@@ -18,7 +18,7 @@ This version of LiteSpeedCache requires Joomla 3.x or later and LiteSpeed LSWS S
 
 Installing
 -------------
-Modify .htaccess file in MediaWiki site directory, adding the following directives:
+Modify .htaccess file in Joomla site directory, adding the following directives:
 
     <IfModule LiteSpeed>
     CacheLookup on
