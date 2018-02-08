@@ -656,7 +656,7 @@ class plgSystemLSCache extends JPlugin
             }
         }
         
-        $this->debug($content);
+        //$this->debug($content);
         
         $logLevelSetting = $this->settings->get('logLevel', -1);
         if ($logLevelSetting < 0) {
