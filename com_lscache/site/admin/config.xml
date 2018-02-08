@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    @since      1.0.0
+    @author     LiteSpeed Technologies <info@litespeedtech.com>
+    @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
+    @license    https://opensource.org/licenses/GPL-3.0
+-->
+<config>
+    <fieldset name="basic" label="COM_LSCACHE_FIELDSET_BASIC_LABEL"  description="COM_LSCACHE_FIELDSET_BASIC_DESC" >
+        <field name="cacheEnabled" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_CACHE_ENABLED_LABEL" description="COM_LSCACHE_FIELD_CACHE_ENABLED_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
+        <field name="cacheTimeout" type="text" default="1500" label="COM_LSCACHE_FIELD_CACHE_TIMEOUT_LABEL" description="COM_LSCACHE_FIELD_CACHE_TIMEOUT_DESC"/>
+
+        <field name="autoPurgePlugin" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_AUTOPURGE_PLUGIN_LABEL" description="COM_LSCACHE_FIELD_AUTOPURGE_PLUGIN_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
+        
+        <field name="autoPurgeLanguage" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_AUTOPURGE_LANGUAGES_LABEL" description="COM_LSCACHE_FIELD_AUTOPURGE_LANGUAGES_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
+
+        <field name="logLevel"  type="radio" default="-1" class="btn-group btn-group-yesno radio" label="COM_LSCACHE_FIELD_LOG_PRIORITIES_LABEL" description="COM_LSCACHE_FIELD_LOG_PRIORITIES_DESC">
+            <option value="-1">JNO</option>
+            <option value="3">COM_LSCACHE_FIELD_LOG_LEVEL_ERROR</option>
+            <option value="6">COM_LSCACHE_FIELD_LOG_LEVEL_INFO</option>
+            <option value="8">COM_LSCACHE_FIELD_LOG_LEVEL_ALL</option>
+        </field>
+    </fieldset>
+    
+    <fieldset name="exclude"  addfieldpath="/administrator/components/com_lscache/models/fields"  label="COM_LSCACHE_FIELDSET_EXCLUDE_LABEL" description="COM_LSCACHE_FIELDSET_EXCLUDE_DESC" >
+        <field name="excludeOptions" type="components" required="false" multiple="multiple" label="COM_LSCACHE_FIELD_EXCLUDE_COMPONENT_LABEL"/>
+        <field name="excludeMenus" type="menuitem" menuType="mainmenu" published="1" clientId="0" multiple="multiple" label="COM_LSCACHE_FIELD_EXCLUDE_MENU_LABEL" />
+        <field name="excludeURLs" type="textarea" default="" class="input-xxlarge" rows="15" filter="raw" label="COM_LSCACHE_FIELD_EXCLUDE_URL_LABEL" description="COM_LSCACHE_FIELD_EXCLUDE_URL_DESC" />
+    </fieldset>
+
+    <fieldset name="permissions" label="JCONFIG_PERMISSIONS_LABEL" description="JCONFIG_PERMISSIONS_DESC" >
+        <field name="rules" type="rules" label="JCONFIG_PERMISSIONS_LABEL" class="inputbox" filter="rules" validate="rules" component="com_lscache" section="component" />
+    </fieldset>
+    
+</config>

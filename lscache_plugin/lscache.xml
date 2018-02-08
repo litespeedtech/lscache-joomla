@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension version="3.1" type="plugin" group="system" method="upgrade">
+	<name>LiteSpeedCache Plugin</name>
+	<author>LiteSpeedTech</author>
+	<creationDate>Dec 2017</creationDate>
+	<copyright>Copyright (C) 2005 - 2018 Open Source Matters. All rights reserved.</copyright>
+	<license>GNU General Public License version 3 or later</license>
+	<authorEmail>info@litespeedtech.com</authorEmail>
+	<authorUrl>www.litespeedtech.org</authorUrl>
+	<version>1.0.0</version>
+	<description>LiteSpeedCache is a hign performance cache solution for MediaWiki sites running on LiteSpeed Web Server.</description>
+	<files>
+		<filename plugin="lscache">lscache.php</filename>
+		<filename plugin="lscache">lscachecore.php</filename>
+		<filename plugin="lscache">lscachebase.php</filename>
+	</files>
+</extension>

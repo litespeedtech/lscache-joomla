@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="component" version="3.2.0" method="upgrade">
+
+    <name>COM_LSCACHE</name>
+    <!-- The following elements are optional and free of formatting constraints -->
+    <creationDate>December 2017</creationDate>
+    <author>LiteSpeedTech</author>
+    <authorEmail>info@litespeedtech.com</authorEmail>
+    <authorUrl>www.litespeedtech.com</authorUrl>
+    <copyright>Copyright Info</copyright>
+    <license>License Info</license>
+    <!--  The version string is recorded in the components table -->
+    <version>1.0.0</version>
+    <!-- The description is optional and defaults to the name -->
+    <description>COM_LSCACHE_DESCRIPTION</description>
+    <install>
+        <sql>
+            <file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+            <file driver="sqlsrv" charset="utf8">sql/install.sqlsrv.utf8.sql</file>
+        </sql>
+    </install>
+
+    <!-- Site Main File Copy Section -->
+    <!-- Note the folder attribute: This attribute describes the folder
+            to copy FROM in the package to install therefore files copied
+            in this section are copied from /site/ in the package -->
+    <files folder="site">
+        <filename>controller.php</filename>
+        <filename>index.html</filename>
+        <filename>lscache.php</filename>
+        <folder>models</folder>
+        <folder>views</folder>
+    </files>
+
+    <administration>
+        <menu link='index.php?option=com_lscache'>COM_LSCACHE_MENU</menu>
+        <files folder="admin">
+            <!-- Admin Main File Copy Section -->
+            <filename>access.xml</filename>
+            <filename>config.xml</filename>
+            <filename>controller.php</filename>
+            <filename>lscache.php</filename>
+            <filename>index.html</filename>
+            <folder>controllers</folder>
+            <folder>layouts</folder>
+            <folder>models</folder>
+            <folder>sql</folder>
+            <folder>views</folder>
+        </files>
+	<languages folder="admin/language">
+            <language tag="en-GB">en-GB/en-GB.com_lscache.ini</language>
+            <language tag="en-GB">en-GB/en-GB.com_lscache.sys.ini</language>
+        </languages>
+    </administration>
+
+</extension>
