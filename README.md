@@ -22,6 +22,8 @@ Modify .htaccess file in Joomla site directory, adding the following directives:
 
     <IfModule LiteSpeed>
     CacheLookup on
+    RewriteEngine On
+    RewriteRule .* - [E=esi_on:1]
     </IfModule>
 
 Download *com_lscache* and *lscache_plugin* directory, ZIP each directory and install the zip file using Joomla administrator menu: 
