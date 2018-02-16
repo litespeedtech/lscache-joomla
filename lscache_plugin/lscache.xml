@@ -8,7 +8,7 @@
 	<authorEmail>info@litespeedtech.com</authorEmail>
 	<authorUrl>www.litespeedtech.org</authorUrl>
 	<version>1.0.0</version>
-	<description>LiteSpeedCache is a hign performance cache solution for MediaWiki sites running on LiteSpeed Web Server.</description>
+	<description>LiteSpeedCache is a hign performance cache solution for Joomla sites running on LiteSpeed Web Server.</description>
 	<files>
 		<filename plugin="lscache">lscache.php</filename>
 		<filename plugin="lscache">lscachecore.php</filename>
