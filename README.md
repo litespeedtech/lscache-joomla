@@ -1,9 +1,9 @@
-LiteSpeedCache for Joomla
+LiteSpeed Cache for Joomla
 ============================
 
-The LiteSpeedCache plugin is a high performance cache plugin for Joomla sites running on a LiteSpeed webserver.
+The LiteSpeed Cache plugin is a high-performance cache component for Joomla sites running on a LiteSpeed web server.
 
-The LiteSpeedCache extension was originally written by LiteSpeed Technologies. It is released under the GNU General Public Licence 
+The LiteSpeed Cache extension was originally written by LiteSpeed Technologies. It is released under the GNU General Public Licence 
 (GPL).
 
 See https://www.litespeedtech.com/products/cache-plugins for more information.
@@ -12,13 +12,13 @@ See https://www.litespeedtech.com/products/cache-plugins for more information.
 
 Prerequisites
 -------------
-This version of LiteSpeedCache requires Joomla 3.x or later and LiteSpeed LSWS Server 5.2.3 or later.
+This version of LiteSpeed Cache requires Joomla 3.x or later and LiteSpeed Web Server 5.2.3 or later.
 
 
 
 Installing
 -------------
-Modify .htaccess file in Joomla site directory, adding the following directives:
+Modify the .htaccess file in the Joomla site directory, adding the following directives:
 
     <IfModule LiteSpeed>
     CacheLookup on
@@ -26,15 +26,15 @@ Modify .htaccess file in Joomla site directory, adding the following directives:
     RewriteRule .* - [E=esi_on:1]
     </IfModule>
 
-Download *com_lscache* and *lscache_plugin* directory, ZIP each directory and install the zip file using Joomla administrator menu: 
-*Extensions->Manage->install*
+Download *com_lscache* and *lscache_plugin*, ZIP the directories together and install the zip file using the Joomla Administrator menu: 
+*Extensions->Manage->Install->Upload Package File*
 
-Enable *LiteSpeedCache Plugin* using administrator menu: *Extensions->Plugins*
+Enable the LiteSpeed Cache Plugin using the Administrator menu: *Extensions->Plugins*
 
 
 Configuration
 --------------
 
-using Joomla administrator menu: *Components->LiteSpeedCache* , click *Options* button to change LiteSpeedCache settings.
+Using Joomla Administrator menu: *Components->LiteSpeed Cache* , click the *Options* button to change LiteSpeed Cache settings.
 
 
