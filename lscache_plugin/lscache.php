@@ -107,7 +107,7 @@ class plgSystemLSCache extends JPlugin
         $app  = $this->app;
         $this->pageCachable = false;
 
-        if ($app->isClient('administrator'))
+        if ($app->isAdmin())
 		{
 			return;
 		}
@@ -379,7 +379,7 @@ class plgSystemLSCache extends JPlugin
 
 	public function onUserAfterLogin($options){
 
-        if ($this->app->isClient('administrator'))
+        if ($this->app->isAdmin())
 		{
 			return;
 		}
