@@ -22,9 +22,15 @@ Modify .htaccess file in Joomla site directory, adding the following directives:
 
     <IfModule LiteSpeed>
     CacheLookup on
+    </IfModule>
+
+If your Joomla site has a separate mobile view, please add the following directives:
+
+    <IfModule LiteSpeed>
     RewriteEngine On
     RewriteCond %{HTTP_USER_AGENT} Mobile|Android|Silk/|Kindle|BlackBerry|Opera\ Mini|Opera\ Mobi [NC] RewriteRule .* - [E=Cache-Control:vary=ismobile]
     </IfModule>
+
 
 Download *com_lscache* and *lscache_plugin* directory, ZIP each directory and install the zip file using Joomla administrator menu: 
 *Extensions->Manage->install*
