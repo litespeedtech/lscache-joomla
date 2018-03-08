@@ -395,7 +395,7 @@ class plgSystemLSCache extends JPlugin
 
 	public function onUserAfterLogout($options){
 
-        if ($this->app->isClient('administrator'))
+        if ($this->app->isAdmin())
 		{
 			return;
 		}
@@ -955,7 +955,7 @@ class plgSystemLSCache extends JPlugin
     public function onAfterInitialise()
     {
         $app = $this->app;
-        if ($app->isClient('administrator'))
+        if ($app->isAdmin())
 		{
 			return;
 		}
