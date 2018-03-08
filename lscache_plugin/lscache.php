@@ -220,14 +220,6 @@ class plgSystemLSCache extends JPlugin
             $this->cacheTags[] = 'com_k2';
         }
         
-        if($cacheType==self::MODULE_PURGEALL){
-            return;
-        }
-        
-        if($cacheType==self::MODULE_PURGETAG){
-            $this->cacheTags[] = "com_modules:" . $module->id;
-            return;
-        }
     }
 
     
@@ -237,7 +229,7 @@ class plgSystemLSCache extends JPlugin
             return;
         }
         
-        if($context=="mod_custom.content"){
+        if(strpos($context, "mod_")==0){
             return;
         }
         
@@ -609,7 +601,21 @@ class plgSystemLSCache extends JPlugin
             }
             
             $purgeTags = "com_modules:" . $row->id;
+            
+            if($cacheType==self::MODULE_PURGETAGTAG){
+                $db = JFactory::getDbo();
+                $query = $db->getQuery(true)
+                    ->select('menuid')
+                    ->from('#__modules_menu')
+                    ->where($db->quoteName('moduleid') . '=' . (int)$row->id);
+                $db->setQuery($query);
+                $menus = $db->loadObjectList();
 
+                foreach($menus as $menu){
+                        $purgeTags .= ",com_menus:" . $menu->menuid;
+                }
+            }
+            
             $this->lscInstance->purgePublic($purgeTags);
             return;
         }
