@@ -3,8 +3,8 @@ LiteSpeedCache for Joomla
 
 The LiteSpeedCache plugin is a high performance cache plugin for Joomla sites running on a LiteSpeed webserver.
 
-The LiteSpeedCache extension was originally written by LiteSpeed Technologies. It is released under the GNU General Public Licence 
-(GPL).
+The LiteSpeedCache extension was originally written by LiteSpeed Technologies. It is released under the GNU General Public Licence V3
+(GPLv3).
 
 See https://www.litespeedtech.com/products/cache-plugins for more information.
 

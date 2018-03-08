@@ -602,7 +602,7 @@ class plgSystemLSCache extends JPlugin
             
             $purgeTags = "com_modules:" . $row->id;
             
-            if($cacheType==self::MODULE_PURGETAGTAG){
+            if($cacheType==self::MODULE_PURGETAG){
                 $db = JFactory::getDbo();
                 $query = $db->getQuery(true)
                     ->select('menuid')
