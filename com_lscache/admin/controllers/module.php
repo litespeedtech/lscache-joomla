@@ -7,13 +7,8 @@
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
 
-defined('_JEXEC') or die('Restricted access');
-/**
- * Hello World Component Controller
- *
- * @since  0.0.1
- */
-class LSCacheController extends JControllerLegacy
+class LSCacheControllerModule extends JControllerForm
 {
-    	protected $default_view = 'esi';
+    
+    
 }
