@@ -52,10 +52,15 @@
             <option value="1">JENABLED</option>
         </field>
 	<field name="cleanCache" default="purgeAllCache" type="text" label="COM_LSCACHE_FIELD_CLEAN_CACHE_LABEL" description="COM_LSCACHE_FIELD_CLEAN_CACHE_DESC" class="input-xxlarge input-large-text" size="40" maxlength="40" />
+    </fieldset>
+
+    <fieldset name="login" label="COM_LSCACHE_FIELDSET_LOGIN_LABEL" description="COM_LSCACHE_FIELDSET_LOGIN_DESC" >
         <field name="loginCachable" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_LOGIN_CACHABLE_LABEL" description="COM_LSCACHE_FIELD_LOGIN_CACHABLE_DESC">
             <option value="0">JDISABLED</option>
             <option value="1">JENABLED</option>
         </field>
+        <field name="loginExcludeMenus" type="menuitem" menuType="mainmenu" published="1" clientId="0" multiple="multiple" label="COM_LSCACHE_FIELD_EXCLUDE_MENU_LABEL" />
+        <field name="loginExcludeURLs" type="textarea" default="" class="input-xxlarge" rows="15" filter="raw" label="COM_LSCACHE_FIELD_EXCLUDE_URL_LABEL" description="COM_LSCACHE_FIELD_EXCLUDE_URL_DESC" />
     </fieldset>
-        
+                        
 </config>
