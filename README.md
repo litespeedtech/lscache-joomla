@@ -1,16 +1,16 @@
 LiteSpeed Cache for Joomla
 ============================
-The LiteSpeed LSCache Plugin for Joomla is a high performance, low cost, user friend cache plugin for Joomla sites running on a LiteSpeed web server, it will tremendously speed up your site, reduce server load with minimal management efforts.
+LiteSpeed LSCache for Joomla is a high performance, low cost, user friendly cache plugin. It will tremendously speed up your site, and reduce server load with minimal management efforts.
 
-For most Joomla sites,  the default setting works well, very few option need to be changed as your demand.
+For most Joomla sites, the default settings work well. Very few option need to be changed.
 
-For advanced Joomla sites such as E-Commerce sites, the advanced ESI feature and cache options for logged-in users will help run your complex business site like a static file site. It will tremendously improve your customer experiences.
+For advanced Joomla sites such as E-Commerce sites, the advanced ESI feature and cache options for logged-in users will help run your complex business site like a static file site. It will tremendously improve your customer experience.
 
-The smart auto-purge feature will minimize your management works. No more worrying about cache sync problems. LScache will detect that you changed an article, you changed a menu setting, you changed a module setting, or other settings, it will purge related pages automatically.  So you can even set a longer cache expiration time to improve visitor experience, confident that the cache will be purged when relevant setting changes.
+The smart auto-purge feature will minimize your management needs. No more worrying about cache sync problems. LSCache will detect that you changed an article, you changed a menu setting, or you changed a module setting. Then, it will automatically purge related pages. So, you can set a longer cache expiration time to improve visitor experience, confident that the cache will be purged when the relevant settings change.
 
-Some component, some page may not work well with cache,  we can set flexible exclude rule for those components and pages. We have both simple and easy setting way and powerful complex setting way (support regular expressions).
+Some components and some pages may not work well with cache. We can set flexible exclude rules for those components and pages. We have both a simple easy way and a powerful complex way (supporting regular expressions).
 
-We'll keep on improve this cache plugin as demand, your opinion and feedback is most precious for us.
+We'll keep on improving this cache plugin. Your opinion and feedback is important to us!
 
 The LiteSpeed Cache Plugin was originally written by LiteSpeed Technologies. It is released under the GNU General Public Licence 
 (GPLv3).
@@ -49,4 +49,4 @@ Disable other caching plugins if possible to avoid conflicts.
 Configuration
 --------------
 
-using Joomla administrator menu: *Components->LiteSpeedCache* , click *Options* button to change LiteSpeedCache settings.
+Using Joomla administrator menu: *Components->LiteSpeedCache* , click *Options* button to change LiteSpeedCache settings.
