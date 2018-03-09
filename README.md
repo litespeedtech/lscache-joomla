@@ -35,12 +35,16 @@ If your Joomla site has a separate mobile view, please add the following directi
 Download *com_lscache* and *lscache_plugin* directory, ZIP each directory and install the zip file using Joomla administrator menu: 
 *Extensions->Manage->install*
 
-Enable *LiteSpeedCache Plugin* using administrator menu: *Extensions->Plugins*
-
-
 Configuration
 --------------
+Enable caching in global configuration
+
+In: administrator menu: *Extensions->Plugins*
+
+Enable *LiteSpeedCache Plugin*, place plugin last
+
+Disable Joomla, or any other caching plugin (like jotcahce, recacher and so on)
+
+Then
 
 using Joomla administrator menu: *Components->LiteSpeedCache* , click *Options* button to change LiteSpeedCache settings.
-
-
