@@ -1,1 +1,1 @@
-ALTER TABLE `#__modules` DROP COLUMN `lscache_type`;
+DROP TABLE IF EXISTS `#__modules_lscache`;

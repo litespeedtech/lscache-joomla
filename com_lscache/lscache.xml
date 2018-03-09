@@ -26,18 +26,6 @@
         </sql>
     </uninstall>
 
-    <!-- Site Main File Copy Section -->
-    <!-- Note the folder attribute: This attribute describes the folder
-            to copy FROM in the package to install therefore files copied
-            in this section are copied from /site/ in the package -->
-    <files folder="site">
-        <filename>controller.php</filename>
-        <filename>index.html</filename>
-        <filename>lscache.php</filename>
-        <folder>models</folder>
-        <folder>views</folder>
-    </files>
-
     <administration>
         <menu link='index.php?option=com_lscache'>COM_LSCACHE_MENU</menu>
         <files folder="admin">
@@ -51,6 +39,7 @@
             <folder>layouts</folder>
             <folder>models</folder>
             <folder>sql</folder>
+            <folder>tables</folder>
             <folder>views</folder>
         </files>
 	<languages folder="admin/language">

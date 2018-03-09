@@ -85,7 +85,7 @@ class LSCacheControllerModules extends JControllerAdmin
 		$this->setRedirect('index.php?option=com_lscache');        
     }
     
-    
+
     public function purgeall(){
         JLoader::registerPrefix('LiteSpeedCacheCore', JPATH_ROOT . '/plugins/system/lscache/lscachebase.php', true);
         JLoader::registerPrefix('LiteSpeedCacheBase', JPATH_ROOT . '/plugins/system/lscache/lscachebase.php', true);

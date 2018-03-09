@@ -84,15 +84,18 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
      *
      * Cache this page for public use if not cached before
      *
-     * @since   1.0.0
+     * @since   1.0.1
      */
-    public function cachePublic($publicTags)
+    public function cachePublic($publicTags, $esi=false)
     {
         if (!isset($publicTags) || ($publicTags == null)) {
             return;
         }
 
         $LSheader = self::PUBLIC_CACHE_CONTROL . $this->public_cache_timeout;
+        if($esi){
+            $LSheader .= ',esi=on';
+        }        
         $this->liteSpeedHeader($LSheader);
 
         $siteTags = Array();
@@ -109,7 +112,7 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
      *
      * @since   0.1
      */
-    public function cachePrivate($publicTags, $privateTags = "")
+    public function cachePrivate($publicTags, $privateTags = "", $esi=false)
     {
         if ( !isset($privateTags) || ($privateTags == "") ) {
             if ( !isset($publicTags) || ($publicTags == "")) {
@@ -118,6 +121,9 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
         }
 
         $LSheader = self::PRIVATE_CACHE_CONTROL . $this->private_cache_timeout;
+        if($esi){
+            $LSheader .= ',esi=on';
+        }
         $this->liteSpeedHeader($LSheader);
 
         $siteTags = Array();
@@ -133,5 +139,8 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
         $this->liteSpeedHeader($LSheader);
     }
 
+    public function getSiteOnlyTag(){
+        return $this->site_only_tag;
+    }
     
 }

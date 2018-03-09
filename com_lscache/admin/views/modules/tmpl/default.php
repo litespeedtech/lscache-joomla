@@ -16,6 +16,8 @@ $clientId   = (int) $this->state->get('client_id', 0);
 $user		= JFactory::getUser();
 $listOrder	= $this->escape($this->state->get('list.ordering'));
 $listDirn	= $this->escape($this->state->get('list.direction'));
+$esiRender	= $this->escape($this->state->get('lscache_type'));
+
 $saveOrder	= ($listOrder == 'a.ordering');
 if ($saveOrder)
 {
@@ -50,6 +52,14 @@ $colSpan = $clientId === 1 ? 8 : 10;
 						<th class="title">
 							<?php echo JHtml::_('searchtools.sort', 'JGLOBAL_TITLE', 'a.title', $listDirn, $listOrder); ?>
 						</th>
+                        <?php if($esiRender == "1") : ?>
+						<th width="10%" class="nowrap hidden-phone hidden-tablet">
+							<?php echo JHtml::_('searchtools.sort', 'COM_LSCACHE_HEADING_CACHE_TYPE', 'm.lscache_type', $listDirn, $listOrder); ?>
+						</th>
+						<th width="10%" class="nowrap hidden-phone hidden-tablet">
+							<?php echo JHtml::_('searchtools.sort', 'COM_LSCACHE_HEADING_CACHE_TTL', 'm.lscache_ttl', $listDirn, $listOrder); ?>
+						</th>
+                        <?php endif;?>
 						<th width="15%" class="nowrap hidden-phone">
 							<?php echo JHtml::_('searchtools.sort', 'COM_MODULES_HEADING_POSITION', 'a.position', $listDirn, $listOrder); ?>
 						</th>
@@ -90,7 +100,7 @@ $colSpan = $clientId === 1 ? 8 : 10;
 					$ordering   = ($listOrder == 'a.ordering');
 					$canCheckin = false;
 					$canChange  = false;
-                    $canViewESI = false; //$user->authorise('core.manage');
+                    $canEditESI = ( $user->authorise('core.manage') ) && ( $esiRender == "1" );
 				?>
 					<tr class="row<?php echo $i % 2; ?>" sortable-group-id="<?php echo $item->position ?: 'none'; ?>">
 						<td class="order nowrap center hidden-phone">
@@ -135,8 +145,8 @@ $colSpan = $clientId === 1 ? 8 : 10;
 								<?php if ($item->checked_out) : ?>
 									<?php echo JHtml::_('jgrid.checkedout', $i, $item->editor, $item->checked_out_time, 'modules.', $canCheckin); ?>
 								<?php endif; ?>
-								<?php if ($canViewESI) : ?>
-									<a class="hasTooltip" href="<?php echo JRoute::_('index.php?option=com_lscache&view=esi&moduleid=' . (int) $item->id); ?>" title="<?php echo JText::_('COM_LSCACHE_MODULES_ESI_TIPS'); ?>">
+								<?php if ($canEditESI) : ?>
+									<a class="hasTooltip" href="<?php echo JRoute::_('index.php?option=com_lscache&view=module&moduleid=' . (int) $item->id); ?>" title="<?php echo JText::_('COM_LSCACHE_MODULES_ESI_TIPS'); ?>">
 									<?php echo $this->escape($item->title); ?></a>
 								<?php else : ?>
 									<?php echo $this->escape($item->title); ?>
@@ -149,6 +159,14 @@ $colSpan = $clientId === 1 ? 8 : 10;
 								<?php endif; ?>
 							</div>
 						</td>
+                        <?php if($esiRender == "1") : ?>
+						<td class="small hidden-phone hidden-tablet">
+							<?php echo $item->lscache_type==1 ? 'Public' : ($item->lscache_type==-1 ? 'Private' : 'None') ; ?>
+						</td>
+						<td class="small hidden-phone hidden-tablet">
+							<?php echo $item->lscache_ttl; ?>
+						</td>
+                        <?php endif; ?>
 						<td class="small hidden-phone">
 							<?php if ($item->position) : ?>
 								<span class="label label-info">

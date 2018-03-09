@@ -30,24 +30,35 @@ class LSCacheModelModules extends JModelList
 		if (empty($config['filter_fields']))
 		{
 			$config['filter_fields'] = array(
-				'id', 'a.id',
-				'title', 'a.title',
-				'checked_out', 'a.checked_out',
-				'checked_out_time', 'a.checked_out_time',
-				'published', 'a.published', 'state',
-				'access', 'a.access',
-				'ag.title', 'access_level',
-				'ordering', 'a.ordering',
-				'module', 'a.module',
-				'language', 'a.language',
-				'l.title', 'language_title',
-				'publish_up', 'a.publish_up',
-				'publish_down', 'a.publish_down',
-				'client_id', 'a.client_id',
-				'position', 'a.position',
+				'id', 
+				'title',
+                'note',
+                'position',
+				'module',
+				'language',
+				'access',
+                'published',
+                'publish_up',
+                'publish_down',
+                'checked_out',
+                'checked_out_time',
+				'language_title',
+				'language_image',
 				'pages',
-				'name', 'e.name',
-				'menuitem', 'a.lscache_type', 'lscache_type'
+                'editor',
+                'access_level',
+                'lscache_type',
+                'lscache_ttl',
+				'name',
+                'enabled',
+                'a.published',
+                'a.title',
+                'a.position',
+                'ag.title',
+                'l.title',
+                'a.id',
+                'm.lscache_type',
+                'm.lscache_ttl'
 			);
 		}
 
@@ -240,13 +251,7 @@ class LSCacheModelModules extends JModelList
 		$query = $db->getQuery(true);
 
 		// Select the required fields.
-		$query->select(
-			$this->getState(
-				'list.select',
-				'a.id, a.title, a.note, a.position, a.module, a.language,a.lscache_type,' .
-					'a.checked_out, a.checked_out_time, a.published AS published, e.enabled AS enabled, a.access, a.ordering, a.publish_up, a.publish_down'
-			)
-		);
+		$query->select($db->quoteName(array('a.id' , 'a.title', 'a.note', 'a.position', 'a.module', 'a.language', 'a.access', 'a.published', 'a.publish_up', 'a.publish_down', 'a.checked_out', 'a.checked_out_time')));
 
 		// From modules table.
 		$query->from($db->quoteName('#__modules', 'a'));
@@ -265,25 +270,34 @@ class LSCacheModelModules extends JModelList
 			->join('LEFT', $db->quoteName('#__viewlevels', 'ag') . ' ON ' . $db->quoteName('ag.id') . ' = ' . $db->quoteName('a.access'));
 
 		// Join over the module menus
+		$query->select($db->quoteName('m.lscache_ttl', 'lscache_ttl'))
+            ->select($db->quoteName('m.lscache_type', 'lscache_type'))    
+			->join('LEFT', $db->quoteName('#__modules_lscache', 'm') . ' ON ' . $db->quoteName('m.moduleid') . ' = ' . $db->quoteName('a.id'));
+
+        // Join over the module menus
 		$query->select('MIN(mm.menuid) AS pages')
 			->join('LEFT', $db->quoteName('#__modules_menu', 'mm') . ' ON ' . $db->quoteName('mm.moduleid') . ' = ' . $db->quoteName('a.id'));
 
 		// Join over the extensions
 		$query->select($db->quoteName('e.name', 'name'))
+		    ->select($db->quoteName('e.enabled', 'enabled'))
 			->join('LEFT', $db->quoteName('#__extensions', 'e') . ' ON ' . $db->quoteName('e.element') . ' = ' . $db->quoteName('a.module'));
 
 		// Group (careful with PostgreSQL)
 		$query->group(
-			'a.id, a.title, a.note, a.position, a.module, a.language, a.checked_out, '
-			. 'a.checked_out_time, a.published, a.access, a.ordering, l.title, l.image, uc.name, ag.title, e.name, '
-			. 'l.lang_code, uc.id, ag.id, mm.moduleid, e.element, a.publish_up, a.publish_down, e.enabled'
+			'a.id, a.title, a.note, a.position, a.module, a.language, a.access, a.published,a.publish_up,a.publish_down, a.checked_out, a.checked_out_time, l.title, l.image, uc.name, ag.title, m.lscache_ttl, m.lscache_type, e.name, e.enabled'
 		);
 
 		$query->where($db->quoteName('a.client_id') . ' = 0 AND ' . $db->quoteName('e.client_id') . ' = 0' );
 
 		// Filter by lscache_type.
 		$cacheType = $this->getState('lscache_type');
-		$query->where($db->quoteName('a.lscache_type') . ' = ' . (int) $cacheType );
+        if($cacheType=="1"){
+            $query->where($db->quoteName('m.lscache_type') . ' is not null');
+        }
+        else{
+            $query->where($db->quoteName('m.lscache_type') . ' is null');
+        }
         
 		// Filter by current user access level.
 		$user = JFactory::getUser();

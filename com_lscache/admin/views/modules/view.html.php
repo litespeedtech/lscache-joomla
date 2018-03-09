@@ -53,24 +53,7 @@ class LSCacheViewModules extends JViewLegacy
 			$this->filterForm->removeField('language', 'filter');
 		}
 
-		// We don't need the toolbar in the modal window.
-		if ($this->getLayout() !== 'modal')
-		{
-			$this->addToolbar();
-		}
-		// If in modal layout.
-		else
-		{
-			// Client id selector should not exist.
-			$this->filterForm->removeField('client_id', '');
-
-			// If in the frontend state and language should not activate the search tools.
-			if (JFactory::getApplication()->isClient('site'))
-			{
-				unset($this->activeFilters['state']);
-				unset($this->activeFilters['language']);
-			}
-		}
+		$this->addToolbar();
 
 		// Include the component HTML helpers.
 		JHtml::addIncludePath(JPATH_COMPONENT . '/helpers/html');
@@ -78,6 +61,9 @@ class LSCacheViewModules extends JViewLegacy
 		return parent::display($tpl);
 	}
 
+
+    
+    
 	/**
 	 * Add the page title and toolbar.
 	 *
@@ -88,6 +74,7 @@ class LSCacheViewModules extends JViewLegacy
 	protected function addToolbar()
 	{
 		$state = $this->get('State');
+        $cacheType = $state->get('lscache_type');
 		$canDo = JHelperContent::getActions('com_lscache');
 		$user  = JFactory::getUser();
 
@@ -98,8 +85,12 @@ class LSCacheViewModules extends JViewLegacy
 
 		if ($canDo->get('core.admin'))
 		{
-			JToolbarHelper::custom('modules.esi', 'featured', 'loop', 'COM_LSCACHE_MODULE_ESI', true);
-			JToolbarHelper::custom('modules.normal', 'unfeatured', 'loop', 'COM_LSCACHE_MODULE_NORMAL', true);
+            if($cacheType=="1"){
+                JToolbarHelper::custom('modules.normal', 'unfeatured', 'loop', 'COM_LSCACHE_RENDER_NORMAL', true);
+            }
+            else{
+                JToolbarHelper::custom('modules.esi', 'featured', 'loop', 'COM_LSCACHE_RENDER_ESI', true);
+            }
             
 			//JToolbarHelper::custom('modules.tag', 'tag', 'tag2', 'COM_LSCACHE_MODULE_TAG', true);
 			//JToolbarHelper::custom('modules.purge', 'stack', 'stack', 'COM_LSCACHE_MODULE_PURGE', true);
