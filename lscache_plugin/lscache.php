@@ -96,7 +96,7 @@ class plgSystemLSCache extends JPlugin
     /**
      * No cache for backend pages, for page with error messages, for PostBack request, for logged in user, for expired sessions, for exclude pages, etc.
      *
-     * @since   0.1
+     * @since   1.0.0
      */
     public function onAfterRoute()
     {
@@ -124,24 +124,32 @@ class plgSystemLSCache extends JPlugin
         if($app->input->getMethod() != 'GET'){
             return;
         }
+
+        $this->menuItem = $app->getMenu()->getActive();
         
 		$user = JFactory::getUser();
+        
         if(!$user->get('guest')){
             $this->lscInstance->checkPrivateCookie();
             $varyKey = self::getVaryKey("Login");
-            $this->checkVary($varyKey);
+            if(!$this->checkVary($varyKey)){
+                return;
+            }
             $loginCachable =  $this->settings->get('loginCachable', 0) == 1 ? true : false;
             if(!$loginCachable){
                 return;
             }
+            if($this->isLoginExcluded()){
+                return;
+            }
+        }
+        else{
+            $varyKey = self::getVaryKey("Logout");
+            if(!$this->checkVary($varyKey)){
+                return;
+            }
         }
 
-        $varyKey = self::getVaryKey("Logout");
-        if(!$this->checkVary($varyKey)){
-            return;
-        }
-        $this->menuItem = $app->getMenu()->getActive();
-        
         if($this->menuItem){
             $this->cacheTags[] = "com_menus:" . $this->menuItem->id;
             $link = $this->menuItem->link;
@@ -166,6 +174,7 @@ class plgSystemLSCache extends JPlugin
         }
         
         $this->pageCachable = true;
+        
     }
 
     
@@ -956,6 +965,47 @@ class plgSystemLSCache extends JPlugin
         }
         return false;
     }
+    
+        
+
+    protected function isLoginExcluded()
+    {
+        $excludeMenuItems = $this->settings->get('loginExcludeMenus', array());
+        if ($excludeMenuItems) {
+            $menuItem = $this->menuItem;
+            if ($menuItem && $menuItem->id && $excludeMenuItems && in_array($menuItem->id, (array) $excludeMenuItems, true)) {
+                return true;
+            }
+        }
+
+        // Check if regular expressions are being used
+        $excludeURIs = $this->settings->get('loginExcludeURLs', '');
+        if (!$excludeURIs) {
+            return false;
+        }
+        
+        $exclusions = explode("\n", str_replace(array("\r\n", "\r"), "\n", $excludeURIs));
+        if (!$exclusions) {
+            return false;
+        }
+
+        $path = JUri::getInstance()->toString(array('path', 'query', 'fragment'));
+        foreach ($exclusions as $exclusion) {
+            if ($exclusion == '') {
+                continue;
+            }
+            
+            if((strpos($exclusion,'/')!==FALSE) && (strpos($exclusion,'\/')===FALSE)){
+                $exclusion = str_replace('/', '\/', $exclusion);
+            }
+            
+            if (preg_match('/' . $exclusion . '/is', $path)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     
     //ESI Render;
     public function onAfterInitialise()
