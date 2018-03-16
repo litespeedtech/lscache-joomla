@@ -53,6 +53,11 @@ class LSCacheViewModules extends JViewLegacy
 			$this->filterForm->removeField('language', 'filter');
 		}
 
+        if(isset( $_SERVER['LSWS_EDITION'] ) && strpos( $_SERVER['LSWS_EDITION'], 'Openlitespeed' ) === 0){
+            $app = JFactory::getApplication();  
+            $app->enqueueMessage(JText::_('COM_LSCACHE_MODULES_UPGRADE'));
+        }
+        
 		$this->addToolbar();
 
 		// Include the component HTML helpers.

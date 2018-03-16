@@ -21,6 +21,7 @@ class plgSystemLSCache extends JPlugin
     const MODULE_ESI=1;
     const MODULE_PURGEALL=2;
     const MODULE_PURGETAG=3;
+    const MODULE_EMBED=4;
     
     const CATEGORY_CONTEXTS = array('com_categories.category', 'com_banners.category','com_contact.category','com_content.category','com_newsfeeds.category','com_users.category',
             'com_categories.categories', 'com_banners.categories','com_contact.categories','com_content.categories','com_newsfeeds.categories','com_users.categories');
@@ -32,6 +33,8 @@ class plgSystemLSCache extends JPlugin
     protected $esiEnabled;
     protected $pageCachable = false;
     protected $esion = false;
+    protected $esittl = 0;
+    protected $esipublic = true;
     protected $menuItem;
     protected $lscInstance;
     protected $cacheTags = array();
@@ -186,12 +189,19 @@ class plgSystemLSCache extends JPlugin
         
         $cacheType = $this->getModuleCacheType($module);
         
-        if(LITESPEED_ESI_SUPPORT && $this->esiEnabled && ($cacheType==self::MODULE_ESI) ){
+        if($cacheType==self::MODULE_EMBED){
+                $this->cacheTags[] = 'com_modules:'. $module->id;            
+        }
+        else if(LITESPEED_ESI_SUPPORT && $this->esiEnabled && ($cacheType==self::MODULE_ESI) ){
 
             $tag = $this->lscInstance->getSiteOnlyTag() . 'com_modules:' . $module->id;
             $device = "desktop";
             if($this->app->client->mobile){
                 $device = 'mobile';
+            }
+            
+            if($module->lscache_ttl==0){
+                $module->lscache_type=0;
             }
             
             if($module->lscache_type==1){
@@ -208,6 +218,21 @@ class plgSystemLSCache extends JPlugin
             $this->esion = true;
             return;
         }
+        else if(!LITESPEED_ESI_SUPPORT && $this->esiEnabled && ($cacheType==self::MODULE_ESI) ){
+            if($module->lscache_type==0){
+                $this->esittl = 0;
+            }
+            else{
+                $this->esittl = min($this->esittl, $module->lscache_ttl);
+                if($module->lscache_type==-1){
+                    $this->esipublic = false;
+                }
+            }
+            
+            $this->esion = true;
+            return;
+        }
+
         
         if($module->module == "mod_menu"){
             if($cacheType==self::MODULE_PURGEALL){
@@ -297,7 +322,9 @@ class plgSystemLSCache extends JPlugin
         }
         
         if(!$option){
-            return;
+            if(!$this->menuItem->home){
+                return;
+            }
         }
         else if(isset($id) && in_array($option, array('com_content', 'com_contact', 'com_banners', 'com_newsfeed', 'com_k2', 'com_categories', 'com_users'))){
             $this->cacheTags[] =  $option . ':' . $id;
@@ -316,8 +343,27 @@ class plgSystemLSCache extends JPlugin
         if($this->menuItem->home){
             $cacheTimeout = $this->settings->get('homePageCacheTimeout', 1500) * 60;
         }
-        $this->lscInstance->config(array("public_cache_timeout"=>$cacheTimeout, "private_cache_timeout"=>$cacheTimeout));        
-        $this->lscInstance->cachePublic($cacheTags, $this->esion);
+
+        if(!LITESPEED_ESI_SUPPORT && $this->esiEnabled && $this->esion){
+            $cacheTimeout = min($cacheTimeout, $this->esittl);
+            if($cacheTimeout==0){
+                return;
+            }
+            $this->lscInstance->config(array("public_cache_timeout"=>$cacheTimeout, "private_cache_timeout"=>$cacheTimeout));        
+            if($this->esipublic){
+                $this->lscInstance->cachePublic($cacheTags, $this->esion);
+            }
+            else{
+                $this->lscInstance->cachePrivate($cacheTags, $this->esion);
+            }
+        }
+        else{
+            if($cacheTimeout==0){
+                return;
+            }
+            $this->lscInstance->config(array("public_cache_timeout"=>$cacheTimeout, "private_cache_timeout"=>$cacheTimeout));        
+            $this->lscInstance->cachePublic($cacheTags, $this->esion);
+        }
         $this->log();
     }
     
@@ -795,6 +841,10 @@ class plgSystemLSCache extends JPlugin
             $module->lscache_ttl = $rows[0]->lscache_ttl;
             return self::MODULE_ESI;
         }
+        else{
+            $module->cache_type = self::MODULE_EMBED;
+            return self::MODULE_EMBED;
+        }
         
         $query1 = $db->getQuery(true)
             ->select('MIN(menuid)')
@@ -1065,8 +1115,8 @@ class plgSystemLSCache extends JPlugin
         }
         
         $attribs = array();
-        $attrib =  $_GET['attribs'];
-        if($attrib){
+        if(isset($_GET['attribs'])){
+            $attrib =  $_GET['attribs'];
             $attribs = $this->explode2($attrib, ';', ',');
         }
         
