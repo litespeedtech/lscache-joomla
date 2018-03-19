@@ -43,10 +43,28 @@ If your Joomla site has a separate mobile view, please add the following directi
 Download the latest version zip file from github *package* folder and install the zip file using the Joomla Administrator menu: 
 *Extensions->Manage->Install->Upload Package File*
 
-Disable other caching plugins if possible to avoid conflicts. 
+Enable caching in global configuration
+*System->Global Configuration->System
+
+Enable LiteSpeedCache plugin
+*Extensions->Plugin->find and enable plugin
+
+Disable other caching plugins if possible to avoid conflicts (like joomla, Jotcache)
 
 
 Configuration
 --------------
 
 Using Joomla administrator menu: *Components->LiteSpeedCache* , click *Options* button to change LiteSpeedCache settings.
+
+Disable Joomla, or any other caching plugin (like jotcahce, recacher and so on)
+
+Untested
+--------------
+
+CDN usage with lscache plugin
+
+Tested
+--------------
+
+JCH optimizer
