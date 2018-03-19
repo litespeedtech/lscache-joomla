@@ -74,6 +74,7 @@ class LSCacheViewModule extends JViewLegacy
 		}
 
 		JToolBarHelper::title($title, 'module');
+		JToolBarHelper::apply('module.apply');
 		JToolBarHelper::save('module.save');
 		JToolBarHelper::cancel(
 			'module.cancel',

@@ -10,7 +10,7 @@
     <copyright>Copyright Info</copyright>
     <license>License Info</license>
     <!--  The version string is recorded in the components table -->
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <!-- The description is optional and defaults to the name -->
     <description>COM_LSCACHE_DESCRIPTION</description>
     <install>
@@ -25,6 +25,13 @@
             <file driver="sqlsrv" charset="utf8">sql/uninstall.sqlsrv.utf8.sql</file>
         </sql>
     </uninstall>
+    <update>
+            <schemas>
+                    <schemapath type="mysql">sql/updates/mysql</schemapath>
+                    <schemapath type="sqlsrv">sql/updates/sqlsrv</schemapath>
+            </schemas>
+    </update>
+    
 
     <administration>
         <menu link='index.php?option=com_lscache'>COM_LSCACHE_MENU</menu>
