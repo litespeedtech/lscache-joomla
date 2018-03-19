@@ -31,12 +31,6 @@ If your Joomla site has a separate mobile view, please add the following directi
     RewriteCond %{HTTP_USER_AGENT} Mobile|Android|Silk/|Kindle|BlackBerry|Opera\ Mini|Opera\ Mobi [NC] RewriteRule .* - [E=Cache-Control:vary=ismobile]
     </IfModule>
 
-If your jooomla site uses cpanel, SSL site verification remember to add
-
-    RewriteCond %{REQUEST_URI} !^/[0-9]+\..+\.cpaneldcv$
-    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/[0-9a-zA-Z_-]+$
-    RewriteCond %{REQUEST_URI} !^/\.well-known/pki-validation/[A-F0-9]{32}\.txt(?:\ Comodo\ DCV)?$
-
 Download *com_lscache* and *lscache_plugin*, ZIP the directories together and install the zip file using the Joomla Administrator menu: 
 *Extensions->Manage->Install->Upload Package File*
 
@@ -53,12 +47,3 @@ Disable Joomla, or any other caching plugin (like jotcahce, recacher and so on)
 Then
 
 using Joomla administrator menu: *Components->LiteSpeedCache* , click *Options* button to change LiteSpeedCache settings.
-
-Untested
---------------
-CDN usage with lscache
-
-Tested
---------------
-JCH optimizer
-    * In some configs lasy load is ok, but force load must be enabled.
