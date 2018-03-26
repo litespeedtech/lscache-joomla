@@ -20,6 +20,9 @@ class LSCacheComponentJabuilder extends LSCacheComponentBase{
         if($option!=null){
             return false;
         }
+        else{
+            return true;
+        }
 
     }
     
