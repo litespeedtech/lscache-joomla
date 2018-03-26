@@ -53,8 +53,6 @@ class LSCacheModelModule extends JModelAdmin
 
 		foreach ($pks as $pk)
 		{
-            $dispatcher->trigger("onExtensionAfterSave", array("com_modules.module", $table, false));
-            
             $db    = $this->getDbo();
             $query = $db->getQuery(true)
                 ->insert($db->quoteName('#__modules_lscache'))
@@ -63,6 +61,10 @@ class LSCacheModelModule extends JModelAdmin
                         
             $db->setQuery($query);
             $db->execute();
+            
+            $table = $this->getTable();
+            $table->moduleid = $pk;
+            $dispatcher->trigger("onExtensionAfterSave", array("com_lscache.module", $table, false));
         }
 
         return true;
@@ -70,6 +72,7 @@ class LSCacheModelModule extends JModelAdmin
     
     
     public function renderNormal($pks){
+		$dispatcher = JEventDispatcher::getInstance();
 		$user       = JFactory::getUser();
         
         if(!$user->authorise('core.admin', 'com_lscache'))
@@ -87,6 +90,10 @@ class LSCacheModelModule extends JModelAdmin
 
             $db->setQuery($query);
             $db->execute();
+
+            $table = $this->getTable();
+            $table->moduleid = $pk;
+            $dispatcher->trigger("onExtensionAfterSave", array("com_lscache.module", $table, false));
         }
 
         return true;

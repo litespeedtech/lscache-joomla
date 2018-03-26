@@ -21,7 +21,7 @@ See https://www.litespeedtech.com/products/cache-plugins for more information.
 
 Prerequisites
 -------------
-This version of LiteSpeed Cache requires Joomla 3.x or later and LiteSpeed Web Server 5.2.3 or later.
+This version of LiteSpeed Cache requires Joomla 3.x or later and LiteSpeed Web Server 5.2.3+ or OpenLiteSpeed.
 
 
 
