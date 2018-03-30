@@ -11,7 +11,7 @@
             <option value="0">JDISABLED</option>
             <option value="1">JENABLED</option>
         </field>
-        <field name="cacheTimeout" type="text" default="1500" label="COM_LSCACHE_FIELD_CACHE_TIMEOUT_LABEL" description="COM_LSCACHE_FIELD_CACHE_TIMEOUT_DESC"/>
+        <field name="cacheTimeout" type="text" default="2000" label="COM_LSCACHE_FIELD_CACHE_TIMEOUT_LABEL" description="COM_LSCACHE_FIELD_CACHE_TIMEOUT_DESC"/>
 
         <field name="autoPurgePlugin" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_AUTOPURGE_PLUGIN_LABEL" description="COM_LSCACHE_FIELD_AUTOPURGE_PLUGIN_DESC">
             <option value="0">JDISABLED</option>
@@ -46,7 +46,7 @@
             <option value="0">JDISABLED</option>
             <option value="1">JENABLED</option>
         </field>
-        <field name="homePageCacheTimeout" type="text" default="1500" label="COM_LSCACHE_FIELD_HOMEPAGE_TIMEOUT_LABEL" description="COM_LSCACHE_FIELD_HOMEPAGE_TIMEOUT_DESC"/>
+        <field name="homePageCacheTimeout" type="text" default="2000" label="COM_LSCACHE_FIELD_HOMEPAGE_TIMEOUT_LABEL" description="COM_LSCACHE_FIELD_HOMEPAGE_TIMEOUT_DESC"/>
         <field name="purgeMessage" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_PURGE_MESSAGE_LABEL" description="COM_LSCACHE_FIELD_PURGE_MESSAGE_DESC">
             <option value="0">JDISABLED</option>
             <option value="1">JENABLED</option>

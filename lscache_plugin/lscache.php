@@ -41,6 +41,7 @@ class plgSystemLSCache extends JPlugin
     protected $componentHelper;
     protected $cacheTags = array();
     protected $pageElements = array();
+    protected $cachePurged = false;
 
     /**
      * Read LSCache Settings.
@@ -346,9 +347,9 @@ class plgSystemLSCache extends JPlugin
         }
 
         $cacheTags = implode(',', $this->cacheTags);
-        $cacheTimeout = $this->settings->get('cacheTimeout', 1500) * 60;
+        $cacheTimeout = $this->settings->get('cacheTimeout', 2000) * 60;
         if($this->menuItem->home){
-            $cacheTimeout = $this->settings->get('homePageCacheTimeout', 1500) * 60;
+            $cacheTimeout = $this->settings->get('homePageCacheTimeout', 2000) * 60;
         }
 
         if(!LITESPEED_ESI_SUPPORT && $this->esiEnabled && $this->esion){
@@ -942,6 +943,9 @@ class plgSystemLSCache extends JPlugin
             if(!$this->lscInstance){
                 return;
             }
+            if($this->cachePurged){
+                return;
+            }
             $purgeMessage =  $this->settings->get('purgeMessage', 1) == 1 ? true : false;
             if(!$purgeMessage){
                 return;
@@ -949,7 +953,8 @@ class plgSystemLSCache extends JPlugin
             
             $content = $this->lscInstance->getLogBuffer();
             if(stripos($content, 'X-LiteSpeed-Purge') !== false){
-                $this->app->enqueueMessage("Purged LiteSpeedCache with tags : " . str_replace('X-LiteSpeed-Purge:', "", $content) , "LiteSpeedCache");
+                $this->app->enqueueMessage("Informed LiteSpeed Server to purge all related cached pages successfully", "message");
+                $this->cachePurged = true;
             }
         }
         
@@ -1218,5 +1223,53 @@ class plgSystemLSCache extends JPlugin
         
         return true;
     }
+    
+    
+    public function onLSCacheRebuildAll(){
+        
+        if(!function_exists('curl_version')){
+            reutrn;
+        }
+
+		$db = JFactory::getDbo();
+
+		$query = $db->getQuery(true)
+			->select('path')
+			->from('#__menu')
+			->where($db->quoteName('client_id') . '=0')
+			->where($db->quoteName('published') . '=1')
+			->where($db->quoteName('type') . '!="url"');
+            
+		$db->setQuery($query);
+        
+        $menus = $db->loadObjectList();
+        if(!is_array($menus)){
+            return;
+        }
+        
+        $fail = 0;
+        $success = 0;
+        $root = str_replace('/administrator', '', JUri::base()) . 'index.php/';
+
+        foreach($menus as $menu){
+            $ch=curl_init();
+            $path =  $root . $menu->path;
+            curl_setopt($ch,CURLOPT_URL, $path);
+            curl_setopt($ch, CURLOPT_HEADER,         false);           
+            curl_setopt($ch,CURLOPT_RETURNTRANSFER,  true);
+            $buffer = curl_exec($ch);
+            curl_close($ch);
+            if (!$buffer || empty($buffer)){
+                $fail++;
+            }
+            else{
+                $success++;
+            }
+        }
+        
+        $this->app->enqueueMessage($success . " pages rebuild, " . $fail . ' pages failed.'  , "message");
+
+    }
+    
     
 }

@@ -103,6 +103,8 @@ class LSCacheViewModules extends JViewLegacy
     		$bar = JToolbar::getInstance('toolbar');
             $layout = new JLayoutFile('toolbar.purgeall');
 			$bar->appendButton('Custom', $layout->render(array()));
+
+            JToolbarHelper::custom('modules.rebuild', 'refresh', 'loop','COM_LSCACHE_BTN_REBUILD',false);
             
 			JToolbarHelper::preferences('com_lscache');
 		}

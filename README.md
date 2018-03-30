@@ -1,6 +1,6 @@
 LiteSpeed Cache for Joomla
 ============================
-LiteSpeed LSCache for Joomla is a high performance, low cost, user friendly cache plugin. It will tremendously speed up your site, and reduce server load with minimal management efforts.
+LiteSpeed Cache for Joomla is a high performance, low cost, user friendly cache plugin. It will tremendously speed up your site, and reduce server load with minimal management efforts.
 
 For most Joomla sites, the default settings work well. Very few option need to be changed.
 
@@ -49,4 +49,4 @@ Disable other caching plugins if possible to avoid conflicts.
 Configuration
 --------------
 
-Using Joomla administrator menu: *Components->LiteSpeedCache* , click *Options* button to change LiteSpeedCache settings.
+Using Joomla administrator menu: *Components->LiteSpeed Cache* , click *Options* button to change LiteSpeed Cache settings.
