@@ -16,14 +16,15 @@ class LSCacheModulesHelper
     const MODULE_CLASSNAME = 3;
         
     protected $activeModules;
+    protected $plugin;
     
-	public function __construct () {
+	public function __construct (&$plugin) {
         require_once (__DIR__ . '/list.php');
-
+        $this->plugin = $plugin;
         $this->activeModules = $lscacheModules;
     }
     
-    public function getInstance($module){
+    public function getInstance(&$module){
         
         if(!isset($this->activeModules[$module->module])){
             return NULL;
@@ -45,10 +46,10 @@ class LSCacheModulesHelper
             return NULL;
         }
         
-        return new $className($module);
+        return new $className($this->plugin, $module);
     }
     
-    public function getModuleTags($module){
+    public function getModuleTags(&$module){
         $lscacheModule = $this->getInstance($module);
         if($lscacheModule==NULL){
             return "";
@@ -56,7 +57,7 @@ class LSCacheModulesHelper
         return $lscacheModule->getModuleTags();
     }
     
-    public function afterESIRender($module, &$content){
+    public function afterESIRender(&$module, &$content){
         $lscacheModule = $this->getInstance($module);
         if($lscacheModule==NULL){
             return;

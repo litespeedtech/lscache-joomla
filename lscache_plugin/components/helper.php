@@ -18,7 +18,7 @@ class LSCacheComponentsHelper
     protected $plugin;
     protected $dispatcher;
     
-	public function __construct ($plugin, $filter = array()) {
+	public function __construct (&$plugin, $filter = array()) {
         require_once (__DIR__ . '/list.php');
         
         $this->plugin = $plugin;
@@ -72,18 +72,12 @@ class LSCacheComponentsHelper
         
     }
     
-    public function registerEvents($com_name=null){
+    public function registerEvents($com_name){
         if($com_name!=null){
             $com_instance = $this->getInstance($com_name);
             if($com_instance==null){
-                return true;
+                return;
             }
-            return $com_instance->onRegisterEvents();
-            
-        }
-        
-        foreach($this->activeComponents as $component){
-            $com_instance = $this->getInstanceInternal($component);
             $com_instance->onRegisterEvents();
         }
     }
@@ -94,6 +88,14 @@ class LSCacheComponentsHelper
             return false;
         }
         return $com_instance->onPurgeContent($context, $row);
+    }
+    
+    public function getTags($com_name, $pageElements){
+        $com_instance = $this->getInstance($com_name);
+        if($com_instance==NULL){
+            return "";
+        }
+        return $com_instance->getTags($com_name, $pageElements);
     }
     
 }

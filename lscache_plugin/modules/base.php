@@ -10,8 +10,10 @@
 abstract class LSCacheModuleBase
 {
     protected $module;
+    protected $plugin;
     
-    public function __construct(&$module){
+    public function __construct(&$plugin, &$module){
+        $this->plugin = $plugin;
         $this->module = $module;
     }    
     

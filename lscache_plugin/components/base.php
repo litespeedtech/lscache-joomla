@@ -12,17 +12,33 @@ abstract class LSCacheComponentBase  extends JPlugin
     protected $plugin;
     protected $dispatcher;
     
-    public function init($dispatcher,$plugin){
+    public function init($dispatcher,&$plugin){
         $this->dispatcher = $dispatcher;
         $this->plugin = $plugin;
     }    
     
-    //return: current page cachable
     public function onRegisterEvents(){
-        return true;
     }
     
     
     //return purgeTags or false
     abstract public function onPurgeContent($context, $row);
+    
+    //return cache tags;
+    public function getTags($option, $pageElements){
+        if(isset($pageElements["context"])){
+            $context = $pageElements["context"];
+        }
+        else{
+            $context = $option;
+        }
+        
+        if(isset($pageElements["id"])){
+            return $context . ':' . $pageElements["id"];
+        }
+        else{
+            return $context;
+        }
+
+    }
 }

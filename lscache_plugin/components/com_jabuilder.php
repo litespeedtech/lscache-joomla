@@ -18,12 +18,8 @@ class LSCacheComponentJabuilder extends LSCacheComponentBase{
         $app = JFactory::getApplication();
         $option = $app->input->get('jub', null);
         if($option!=null){
-            return false;
+            $this->plugin->pageCachable = false;
         }
-        else{
-            return true;
-        }
-
     }
     
     
@@ -39,10 +35,10 @@ class LSCacheComponentJabuilder extends LSCacheComponentBase{
     public function onPurgeContent($context, $row)
     {
         if($context == "com_jabuilder.page"){
-            return "com_jabuilder, com_jabuilder:" . $row->id;
+            return "com_jabuilder, com_jabuilder.item:" . $row->id;
         }
         if($context == "com_jabuilder.item"){
-            return "com_jabuilder, com_jabuilder:" . $row->id;
+            return "com_jabuilder, com_jabuilder.item:" . $row->id;
         }
         else{
             return "com_jabuilder";

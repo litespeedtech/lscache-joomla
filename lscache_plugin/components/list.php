@@ -10,5 +10,6 @@
 $lscacheComponents = Array(
     "com_k2" => Array("K2 Component", "com_k2", "com_k2.php", "LSCacheComponentK2"),
     "com_jabuilder" => Array("JA Builder", "com_jabuilder", "com_jabuilder.php", "LSCacheComponentJabuilder"),
+    "com_virtuemart" => Array("VirtueMart", "com_virtuemart", "com_virtuemart.php", "LSCacheComponentVirtueMart"),
     
 );
