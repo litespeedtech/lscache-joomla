@@ -145,6 +145,9 @@ class plgSystemLSCache extends JPlugin
         if(!empty($link)){
             $this->pageElements = $this->explode2($link, '&', '=');
         }
+        else if(!empty($app->input->get('option')));{
+            $this->pageElements["option"] = $app->input->get('option');
+        }        
         if(isset($this->pageElements["option"])){
             $option = $this->pageElements["option"];
             $this->componentHelper->registerEvents($option);
@@ -181,7 +184,6 @@ class plgSystemLSCache extends JPlugin
             $this->pageCachable = false;
             return;
         }
-        
     }
 
     

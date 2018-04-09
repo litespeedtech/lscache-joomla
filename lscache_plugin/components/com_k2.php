@@ -31,7 +31,9 @@ class LSCacheComponentK2 extends LSCacheComponentBase{
     }
 
     public function onFinderChangeState($context, $pks, $value){
-         $this->plugin->onContentChangeState($context, $pks, $value);
+        if($context!="com_k2.item"){
+            $this->plugin->onContentChangeState($context, $pks, $value);
+        }
     }
 
      

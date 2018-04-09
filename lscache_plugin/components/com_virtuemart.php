@@ -18,6 +18,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase{
         $this->dispatcher->register("plgVmAfterStoreProduct", $this);
         $this->dispatcher->register("plgVmOnDeleteProduct", $this);
         $this->dispatcher->register("plgVmAfterVendorStore", $this);
+        $this->dispatcher->register("plgVmConfirmedOrder", $this);
 
         $db = JFactory::getDbo();
         $query = $db->getQuery(true)
@@ -85,6 +86,13 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase{
         $this->plugin->lscInstance->purgePublic($tag);
         $this->plugin->log();
     }
+
+    public function plgVmConfirmedOrder($cart, $orderDetails){
+        $tag =  "com_virtuemart";
+        $this->plugin->lscInstance->purgePublic($tag);
+        $this->plugin->log();
+    }
+
     
     public function onPurgeContent($context, $row)
     {
