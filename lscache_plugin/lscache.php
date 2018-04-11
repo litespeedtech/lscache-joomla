@@ -157,35 +157,35 @@ class plgSystemLSCache extends JPlugin
         if ($app->isAdmin())
 		{
             $this->pageCachable = false;
-			return;
 		}
+        else{
+            $this->checkVary();
+        }
         
-        $this->checkVary();
-
         if(!$this->pageCachable){
-            return;
+            
         }
-        
-        if(JDEBUG){
+        else if(JDEBUG){
             $this->pageCachable = false;
-            return;
         }
-        
-		if (count($app->getMessageQueue()))
+		else if (count($app->getMessageQueue()))
 		{
             $this->pageCachable = false;
-            return;
 		}
+        else if($app->input->getMethod() != 'GET'){
+            $this->pageCachable = false;
+        }
+        else if($this->isExcluded()){
+            $this->pageCachable = false;
+        }
         
-        if($app->input->getMethod() != 'GET'){
-            $this->pageCachable = false;
-            return;
+        if(!$this->pageCachable){
+            $info= $_SERVER['HTTP_USER_AGENT'];
+            if($info=='lscache_runner'){
+                $app->close();
+            }
         }
-
-        if($this->isExcluded()){
-            $this->pageCachable = false;
-            return;
-        }
+        
     }
 
     
@@ -282,8 +282,13 @@ class plgSystemLSCache extends JPlugin
         $this->pageElements["content"] = $row;
     }
 
+
+
     
     public function onAfterRender(){
+        if(defined("LSCACHE_REBUILD")){
+            $this->onLSCacheRebuildAll();
+        }        
 
         if(!$this->pageCachable){
             return;
@@ -1290,6 +1295,11 @@ class plgSystemLSCache extends JPlugin
     
     public function onLSCacheRebuildAll(){
         
+        if(!defined("LSCACHE_REBUILD")){
+            define("LSCACHE_REBUILD",true);
+            return;
+        }
+        
         if(!function_exists('curl_version')){
             reutrn;
         }
@@ -1301,38 +1311,50 @@ class plgSystemLSCache extends JPlugin
 			->from('#__menu')
 			->where($db->quoteName('client_id') . '=0')
 			->where($db->quoteName('published') . '=1')
-			->where($db->quoteName('type') . '!="url"');
-            
+			->where($db->quoteName('type') . '!="url"')
+            ->order($db->quoteName('level') . ' ASC');
+        
 		$db->setQuery($query);
         
         $menus = $db->loadObjectList();
+        $count = count($menus);
         if(!is_array($menus)){
             return;
         }
         
-        $fail = 0;
-        $success = 0;
         $root = str_replace('/administrator', '', JUri::base()) . 'index.php/';
 
+        set_time_limit(0);
+        ob_implicit_flush(TRUE);
+        
+        echo '<h3>It may take several minutes</h3><br/>';
+        $success = 0;
+        $current = 0;
         foreach($menus as $menu){
             $ch=curl_init();
             $path =  $root . $menu->path;
             curl_setopt($ch,CURLOPT_URL, $path);
             curl_setopt($ch, CURLOPT_HEADER,         false);           
             curl_setopt($ch,CURLOPT_RETURNTRANSFER,  true);
+            curl_setopt($ch,CURLOPT_USERAGENT,  'lscache_runner');
+            
             $buffer = curl_exec($ch);
-            curl_close($ch);
-            if (!$buffer || empty($buffer)){
-                $fail++;
-            }
-            else{
+            if (!empty($buffer)){
                 $success++;
             }
+            curl_close($ch);
+            echo '*';
+            $current++;
+            if($current%10==0){
+                echo floor($current*100/$count) .'%<br/>';
+            }
+            usleep(200);
         }
         
-        $this->app->enqueueMessage($success . " pages rebuild, " . $fail . ' pages failed.'  , "message");
-
+        $this->app->enqueueMessage($success . " page caches rebuild, " );
+        $this->app->redirect('index.php?option=com_lscache');   
     }
+    
     
     
 }
