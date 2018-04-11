@@ -126,32 +126,34 @@ class plgSystemLSCache extends JPlugin
         
         $this->menuItem = $app->getMenu()->getActive();
         if($this->menuItem){
+            if($this->menuItem->type=='url'){
+                $this->pageCachable = false;
+                return;
+            } 
             $this->cacheTags[] = "com_menus:" . $this->menuItem->id;
-            $link = $this->menuItem->link;
             if($this->menuItem->type=='alias'){
-                $menuParams = new Registry;
-                $menuParams->loadString($this->menuItem->params);
-                $menuid = $menuParams->get('aliasoption');
-                $menuItem = $app->getMenu()->getitem($menuid);
-                $this->cacheTags[] = "com_menus:" . $menuItem->id;
-                $link = $menuitem->link;
+                $menuParams = $this->menuItem->params;
+                $menuid = $menuParams->get('aliasoptions');
+                $this->cacheTags[] = "com_menus:" . $menuid;
             }
-            $link =  str_replace('index.php?', '', $link );
+            $this->pageElements = $this->menuItem->query;
         }
         else{
             $link = JUri::getInstance()->getQuery();
+            if(!empty($link)){
+                $this->pageElements = $this->explode2($link, '&', '=');
+            }
+            else if(!empty($app->input->get('option')));{
+                $this->pageElements["option"] = $app->input->get('option');
+            }        
         }
+        //$this->debug(__FUNCTION__ . var_export($this->pageElements,true));
 
-        if(!empty($link)){
-            $this->pageElements = $this->explode2($link, '&', '=');
-        }
-        else if(!empty($app->input->get('option')));{
-            $this->pageElements["option"] = $app->input->get('option');
-        }        
         if(isset($this->pageElements["option"])){
             $option = $this->pageElements["option"];
             $this->componentHelper->registerEvents($option);
         }
+        
         if ($app->isAdmin())
 		{
             $this->pageCachable = false;
@@ -258,6 +260,8 @@ class plgSystemLSCache extends JPlugin
             return;
         }
         
+        //$this->debug(__FUNCTION__ . $context . var_export($row,true) );
+        
         if(strpos($context, "mod_")===0){
             return;
         }
@@ -316,7 +320,7 @@ class plgSystemLSCache extends JPlugin
             }
         }
         
-        if(!$option){
+        if(empty($option) && !empty($this->menuItem)){
             if(!$this->menuItem->home){
                 return;
             }
@@ -337,6 +341,8 @@ class plgSystemLSCache extends JPlugin
         }
 
         $cacheTags = implode(',', $this->cacheTags);
+        //$this->debug(__FUNCTION__ . $cacheTags . var_export($this->pageElements,true) );
+        
         $cacheTimeout = $this->settings->get('cacheTimeout', 2000) * 60;
         if($this->menuItem->home){
             $cacheTimeout = $this->settings->get('homePageCacheTimeout', 2000) * 60;
@@ -516,6 +522,8 @@ class plgSystemLSCache extends JPlugin
         }
         
         $purgeTags = $this->componentHelper->onPurgeContent($option, $context, $row);
+        //$this->debug(__FUNCTION__ . $purgeTags . $context . var_export($row,true) );
+
         if($purgeTags){
             $this->lscInstance->purgePublic($purgeTags);
             return;
@@ -930,7 +938,7 @@ class plgSystemLSCache extends JPlugin
      *
      * @since    0.1
      */
-    private function debug($action)
+    public function debug($action)
     {
         $debugFile = "lscache.log";
 

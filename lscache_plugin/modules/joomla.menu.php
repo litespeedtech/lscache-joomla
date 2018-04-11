@@ -21,6 +21,9 @@ class LSCacheModuleJoomlaMenu extends LSCacheModuleBase
             return 'com_menus:' . $menuid;
         }
         else if($menutype){
+            if($this->plugin->getModuleCacheType($this->module)==2){
+                return 'com_menus';
+            }
             return 'com_menus:' . $menutype;
         }
         else{
