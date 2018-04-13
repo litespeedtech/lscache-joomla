@@ -37,12 +37,12 @@ class plgSystemLSCache extends JPlugin
     protected $menuItem;
     protected $moduleHelper;
     protected $componentHelper;
-    protected $cacheTags = array();
     
     public $lscInstance;
     public $pageElements = array();
     public $pageCachable = false;
     public $vary = array();
+    public $cacheTags = array();
     
     /**
      * Read LSCache Settings.
@@ -126,6 +126,8 @@ class plgSystemLSCache extends JPlugin
         
         $this->menuItem = $app->getMenu()->getActive();
         if($this->menuItem){
+            $this->app->setUserState('lscache_last_menuid', $this->menuItem->id);
+
             if($this->menuItem->type=='url'){
                 $this->pageCachable = false;
                 return;
@@ -207,49 +209,56 @@ class plgSystemLSCache extends JPlugin
         
         $cacheType = $this->getModuleCacheType($module);
         
-        if($cacheType==self::MODULE_EMBED){
+        if($cacheType==self::MODULE_ESI){
+            if(!$this->esiEnabled){
+                $this->cacheTags[] = 'com_modules:'. $module->id;            
+            }
+            else if(LITESPEED_ESI_SUPPORT){
+                $tag = $this->lscInstance->getSiteOnlyTag() . 'com_modules:' . $module->id;
+                $device = "desktop";
+                if($this->app->client->mobile){
+                    $device = 'mobile';
+                }
+                
+                if($module->lscache_ttl==0){
+                    $module->lscache_type=0;
+                }
+
+                if($module->lscache_type==1){
+                    $module->content = '<esi:include src="index.php?option=com_lscache&view=esi&moduleid=' . $module->id .'&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="public,no-vary" cache-tag="'. $tag . '" />';
+                }
+                else if($module->lscache_type==-1){
+                    $tag = 'public:' . $tag . ',' . $tag;
+                    $module->content = '<esi:include src="index.php?option=com_lscache&view=esi&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="private,no-vary" cache-tag="'. $tag .'" />';
+                }
+                else if($module->lscache_type==0){
+                    $module->content = '<esi:include src="' . 'index.php?option=com_lscache&view=esi&moduleid=' . $module->id . $this->getModuleAttribs($attribs) . '" cache-control="no-cache"/>';
+                }
+
+                $this->esion = true;
+                return;
+            }
+            else if(!LITESPEED_ESI_SUPPORT){
+                $this->cacheTags[] = 'com_modules:'. $module->id;            
+                if($module->lscache_type==0){
+                    $this->esittl = 0;
+                }
+                else{
+                    $this->esittl = min($this->esittl, $module->lscache_ttl);
+                    if($module->lscache_type==-1){
+                        $this->esipublic = false;
+                    }
+                }
+
+                $this->esion = true;
+                return;
+            }            
+            
+        }
+        else if($cacheType==self::MODULE_EMBED){
                 $this->cacheTags[] = 'com_modules:'. $module->id;            
         }
-        else if(LITESPEED_ESI_SUPPORT && $this->esiEnabled && ($cacheType==self::MODULE_ESI) ){
 
-            $tag = $this->lscInstance->getSiteOnlyTag() . 'com_modules:' . $module->id;
-            $device = "desktop";
-            if($this->app->client->mobile){
-                $device = 'mobile';
-            }
-            
-            if($module->lscache_ttl==0){
-                $module->lscache_type=0;
-            }
-            
-            if($module->lscache_type==1){
-                $module->content = '<esi:include src="index.php?option=com_lscache&view=esi&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="public,no-vary" cache-tag="'. $tag . '" />';
-            }
-            else if($module->lscache_type==-1){
-                $tag = 'public:' . $tag . ',' . $tag;
-                $module->content = '<esi:include src="index.php?option=com_lscache&view=esi&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="private,no-vary" cache-tag="'. $tag .'" />';
-            }
-            else if($module->lscache_type==0){
-                $module->content = '<esi:include src="' . 'index.php?option=com_lscache&view=esi&moduleid=' . $module->id  . $this->getModuleAttribs($attribs) . '" cache-control="no-cache"/>';
-            }
-            
-            $this->esion = true;
-            return;
-        }
-        else if(!LITESPEED_ESI_SUPPORT && $this->esiEnabled && ($cacheType==self::MODULE_ESI) ){
-            if($module->lscache_type==0){
-                $this->esittl = 0;
-            }
-            else{
-                $this->esittl = min($this->esittl, $module->lscache_ttl);
-                if($module->lscache_type==-1){
-                    $this->esipublic = false;
-                }
-            }
-            
-            $this->esion = true;
-            return;
-        }
         
     }
 
@@ -680,7 +689,7 @@ class plgSystemLSCache extends JPlugin
             
             $purgeTags = "com_modules:" . $row->id;
             
-            if(($cacheType!=self::MODULE_ESI)  || !$this->esiEnabled ){
+            if($cacheType==self::MODULE_TAG){
                 $purgeTags .= $this->getModuleMenuItems($row->id);
                 
                 if(defined('MODULE_MENUITEMS')){
@@ -969,19 +978,14 @@ class plgSystemLSCache extends JPlugin
                 return;
             }
             
-            if(defined("CACHE_PURGED")){
-                return;
-            }
-            
-            $purgeMessage =  $this->settings->get('purgeMessage', 1) == 1 ? true : false;
-            if(!$purgeMessage){
-                return;
-            }
-            
             $content = $this->lscInstance->getLogBuffer();
+
             if(stripos($content, 'X-LiteSpeed-Purge') !== false){
-                $this->app->enqueueMessage("Informed LiteSpeed Server to purge all related cached pages successfully", "message");
-                define("CACHE_PURGED", true);
+                $purgeMessage =  $this->settings->get('purgeMessage', 1) == 1 ? true : false;
+                if($this->app->isAdmin() && $purgeMessage && !defined("CACHE_PURGED")){
+                    $this->app->enqueueMessage("Informed LiteSpeed Server to purge all related cached pages successfully", "message");
+                    define("CACHE_PURGED", true);
+                }
             }
         }
         
@@ -1164,6 +1168,17 @@ class plgSystemLSCache extends JPlugin
             $attrib =  $_GET['attribs'];
             $attribs = $this->explode2($attrib, ';', ',');
         }
+
+        if(isset($_SERVER['HTTP_REFERER'])){
+            $uri = JURI::getinstance();
+            $uri->setPath("");
+            $uri->setQuery("");
+            $uri->setFragment("");
+            $uri->parse($_SERVER['HTTP_REFERER']);
+        }        
+        
+        $menuid = $this->app->getUserState('lscache_last_menuid', 0);
+        $app->getMenu->setActive($menuid);
         
         $content =  JModuleHelper::renderModule($module, $attribs);
         if($content){
@@ -1178,9 +1193,11 @@ class plgSystemLSCache extends JPlugin
             $this->lscInstance->config(array("public_cache_timeout"=>$cacheTimeout, "private_cache_timeout"=>$cacheTimeout));
             if($module->lscache_type==1){
                 $this->lscInstance->cachePublic($tag);
+                $this->log();
             }
             else if($module->lscache_type==-1){
-                $this->lscInstance->cachePrivate($tag);
+                $this->lscInstance->cachePrivate($tag,$tag);
+                $this->log();
             }
             
 			$app->setBody($content);
