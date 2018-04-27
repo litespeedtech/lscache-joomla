@@ -1,7 +1,7 @@
 <?php
 
 /**
- *  @since      1.0.0
+ *  @since      1.1.1
  *  @author     LiteSpeed Technologies <info@litespeedtech.com>
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
@@ -1324,7 +1324,7 @@ class plgSystemLSCache extends JPlugin
 		$db = JFactory::getDbo();
 
 		$query = $db->getQuery(true)
-			->select('path')
+			->select(array('path','link'))
 			->from('#__menu')
 			->where($db->quoteName('client_id') . '=0')
 			->where($db->quoteName('published') . '=1')
@@ -1339,7 +1339,17 @@ class plgSystemLSCache extends JPlugin
             return;
         }
         
-        $root = str_replace('/administrator', '', JUri::base()) . 'index.php/';
+        $config = JFactory::getConfig();
+        $sef = $config->get('sef');
+        $sef_rewrite = $config->get('sef_rewrite');
+        
+        if($sef_rewrite==1){
+            $root = JUri::root();
+        }  else if($sef!=1){
+            $root = JUri::root();
+        } else {
+            $root = JUri::root() . 'index.php/';
+        }
 
         set_time_limit(0);
         ob_implicit_flush(TRUE);
@@ -1349,7 +1359,11 @@ class plgSystemLSCache extends JPlugin
         $current = 0;
         foreach($menus as $menu){
             $ch=curl_init();
-            $path =  $root . $menu->path;
+            if($sef==1){
+                $path =  $root . $menu->path;
+            } else {
+                $path = $root . $menu->link;
+            }
             curl_setopt($ch,CURLOPT_URL, $path);
             curl_setopt($ch, CURLOPT_HEADER,         false);           
             curl_setopt($ch,CURLOPT_RETURNTRANSFER,  true);
