@@ -1,14 +1,11 @@
 <?php
-
 /**
  *  @since      1.1.1
  *  @author     LiteSpeed Technologies <info@litespeedtech.com>
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
-
 defined('_JEXEC') or die;
-
 /**
  * LiteSpeed Cache Plugin for Joomla running on LiteSpeed Webserver (LSWS).
  *
@@ -24,16 +21,13 @@ class plgSystemLSCache extends JPlugin
     const CATEGORY_CONTEXTS = array('com_categories.category', 'com_banners.category','com_contact.category','com_content.category','com_newsfeeds.category','com_users.category',
             'com_categories.categories', 'com_banners.categories','com_contact.categories','com_content.categories','com_newsfeeds.categories','com_users.categories');
     const CONTENT_CONTEXTS = array('com_content.article', 'com_content.featured','com_banner.banner', 'com_contact.contact', 'com_newsfeeds.newsfeed');
-
 	protected $app;
     protected $settings;
     protected $cacheEnabled;
-
     protected $esiEnabled;
     protected $esion = false;
     protected $esittl = 0;
     protected $esipublic = true;
-
     protected $menuItem;
     protected $moduleHelper;
     protected $componentHelper;
@@ -52,7 +46,6 @@ class plgSystemLSCache extends JPlugin
     public function __construct(&$subject, $config)
     {
         parent::__construct($subject, $config);
-
         $this->settings = JComponentHelper::getParams('com_lscache');
         $this->cacheEnabled = $this->settings->get('cacheEnabled', 1) == 1 ? true : false;
         $this->esiEnabled = $this->settings->get('esiEnabled', 1) == 1 ? true : false;
@@ -75,7 +68,6 @@ class plgSystemLSCache extends JPlugin
                 define( 'LITESPEED_SERVER_TYPE', 'NONE' ) ;
             }
         }
-
         // Checks if caching is allowed via server variable
         if ( ! empty ( $_SERVER['X-LSCACHE'] ) ||  LITESPEED_SERVER_TYPE === 'LITESPEED_SERVER_ADC' || defined( 'LITESPEED_CLI' ) ) {
             ! defined( 'LITESPEED_ALLOWED' ) &&  define( 'LITESPEED_ALLOWED', true ) ;
@@ -84,12 +76,10 @@ class plgSystemLSCache extends JPlugin
             $this->cacheEnabled = false;
             return;
         }
-
         // ESI const defination
         if ( ! defined( 'LITESPEED_ESI_SUPPORT' ) ) {
             define( 'LITESPEED_ESI_SUPPORT', LITESPEED_SERVER_TYPE !== 'LITESPEED_SERVER_OLS' ? true : false ) ;
         }
-
         JLoader::register('LiteSpeedCacheBase', __DIR__ . '/lscachebase.php', true);
         JLoader::register('LiteSpeedCacheCore', __DIR__ . '/lscachecore.php', true);        
         $this->lscInstance = new LiteSpeedCacheCore();
@@ -108,7 +98,6 @@ class plgSystemLSCache extends JPlugin
         JLoader::register('LSCacheComponentsHelper', __DIR__ . '/components/helper.php', true);
         $this->componentHelper = new LSCacheComponentsHelper($this);
     }
-
     /**
      * No cache for backend pages, for page with error messages, for PostBack request, for logged in user, for expired sessions, for exclude pages, etc.
      *
@@ -121,13 +110,11 @@ class plgSystemLSCache extends JPlugin
         }
         
         $this->pageCachable = true;
-
         $app  = $this->app;
         
         $this->menuItem = $app->getMenu()->getActive();
         if($this->menuItem){
             $this->app->setUserState('lscache_last_menuid', $this->menuItem->id);
-
             if($this->menuItem->type=='url'){
                 $this->pageCachable = false;
                 return;
@@ -150,7 +137,6 @@ class plgSystemLSCache extends JPlugin
             }        
         }
         //$this->debug(__FUNCTION__ . var_export($this->pageElements,true));
-
         if(isset($this->pageElements["option"])){
             $option = $this->pageElements["option"];
             $this->componentHelper->registerEvents($option);
@@ -189,7 +175,6 @@ class plgSystemLSCache extends JPlugin
         }
         
     }
-
     
     public function onAfterRenderModule($module, $attribs)
     {
@@ -223,7 +208,6 @@ class plgSystemLSCache extends JPlugin
                 if($module->lscache_ttl==0){
                     $module->lscache_type=0;
                 }
-
                 if($module->lscache_type==1){
                     $module->content = '<esi:include src="index.php?option=com_lscache&view=esi&moduleid=' . $module->id .'&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="public,no-vary" cache-tag="'. $tag . '" />';
                 }
@@ -234,7 +218,6 @@ class plgSystemLSCache extends JPlugin
                 else if($module->lscache_type==0){
                     $module->content = '<esi:include src="' . 'index.php?option=com_lscache&view=esi&moduleid=' . $module->id . $this->getModuleAttribs($attribs) . '" cache-control="no-cache"/>';
                 }
-
                 $this->esion = true;
                 return;
             }
@@ -249,7 +232,6 @@ class plgSystemLSCache extends JPlugin
                         $this->esipublic = false;
                     }
                 }
-
                 $this->esion = true;
                 return;
             }            
@@ -258,10 +240,8 @@ class plgSystemLSCache extends JPlugin
         else if($cacheType==self::MODULE_EMBED){
                 $this->cacheTags[] = 'com_modules:'. $module->id;            
         }
-
         
     }
-
     
     public function onContentPrepare($context, &$row, &$params, $page = 0)
     {
@@ -290,15 +270,11 @@ class plgSystemLSCache extends JPlugin
         $this->pageElements["context"] = $context;
         $this->pageElements["content"] = $row;
     }
-
-
-
     
     public function onAfterRender(){
         if(defined("LSCACHE_REBUILD")){
             $this->onLSCacheRebuildAll();
         }        
-
         if(!$this->pageCachable){
             return;
         }
@@ -317,12 +293,10 @@ class plgSystemLSCache extends JPlugin
                 $context = 'com_categories.category';
             }
         }
-
         $option = $this->pageElements["option"];
         if(isset($context)){
             $option = $this->getOption($context);
         }
-
         if(isset($this->pageElements["id"])){
             $id = $this->pageElements["id"];
         }
@@ -353,7 +327,6 @@ class plgSystemLSCache extends JPlugin
         else{
             $this->cacheTags[] =  $option;
         }
-
         $cacheTags = implode(',', $this->cacheTags);
         //$this->debug(__FUNCTION__ . $cacheTags . var_export($this->pageElements,true) );
         
@@ -361,7 +334,6 @@ class plgSystemLSCache extends JPlugin
         if($this->menuItem->home){
             $cacheTimeout = $this->settings->get('homePageCacheTimeout', 2000) * 60;
         }
-
         if(!LITESPEED_ESI_SUPPORT && $this->esiEnabled && $this->esion){
             $cacheTimeout = min($cacheTimeout, $this->esittl);
             if($cacheTimeout==0){
@@ -390,14 +362,12 @@ class plgSystemLSCache extends JPlugin
         $parts = explode(".", $context);
         return $parts[0];
     }
-
     
     public function onContentAfterSave($context, $row, $isNew)
     {
         if(!$this->cacheEnabled){
             return;
         }
-
         if($isNew){
             if (in_array($context, self::CONTENT_CONTEXTS) && $row->catid){
                 $this->lscInstance->purgePublic('com_categories, com_categories:'.$row->catid);
@@ -412,14 +382,12 @@ class plgSystemLSCache extends JPlugin
         $this->purgeContent($context, $row);
         $this->log();
     }
-
     
     public function onContentAfterDelete($context, $row)
     {
         if(!$this->cacheEnabled){
             return;
         }
-
         $this->purgeContent($context, $row);
         $this->log();
     }    
@@ -429,7 +397,6 @@ class plgSystemLSCache extends JPlugin
         if(!$this->cacheEnabled){
             return;
         }
-
         if(!$success){
             return;
         }
@@ -441,9 +408,7 @@ class plgSystemLSCache extends JPlugin
         $this->purgeContent("com_users.user", $user);
         $this->log();
     }
-
 	public function onUserAfterLogin($options){
-
         if ($this->app->isAdmin())
 		{
 			return;
@@ -456,9 +421,7 @@ class plgSystemLSCache extends JPlugin
         
     }
     
-
 	public function onUserAfterLogout($options){
-
         if ($this->app->isAdmin())
 		{
 			return;
@@ -475,7 +438,6 @@ class plgSystemLSCache extends JPlugin
         if(!$this->cacheEnabled){
             return;
         }
-
         if(!$success){
             return;
         }
@@ -514,7 +476,6 @@ class plgSystemLSCache extends JPlugin
 			$this->lscInstance->purgePublic($purgeTags);
             return;
 		}
-
         if($this->isOptionExcluded($option)){
             return;
         }
@@ -528,7 +489,6 @@ class plgSystemLSCache extends JPlugin
             $this->lscInstance->purgePublic($purgeTags);
             return;
         }
-
         if($context == "com_users.user"){
             $purgeTags='com_users,com_users:' . $row["id"];
             $this->lscInstance->purgePublic($purgeTags);
@@ -537,30 +497,24 @@ class plgSystemLSCache extends JPlugin
         
         $purgeTags = $this->componentHelper->onPurgeContent($option, $context, $row);
         //$this->debug(__FUNCTION__ . $purgeTags . $context . var_export($row,true) );
-
         if($purgeTags){
             $this->lscInstance->purgePublic($purgeTags);
             return;
         }
-
         if($row && $row instanceof JTable){
             $tableName = str_replace('#__', "DB", $row->getTableName());
             $purgeTags = $tableName . ':' . implode('-', $row->getPrimaryKey());
             $this->lscInstance->purgePublic($purgeTags);
             return;
         }
-
         $this->lscInstance->purgeAllPublic($option);    
     }
-
-
     public function onContentChangeState($context, $pks, $value)
     {
         if(!$this->cacheEnabled){
             return;
         }
         $option = $this->getOption($context);
-
         if($option=="com_plugins"){
             foreach($pks as $pk){
                 $row->id = $pk;
@@ -570,7 +524,6 @@ class plgSystemLSCache extends JPlugin
             $this->log();
             return;
         }
-
         if($option=="com_modules"){
             foreach($pks as $pk){
                 $row->id = $pk;
@@ -584,28 +537,23 @@ class plgSystemLSCache extends JPlugin
         if($this->isOptionExcluded($option)){
             return;
         }
-
         foreach($pks as $pk){
             $row->id = $pk;
             $this->purgeContent($context, $row);
         }
         $this->log();
     }
-
     public function onExtensionBeforeSave($context, $row, $isNew)
     {
         if(!$this->cacheEnabled){
             return;
         }
-
         if($context == "com_modules.module"){
             $purgeTags = "";
             $purgeTags = $this->getModuleMenuItems($row->id);
             define('MODULE_MENUITEMS', $purgeTags);
         }
-
     }
-
     
     public function onExtensionAfterSave($context, $row, $isNew)
     {
@@ -616,7 +564,6 @@ class plgSystemLSCache extends JPlugin
         $this->purgeExtension($context, $row);
         $this->log();
     }
-
     
     public function onExtensionBeforeDelete($context, $row)
     {
@@ -626,7 +573,6 @@ class plgSystemLSCache extends JPlugin
         $this->purgeExtension($context, $row);
         $this->log();
     }
-
     
     protected function purgeExtension($context, $row){
         
@@ -659,17 +605,14 @@ class plgSystemLSCache extends JPlugin
                 $this->lscInstance->purgeAllPublic();
                 return;
             }
-
             $purgeTags = array();
             
             $db = JFactory::getDbo();
-
             $query = $db->getQuery(true)
                 ->select('id')
                 ->from('#__menu')
                 ->where($db->quoteName('template_style_id') . '=' . (int)$row->id);
             $db->setQuery($query);
-
             $menus = $db->loadObjectList();
             
             foreach($menus as $menu){
@@ -681,7 +624,6 @@ class plgSystemLSCache extends JPlugin
         
         if($option == "com_modules"){
             $cacheType = $this->getModuleCacheType($row);
-
             if($cacheType==self::MODULE_PURGEALL){
                 $this->lscInstance->purgeAllPublic();
                 return;
@@ -720,7 +662,6 @@ class plgSystemLSCache extends JPlugin
             }
         }
     }
-
     public function getModuleMenuItems($moduleid){
         $db = JFactory::getDbo();
         $query = $db->getQuery(true)
@@ -729,7 +670,6 @@ class plgSystemLSCache extends JPlugin
             ->where($db->quoteName('moduleid') . '=' . (int)$moduleid);
         $db->setQuery($query);
         $menus = $db->loadObjectList();
-
         $tags = "";
         foreach($menus as $menu){
             $tags .= ",com_menus:" . $menu->menuid;
@@ -737,10 +677,7 @@ class plgSystemLSCache extends JPlugin
         
         return $tags;
     }
-
-
     protected function explode2($str, $d1, $d2){
-
         $result = array();
         
         $Parts = explode($d1, trim($str));
@@ -754,7 +691,6 @@ class plgSystemLSCache extends JPlugin
     
     
     protected function implode2(array $arr, $d1, $d2){
-
         $arr1 = array();
         
         foreach($arr as $key=>$val){
@@ -774,7 +710,6 @@ class plgSystemLSCache extends JPlugin
         $this->log();
     }
     
-
     public function onExtensionAfterUpdate($installer, $eid)
     {
         if(!$this->cacheEnabled){
@@ -783,7 +718,6 @@ class plgSystemLSCache extends JPlugin
         $this->purgeInstallation($eid);
         $this->log();
     }
-
     
     public function onExtensionBeforeUninstall($eid)
     {
@@ -794,7 +728,6 @@ class plgSystemLSCache extends JPlugin
         $this->purgeInstallation($eid);
         $this->log();
     }
-
     
     protected function purgeInstallation($eid, $isNew = false){
         
@@ -862,16 +795,13 @@ class plgSystemLSCache extends JPlugin
             return $modules[0];
         }
     }
-
     
     public function getModuleCacheType($module){
         
         $db = JFactory::getDbo();
-
         if(!empty($module->cache_type)){
             return $module->cache_type;
         }
-
         $query = $db->getQuery(true)
             ->select('*')
             ->from('#__modules_lscache')
@@ -891,7 +821,6 @@ class plgSystemLSCache extends JPlugin
             ->where($db->quoteName('moduleid') . '=' . (int)$module->id);
         $db->setQuery($query1);
         $pages =  (int) $db->loadResult();
-
         if($pages===null){
             $module->cache_type = self::MODULE_EMBED;
             return self::MODULE_EMBED; 
@@ -904,17 +833,14 @@ class plgSystemLSCache extends JPlugin
             $module->cache_type = self::MODULE_PURGEALL;
             return self::MODULE_PURGEALL;
         }
-
         $module->cache_type = self::MODULE_PURGETAG;
         return self::MODULE_PURGETAG;
     }
   
-
     
     protected function getModules($element){
        
 		$db = JFactory::getDbo();
-
 		$query = $db->getQuery(true)
 			->select('*')
 			->from('#__modules')
@@ -924,12 +850,25 @@ class plgSystemLSCache extends JPlugin
 		$modules =  $db->loadObjectList();
         return $modules;
     }
+    
+    protected function getTemplate($element)
+    {
+        $db = JFactory::getDbo();
 
+        $query = $db->getQuery(true)
+                ->select('*')
+                ->from('#__template_styles')
+                ->where($db->quoteName('template') . '="' . $element . '"');
+                
+        $db->setQuery($query);
+
+        $template = $db->loadObject();
+        return $template;
+    }
     
     protected function getExtension($eid){
        
 		$db = JFactory::getDbo();
-
 		$query = $db->getQuery(true)
 			->select('*')
 			->from('#__extensions')
@@ -945,7 +884,6 @@ class plgSystemLSCache extends JPlugin
             return null;
         }
     }
-
     
     /**
      * a simple debug function only for development usage
@@ -955,10 +893,8 @@ class plgSystemLSCache extends JPlugin
     public function debug($action)
     {
         $debugFile = "lscache.log";
-
         date_default_timezone_set("America/New_York");
         list( $usec, $sec ) = explode(' ', microtime());
-
         if (!defined("LOG_INIT")) {
             define("LOG_INIT", true);
             file_put_contents($debugFile, "\n\n" . date('m/d/y H:i:s') . substr($usec, 1, 4), FILE_APPEND);
@@ -979,7 +915,6 @@ class plgSystemLSCache extends JPlugin
             }
             
             $content = $this->lscInstance->getLogBuffer();
-
             if(stripos($content, 'X-LiteSpeed-Purge') !== false){
                 $purgeMessage =  $this->settings->get('purgeMessage', 1) == 1 ? true : false;
                 if($this->app->isAdmin() && $purgeMessage && !defined("CACHE_PURGED")){
@@ -995,11 +930,9 @@ class plgSystemLSCache extends JPlugin
         if ($logLevelSetting < 0) {
             return;
         }
-
         if ($logLevel > $logLevelSetting) {
             return;
         }
-
         JLog::add($content, $logLevel, 'LiteSpeedCache Plugin');
     }
     
@@ -1012,7 +945,6 @@ class plgSystemLSCache extends JPlugin
         }
         return false;
     }
-
     /**
      * Check if the page is excluded from the cache or not.
      *
@@ -1035,7 +967,6 @@ class plgSystemLSCache extends JPlugin
                 return true;
             }
         }
-
         // Check if regular expressions are being used
         $excludeURIs = $this->settings->get('excludeURLs', '');
         if (!$excludeURIs) {
@@ -1046,7 +977,6 @@ class plgSystemLSCache extends JPlugin
         if (!$exclusions) {
             return false;
         }
-
         $path = JUri::getInstance()->toString(array('path', 'query', 'fragment'));
         foreach ($exclusions as $exclusion) {
             if ($exclusion == '') {
@@ -1065,7 +995,6 @@ class plgSystemLSCache extends JPlugin
     }
     
         
-
     protected function isLoginExcluded()
     {
         $excludeMenuItems = $this->settings->get('loginExcludeMenus', array());
@@ -1075,7 +1004,6 @@ class plgSystemLSCache extends JPlugin
                 return true;
             }
         }
-
         // Check if regular expressions are being used
         $excludeURIs = $this->settings->get('loginExcludeURLs', '');
         if (!$excludeURIs) {
@@ -1086,7 +1014,6 @@ class plgSystemLSCache extends JPlugin
         if (!$exclusions) {
             return false;
         }
-
         $path = JUri::getInstance()->toString(array('path', 'query', 'fragment'));
         foreach ($exclusions as $exclusion) {
             if ($exclusion == '') {
@@ -1168,7 +1095,6 @@ class plgSystemLSCache extends JPlugin
             $attrib =  $_GET['attribs'];
             $attribs = $this->explode2($attrib, ';', ',');
         }
-
         if(isset($_SERVER['HTTP_REFERER'])){
             $uri = JURI::getinstance();
             $uri->setPath("");
@@ -1186,7 +1112,6 @@ class plgSystemLSCache extends JPlugin
             if($tag1!==""){
                 $tag .= ',' . $tag1;
             }
-
             $this->moduleHelper->afterESIRender($module, $content);
         
             $cacheTimeout = $module->lscache_ttl * 60;
@@ -1216,7 +1141,6 @@ class plgSystemLSCache extends JPlugin
         return '';
     }
     
-
     private function getVaryKey()
     {
         //$lang = JFactory::getLanguage();
@@ -1260,7 +1184,6 @@ class plgSystemLSCache extends JPlugin
         else if(isset($this->vary['login'])){
             unset($this->vary['login']);
         }
-
         
         if(count($this->vary)){
             ksort($this->vary);
@@ -1272,7 +1195,6 @@ class plgSystemLSCache extends JPlugin
         }
     }
     
-
     /**
      *
      *  set or delete cache vary cookie, if cookie need no change return true;
@@ -1287,7 +1209,6 @@ class plgSystemLSCache extends JPlugin
         }
         
         $inputCookie  = $this->app->input->cookie;
-
         if ($value == "") {
             if (isset($_COOKIE[LiteSpeedCacheBase::VARY_COOKIE])) {
                 $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, null, time()-1);
@@ -1300,7 +1221,6 @@ class plgSystemLSCache extends JPlugin
             $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, $value, 0);
             return false;
         }
-
         if($_COOKIE[LiteSpeedCacheBase::VARY_COOKIE]!=$value){
             $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, $value, 0);
             return false;
@@ -1320,9 +1240,7 @@ class plgSystemLSCache extends JPlugin
         if(!function_exists('curl_version')){
             reutrn;
         }
-
 		$db = JFactory::getDbo();
-
 		$query = $db->getQuery(true)
 			->select(array('path','link'))
 			->from('#__menu')
@@ -1350,7 +1268,6 @@ class plgSystemLSCache extends JPlugin
         } else {
             $root = JUri::root() . 'index.php/';
         }
-
         set_time_limit(0);
         ob_implicit_flush(TRUE);
         
@@ -1367,6 +1284,10 @@ class plgSystemLSCache extends JPlugin
             curl_setopt($ch,CURLOPT_URL, $path);
             curl_setopt($ch, CURLOPT_HEADER,         false);           
             curl_setopt($ch,CURLOPT_RETURNTRANSFER,  true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+            curl_setopt($ch, CURLOPT_MAXREDIRS, 1);
             curl_setopt($ch,CURLOPT_USERAGENT,  'lscache_runner');
             
             $buffer = curl_exec($ch);
