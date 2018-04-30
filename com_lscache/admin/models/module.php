@@ -67,6 +67,9 @@ class LSCacheModelModule extends JModelAdmin
             $dispatcher->trigger("onExtensionAfterSave", array("com_lscache.module", $table, false));
         }
 
+		$app = JFactory::getApplication();
+        $app->setUserState("com_lscache.modules.lscache_type", '1');
+
         return true;
     }
     

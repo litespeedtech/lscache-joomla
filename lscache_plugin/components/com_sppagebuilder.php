@@ -29,8 +29,12 @@ class LSCacheComponentSPPageBuilder extends LSCacheComponentBase{
     
     public function onPurgeContent($context, $row)
     {
+        $this->plugin->purgeObject->option = "com_sppagebuilder";
+        $this->plugin->purgeObject->idField = "id";
+        
         if(!empty($row->id)){
-            return "com_sppagebuilder, com_sppagebuilder:" . $row->id;
+            $this->plugin->purgeObject->tags =  "com_sppagebuilder, com_sppagebuilder:" . $row->id;
+            $this->plugin->purgeObject->ids[] = $row->id;
         }
     }
     

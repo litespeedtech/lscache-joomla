@@ -22,8 +22,6 @@ class LSCacheComponentJabuilder extends LSCacheComponentBase{
         }
     }
     
-    
-    
     public function onJubSaveItem($item){
         $this->plugin->purgeContent("com_jabuilder.item", $item);
     }
@@ -34,14 +32,19 @@ class LSCacheComponentJabuilder extends LSCacheComponentBase{
     
     public function onPurgeContent($context, $row)
     {
+        $this->plugin->purgeObject->option = "com_jabuilder";
+        $this->plugin->purgeObject->idField = "id";
+
         if($context == "com_jabuilder.page"){
-            return "com_jabuilder, com_jabuilder.item:" . $row->id;
+            $this->plugin->purgeObject->tags =  "com_jabuilder, com_jabuilder.item:" . $row->id;
+            $this->plugin->purgeObject->ids[] = $row->id;
         }
         if($context == "com_jabuilder.item"){
-            return "com_jabuilder, com_jabuilder.item:" . $row->id;
+            $this->plugin->purgeObject->tags =  "com_jabuilder, com_jabuilder.item:" . $row->id;
+            $this->plugin->purgeObject->ids[] = $row->id;
         }
         else{
-            return "com_jabuilder";
+            $this->plugin->purgeObject->tags =  "com_jabuilder";
         }
     }
     

@@ -39,6 +39,9 @@ abstract class LSCacheComponentBase  extends JPlugin
         else{
             return $context;
         }
-
+    }
+    
+    public function getComMap(){
+        return array();
     }
 }

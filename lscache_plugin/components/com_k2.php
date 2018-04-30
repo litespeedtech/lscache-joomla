@@ -35,12 +35,13 @@ class LSCacheComponentK2 extends LSCacheComponentBase{
             $this->plugin->onContentChangeState($context, $pks, $value);
         }
     }
-
-     
+    
     public function onPurgeContent($context, $row){
+        
+        $this->plugin->purgeObject->option = "com_k2";
+        $this->plugin->purgeObject->idField = "id";
         if($context == "com_k2.item"){
             $purgeTags =  'com_k2,com_k2.item:' . $row->id . ",com_k2.category:" . $row->catid . ",com_k2.user:" . $row->created_by;
-
             $tags = JRequest::getVar('tags', NULL, 'POST', 'array');
 			if (count($tags))
 			{
@@ -50,19 +51,22 @@ class LSCacheComponentK2 extends LSCacheComponentBase{
                     $purgeTags .= ",com_k2.tag:" . $tag;
                 }
             }
-            return $purgeTags;
+            $this->plugin->purgeObject->tags = $purgeTags;
+            $this->plugin->purgeObject->ids = array($row->id, $row->catid);
+            
         }
         else if($context=="com_k2.tag"){
-            return "com_k2," . $context . ":" . $row->name;
+            $this->plugin->purgeObject->tags = "com_k2," . $context . ":" . $row->name;
         }
         else if(!empty($row->id)){
-            return "com_k2," . $context . ":" . $row->id;
+            $this->plugin->purgeObject->tags = "com_k2," . $context . ":" . $row->id;
+            $this->plugin->purgeObject->ids[] = $row->id;
         }
         else{
-            return 'com_k2';
+            $this->plugin->purgeObject->tags = 'com_k2';
         }
+        
    }
-   
    
     public function getTags($option, $pageElements){
 
@@ -86,6 +90,6 @@ class LSCacheComponentK2 extends LSCacheComponentBase{
             return $option;
         }
 
-    }   
+    }
 }
 

@@ -31,8 +31,8 @@
                             <option value="-1">COM_LSCACHE_ESI_CACHETYPE_PRIVATE</option>
                             <option value="0">COM_LSCACHE_ESI_CACHETYPE_NONE</option>
                 </field>
+                <field name="note_lscache_type" type="note" class="alert alert-success" description="COM_LSCACHE_ESI_CACHETYPE_NOTE" />
 
-                
 		<field
 				name="lscache_ttl"
 				type="text"

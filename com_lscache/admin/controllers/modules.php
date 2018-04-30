@@ -48,7 +48,7 @@ class LSCacheControllerModules extends JControllerAdmin
 
 			$model = $this->getModel();
 			$model->renderESI($pks);
-			$this->setMessage(count($pks) .JText::_('COM_LSCACHE_MODULES_CACHE_ESI'));
+			$this->setMessage(count($pks) .JText::_('COM_LSCACHE_MODULES_RENDER_ESI'));
 		}
 		catch (Exception $e)
 		{
@@ -75,7 +75,7 @@ class LSCacheControllerModules extends JControllerAdmin
 
 			$model = $this->getModel();
 			$model->renderNormal($pks);
-			$this->setMessage(count($pks) .JText::_('COM_LSCACHE_MODULES_CACHE_NORMAL'));
+			$this->setMessage(count($pks) .JText::_('COM_LSCACHE_MODULES_RENDER_NORMAL'));
 		}
 		catch (Exception $e)
 		{

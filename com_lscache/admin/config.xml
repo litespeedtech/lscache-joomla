@@ -34,11 +34,7 @@
     <fieldset name="exclude"  addfieldpath="/administrator/components/com_lscache/models/fields"  label="COM_LSCACHE_FIELDSET_EXCLUDE_LABEL" description="COM_LSCACHE_FIELDSET_EXCLUDE_DESC" >
         <field name="excludeOptions" type="components" required="false" multiple="multiple" label="COM_LSCACHE_FIELD_EXCLUDE_COMPONENT_LABEL"/>
         <field name="excludeMenus" type="menuitem" menuType="mainmenu" published="1" clientId="0" multiple="multiple" label="COM_LSCACHE_FIELD_EXCLUDE_MENU_LABEL" />
-        <field name="excludeURLs" type="textarea" default="" class="input-xxlarge" rows="15" filter="raw" label="COM_LSCACHE_FIELD_EXCLUDE_URL_LABEL" description="COM_LSCACHE_FIELD_EXCLUDE_URL_DESC" />
-    </fieldset>
-
-    <fieldset name="permissions" label="JCONFIG_PERMISSIONS_LABEL" description="JCONFIG_PERMISSIONS_DESC" >
-        <field name="rules" type="rules" label="JCONFIG_PERMISSIONS_LABEL" class="inputbox" filter="rules" validate="rules" component="com_lscache" section="component" />
+        <field name="excludeURLs" type="textarea" default="" class="input-xxlarge" rows="15" filter="raw" label="COM_LSCACHE_FIELD_EXCLUDE_URL_LABEL" hint="COM_LSCACHE_FIELD_EXCLUDE_URL_DESC" />
     </fieldset>
 
     <fieldset name="advanced" label="COM_LSCACHE_FIELDSET_ADVANCED_LABEL"  description="COM_LSCACHE_FIELDSET_ADVANCED_DESC" >
@@ -47,24 +43,59 @@
             <option value="1">JENABLED</option>
         </field>
         <field name="homePageCacheTimeout" type="text" default="2000" label="COM_LSCACHE_FIELD_HOMEPAGE_TIMEOUT_LABEL" description="COM_LSCACHE_FIELD_HOMEPAGE_TIMEOUT_DESC"/>
+        <field name="mobileCacheVary" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_VARY_MOBILE_LABEL" description="COM_LSCACHE_FIELD_VARY_MOBILE_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
+
         <field name="purgeMessage" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_PURGE_MESSAGE_LABEL" description="COM_LSCACHE_FIELD_PURGE_MESSAGE_DESC">
             <option value="0">JDISABLED</option>
             <option value="1">JENABLED</option>
         </field>
-	<field name="cleanCache" default="purgeAllCache" type="text" label="COM_LSCACHE_FIELD_CLEAN_CACHE_LABEL" description="COM_LSCACHE_FIELD_CLEAN_CACHE_DESC" class="input-xxlarge input-large-text" size="40" maxlength="40" />
+	<field name="cleanCache" default="purgeAllCache" type="text" label="COM_LSCACHE_FIELD_CLEAN_CACHE_LABEL" class="input-xxlarge input-large-text" size="40" maxlength="40" />
+        <field name="note_cleancache" type="note" class="alert alert-success" description="COM_LSCACHE_FIELD_CLEAN_CACHE_NOTE" />
+        
     </fieldset>
 
     <fieldset name="login" label="COM_LSCACHE_FIELDSET_LOGIN_LABEL" description="COM_LSCACHE_FIELDSET_LOGIN_DESC" >
-        <field name="loginCachable" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_LOGIN_CACHABLE_LABEL" description="COM_LSCACHE_FIELD_LOGIN_CACHABLE_DESC">
+        <field name="loginCachable" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_LOGIN_CACHABLE_LABEL"  description="COM_LSCACHE_FIELD_LOGIN_CACHABLE_DESC" >
             <option value="0">JDISABLED</option>
             <option value="1">JENABLED</option>
         </field>
-        <field name="loginCacheVary" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_LOGIN_CACHEVARY_LABEL" description="COM_LSCACHE_FIELD_LOGIN_CACHEVARY_DESC">
+        <field name="loginCacheVary" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_LOGIN_CACHEVARY_LABEL"  description="COM_LSCACHE_FIELD_LOGIN_CACHEVARY_DESC">
             <option value="0">JDISABLED</option>
             <option value="1">JENABLED</option>
         </field>
         <field name="loginExcludeMenus" type="menuitem" menuType="mainmenu" published="1" clientId="0" multiple="multiple" label="COM_LSCACHE_FIELD_EXCLUDE_MENU_LABEL" />
-        <field name="loginExcludeURLs" type="textarea" default="" class="input-xxlarge" rows="15" filter="raw" label="COM_LSCACHE_FIELD_EXCLUDE_URL_LABEL" description="COM_LSCACHE_FIELD_EXCLUDE_URL_DESC" />
+        <field name="loginExcludeURLs" type="textarea" default="" class="input-xxlarge" rows="15" filter="raw" label="COM_LSCACHE_FIELD_EXCLUDE_URL_LABEL" hint="COM_LSCACHE_FIELD_EXCLUDE_URL_DESC" />
+        <field name="note_loginexclude" type="note" class="alert alert-success"  description="COM_LSCACHE_FIELD_LOGIN_EXCLUDE_NOTE" />
     </fieldset>
-                        
+
+    <fieldset name="recache" label="COM_LSCACHE_FIELDSET_RECACHE_LABEL" description="COM_LSCACHE_FIELDSET_RECACHE_DESC" >
+        <field name="autoRecache" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_RECACHE_AUTORECACHE_LABEL">
+            <option value="2">COM_LSCACHE_FIELD_RECACHE_AUTORECACHE_AGGRESSIVE</option>
+            <option value="1">COM_LSCACHE_FIELD_RECACHE_AUTORECACHE_MODERATE</option>
+            <option value="0">JDISABLED</option>
+        </field>
+        <field name="note_autorecache" type="note" class="alert alert-success" label="COM_LSCACHE_FIELD_RECACHE_AUTORECACHE_DESC" description="COM_LSCACHE_FIELD_RECACHE_AUTORECACHE_NOTE" />
+
+        <field name="recacheDuration" type="text" default="30" label="COM_LSCACHE_FIELD_RECACHE_DURATION_LABEL" description="COM_LSCACHE_FIELD_RECACHE_DURATION_DESC"/>
+        <field name="recacheComponent" type="list" default="" label="COM_LSCACHE_FIELD_RECACHE_COMPONENT_LABEL"  description="COM_LSCACHE_FIELD_RECACHE_COMPONENT_DESC" >
+            <option value="">Please Select</option>
+            <option value="com_virtuemart">com_virtuemart: VirtueMart Component</option>
+        </field>
+                
+    </fieldset>
+
+    <fieldset name="permissions" label="JCONFIG_PERMISSIONS_LABEL" description="JCONFIG_PERMISSIONS_DESC" >
+        <field name="rules" type="rules" label="JCONFIG_PERMISSIONS_LABEL" class="inputbox" filter="rules" validate="rules" component="com_lscache" section="component" />
+    </fieldset>
+
+    <fieldset name="support" label="COM_LSCACHE_FIELDSET_SUPPORT_LABEL" >
+        <field name="note_support_forum" type="note"  label="COM_LSCACHE_FIELD_SUPPORT_FORUM_LABEL" description="COM_LSCACHE_FIELD_SUPPORT_FORUM_DESC" />
+        <field name="note_support_slack" type="note"  label="COM_LSCACHE_FIELD_SUPPORT_SLACK_LABEL" description="COM_LSCACHE_FIELD_SUPPORT_SLACK_DESC" />
+        <field name="note_support_wiki" type="note"  label="COM_LSCACHE_FIELD_SUPPORT_WIKI_LABEL" description="COM_LSCACHE_FIELD_SUPPORT_WIKI_DESC" />
+        <field name="note_support_github" type="note"  label="COM_LSCACHE_FIELD_SUPPORT_GITHUB_LABEL" description="COM_LSCACHE_FIELD_SUPPORT_GITHUB_DESC" />
+    </fieldset>
+
 </config>

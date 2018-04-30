@@ -50,7 +50,7 @@ class LSCacheComponentsHelper
         return $this->getInstanceInternal($component);
     }
     
-    public function getInstanceInternal($component){
+    protected function getInstanceInternal($component){
         
         $className = $component[self::COM_CLASSNAME];
         if (!class_exists($className)){
@@ -87,7 +87,7 @@ class LSCacheComponentsHelper
         if($com_instance==NULL){
             return false;
         }
-        return $com_instance->onPurgeContent($context, $row);
+        $com_instance->onPurgeContent($context, $row);
     }
     
     public function getTags($com_name, $pageElements){
@@ -98,4 +98,11 @@ class LSCacheComponentsHelper
         return $com_instance->getTags($com_name, $pageElements);
     }
     
+    public function getComMap($com_name){
+        $com_instance = $this->getInstance($com_name);
+        if($com_instance==NULL){
+            return array();
+        }
+        return $com_instance->getComMap();
+    }
 }
