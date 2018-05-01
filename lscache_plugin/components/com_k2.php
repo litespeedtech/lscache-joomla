@@ -51,19 +51,19 @@ class LSCacheComponentK2 extends LSCacheComponentBase{
                     $purgeTags .= ",com_k2.tag:" . $tag;
                 }
             }
-            $this->plugin->purgeObject->tags = $purgeTags;
+            $this->plugin->purgeObject->tags[] = $purgeTags;
             $this->plugin->purgeObject->ids = array($row->id, $row->catid);
             
         }
         else if($context=="com_k2.tag"){
-            $this->plugin->purgeObject->tags = "com_k2," . $context . ":" . $row->name;
+            $this->plugin->purgeObject->tags[] = "com_k2," . $context . ":" . $row->name;
         }
         else if(!empty($row->id)){
-            $this->plugin->purgeObject->tags = "com_k2," . $context . ":" . $row->id;
+            $this->plugin->purgeObject->tags[] = "com_k2," . $context . ":" . $row->id;
             $this->plugin->purgeObject->ids[] = $row->id;
         }
         else{
-            $this->plugin->purgeObject->tags = 'com_k2';
+            $this->plugin->purgeObject->tags[] = 'com_k2';
         }
         
    }

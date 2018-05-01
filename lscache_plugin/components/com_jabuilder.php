@@ -36,15 +36,15 @@ class LSCacheComponentJabuilder extends LSCacheComponentBase{
         $this->plugin->purgeObject->idField = "id";
 
         if($context == "com_jabuilder.page"){
-            $this->plugin->purgeObject->tags =  "com_jabuilder, com_jabuilder.item:" . $row->id;
+            $this->plugin->purgeObject->tags[] =  "com_jabuilder, com_jabuilder.item:" . $row->id;
             $this->plugin->purgeObject->ids[] = $row->id;
         }
         if($context == "com_jabuilder.item"){
-            $this->plugin->purgeObject->tags =  "com_jabuilder, com_jabuilder.item:" . $row->id;
+            $this->plugin->purgeObject->tags[] =  "com_jabuilder, com_jabuilder.item:" . $row->id;
             $this->plugin->purgeObject->ids[] = $row->id;
         }
         else{
-            $this->plugin->purgeObject->tags =  "com_jabuilder";
+            $this->plugin->purgeObject->tags[] =  "com_jabuilder";
         }
     }
     

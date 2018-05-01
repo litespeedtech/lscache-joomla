@@ -73,7 +73,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
     {
         $category_tag = $this->getProductCategoryTags($product_data->virtuemart_product_id);
         $tag = "com_virtuemart, com_virtuemart.product:" . $product_data->virtuemart_product_id . $category_tag;
-        $this->plugin->purgeObject->tags = $tag;
+        $this->plugin->purgeObject->tags[] = $tag;
         if($this->plugin->purgeObject->autoRecache==0){
             return;
         }
@@ -88,7 +88,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         }
         $category_tag = $this->getProductCategoryTags($id);
         $tag = "com_virtuemart, com_virtuemart.product:" . $id . $category_tag;
-        $this->plugin->purgeObject->tags = $tag;
+        $this->plugin->purgeObject->tags[] = $tag;
         if($this->plugin->purgeObject->autoRecache==0){
             return;
         }
@@ -100,7 +100,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
     {
         $tag = "com_virtuemart, com_virtuemart.vendor:" . $data->virtuemart_vendor_id;
         $this->plugin->lscInstance->purgePublic($tag);
-        $this->plugin->purgeObject->tags = $tag;
+        $this->plugin->purgeObject->tags[] = $tag;
     }
 
     public function plgVmConfirmedOrder($cart, $orderDetails)
@@ -116,7 +116,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         
         $category_tag = $this->getProductCategoryTags($productids);
         $tag .= $category_tag;
-        $this->plugin->purgeObject->tags = $tag;
+        $this->plugin->purgeObject->tags[] = $tag;
         if($this->plugin->purgeObject->autoRecache==0){
             return;
         }
@@ -130,12 +130,12 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
             $this->plgVmOnDeleteProduct($row->virtuemart_product_id,true);
         } else if ($context == "com_virtuemart.category") {
             $tag = "com_virtuemart, com_virtuemart.category:" . $row->virtuemart_category_id;
-            $this->plugin->purgeObject->tags = $tag;
+            $this->plugin->purgeObject->tags[] = $tag;
             $this->plugin->purgeObject->urls[] = 'index.php?option=com_virtuemart&view=category&virtuemart_category_id='.$row->virtuemart_category_id;
         } else if ($context == "com_virtuemart.vendor") {
             $this->plgVmAfterVendorStore($row);
         } else {
-            $this->plugin->purgeObject->tags = "com_virtuemart";
+            $this->plugin->purgeObject->tags[] = "com_virtuemart";
         }
     }
 

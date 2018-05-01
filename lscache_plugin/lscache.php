@@ -526,8 +526,10 @@ class plgSystemLSCache extends JPlugin
             $this->purgeObject[] = $row->id;
             return;
         }
-
-        $purgeTags = $this->componentHelper->onPurgeContent($option, $context, $row);
+        if($this->componentHelper->supportComponent($option)){
+            $purgeTags = $this->componentHelper->onPurgeContent($option, $context, $row);
+            return;
+        }
 
         if ($row && $row instanceof JTable) {
             $tableName = str_replace('#__', "DB", $row->getTableName());
