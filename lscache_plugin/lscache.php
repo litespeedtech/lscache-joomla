@@ -1,7 +1,7 @@
 <?php
 
 /**
- *  @since      1.0.0
+ *  @since      1.2.0
  *  @author     LiteSpeed Technologies <info@litespeedtech.com>
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
@@ -25,7 +25,6 @@ class plgSystemLSCache extends JPlugin
     const CONTENT_CONTEXTS = array('com_content.article', 'com_content.featured', 'com_banner.banner', 'com_contact.contact', 'com_newsfeeds.newsfeed');
 
     protected $app;
-    protected $settings;
     protected $cacheEnabled;
     protected $esiEnabled;
     protected $esion = false;
@@ -34,6 +33,8 @@ class plgSystemLSCache extends JPlugin
     protected $menuItem;
     protected $moduleHelper;
     protected $componentHelper;
+
+    public $settings;
     public $lscInstance;
     public $pageElements = array();
     public $pageCachable = false;
@@ -51,6 +52,11 @@ class plgSystemLSCache extends JPlugin
         parent::__construct($subject, $config);
 
         $this->settings = JComponentHelper::getParams('com_lscache');
+        if(empty($this->settings->get('firstRun'))){
+            $this->saveComponent(true);
+            $this->saveHtaccess(true);
+        }
+        
         $this->cacheEnabled = $this->settings->get('cacheEnabled', 1) == 1 ? true : false;
         if (!$this->cacheEnabled) {
             return;
@@ -194,16 +200,15 @@ class plgSystemLSCache extends JPlugin
             return;
         }
 
+        $cacheType = $this->getModuleCacheType($module);
+
         $tag = $this->moduleHelper->getModuleTags($module);
         if ($tag !== "") {
-            if (empty($module->cache_type) || ($module->cache_type != self::MODULE_ESI)) {
+            if (($module->cache_type != self::MODULE_ESI) || (!$this->esiEnabled)) {
                 $this->cacheTags[] = $tag;
-            } else if (!$this->esiEnabled) {
-                $this->pageCachable = false;
             }
         }
 
-        $cacheType = $this->getModuleCacheType($module);
 
         if ($cacheType == self::MODULE_ESI) {
             if (!$this->esiEnabled) {
@@ -1215,7 +1220,7 @@ class plgSystemLSCache extends JPlugin
         }
 
         $menuid = $this->app->getUserState('lscache_last_menuid', 0);
-        $app->getMenu->setActive($menuid);
+        $app->getMenu()->setActive($menuid);
 
         $content = JModuleHelper::renderModule($module, $attribs);
         if ($content) {
@@ -1467,7 +1472,7 @@ class plgSystemLSCache extends JPlugin
         return $diff;
     }
 
-    private function purgeAction()
+    public function purgeAction()
     {
         if ((!$this->purgeObject->purgeAll) && (count($this->purgeObject->tags) < 1)) {
             return;
@@ -1521,7 +1526,7 @@ class plgSystemLSCache extends JPlugin
             $urls = array_map(function($menu){return $menu->path;}, $menus);
             $recacheComponent = $this->settings->get('recacheComponent', false);
             if ($recacheComponent) {
-                $compUrls = $this->componentHelper->getCompMap($recacheComp);
+                $compUrls = $this->componentHelper->getComMap($recacheComponent);
                 $urls = array_merge($urls, $compUrls);
             }
         } else if ($this->purgeObject->autoRecache > 0) {
@@ -1563,5 +1568,53 @@ class plgSystemLSCache extends JPlugin
             $this->app->enqueueMessage($msg, "message");
         } 
     }
+    
+    private function saveComponent($firstRun = false){
+        if($firstRun){
+            $this->settings->set('firstRun', date("Y-m-d H:i:s"));
+            $this->settings->set('cleanCache', md5((String)rand()));
+        }
+        $componentid = JComponentHelper::getComponent('com_lscache')->id;
+        $table = JTable::getInstance('extension');
+        $table->load($componentid);
+        $table->bind(array('params' => $this->settings->toString()));
+        $table->store();
+    }
+    
+    
+    private function saveHtaccess($firstRun = false){
+        $htaccess = JPATH_ROOT . '/.htaccess';
+
+        $directives = '### LITESPEED_CACHE_START - Do not remove this line' . PHP_EOL;
+        $directives .= '<IfModule LiteSpeed>' . PHP_EOL;
+        $directives .= 'CacheLookup on' . PHP_EOL;
+        if($this->settings->get('mobileCacheVary',0)==1){
+            $directives .= 'RewriteEngine On' . PHP_EOL;
+            $directives .= 'RewriteCond %{HTTP_USER_AGENT} Mobile|Android|Silk/|Kindle|BlackBerry|Opera\ Mini|Opera\ Mobi [NC] RewriteRule .* - [E=Cache-Control:vary=ismobile]' . PHP_EOL;
+        }
+        $directives .= '</IfModule>' . PHP_EOL;
+        $directives .= '### LITESPEED_CACHE_END';
+        
+        $pattern = '@### LITESPEED_CACHE_START - Do not remove this line.*?### LITESPEED_CACHE_END@s';
+        
+        if (file_exists($htaccess))
+        {
+            $content = file_get_contents($htaccess);
+            $newContent = preg_replace($pattern, $directives, $content, -1, $count);
+            
+            if(($count<=0) && $firstRun){
+                $newContent =  preg_replace('@\<IfModule\ LiteSpeed\>.*?\<\/IfModule\>@s', '', $content);
+                $newContent =  preg_replace('@CacheLookup\ on@s', '', $newContent);
+				file_put_contents($htaccess, $newContent . PHP_EOL . $directives . PHP_EOL);
+            } else if($count>0) {
+				file_put_contents($htaccess, $newContent);
+            } else {
+                file_put_contents($htaccess, PHP_EOL . $directives . PHP_EOL, FILE_APPEND);
+            }
+        } else {
+				file_put_contents($htaccess, $directives);
+        }
+    }
+    
 
 }

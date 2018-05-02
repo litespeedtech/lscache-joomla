@@ -24,6 +24,7 @@ class LSCacheComponentJabuilder extends LSCacheComponentBase{
     
     public function onJubSaveItem($item){
         $this->plugin->purgeContent("com_jabuilder.item", $item);
+        $this->plugin->purgeAction();
     }
 
     public function onJubLoadItem($item){

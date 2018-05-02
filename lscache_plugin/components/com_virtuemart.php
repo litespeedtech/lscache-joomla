@@ -1,7 +1,7 @@
 <?php
 
 /*
- *  @since      1.1.1
+ *  @since      1.2.0
  *  @author     LiteSpeed Technologies <info@litespeedtech.com>
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
@@ -43,7 +43,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
 
         $user = JFactory::getUser();
         if ($user->get('guest')) {
-            if ($view == "cart") {
+            if (($view == "cart") || ($view == "user")) {
                 $this->plugin->pageCachable = false;
             }
         } else if ($view != "category") {
@@ -75,10 +75,13 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         $tag = "com_virtuemart, com_virtuemart.product:" . $product_data->virtuemart_product_id . $category_tag;
         $this->plugin->purgeObject->tags[] = $tag;
         if($this->plugin->purgeObject->autoRecache==0){
+            $this->plugin->purgeAction();
             return;
         }
         $this->plugin->purgeObject->urls = $this->getProductCategoryUrls($product_data->virtuemart_product_id);
         $this->plugin->purgeObject->urls[] = 'index.php?option=com_virtuemart&view=productdetails&virtuemart_product_id=' . $product_data->virtuemart_product_id.'&virtuemart_category_id=0';
+        $this->plugin->purgeAction();
+        
     }
 
     public function plgVmOnDeleteProduct($id, $ok)
@@ -90,17 +93,19 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         $tag = "com_virtuemart, com_virtuemart.product:" . $id . $category_tag;
         $this->plugin->purgeObject->tags[] = $tag;
         if($this->plugin->purgeObject->autoRecache==0){
+            $this->plugin->purgeAction();
             return;
         }
         $this->plugin->purgeObject->urls = $this->getProductCategoryUrls($id);
         $this->plugin->purgeObject->urls[] = 'index.php?option=com_virtuemart&view=productdetails&virtuemart_product_id=' . $id.'&virtuemart_category_id=0';
+        $this->plugin->purgeAction();
     }
 
     public function plgVmAfterVendorStore($data)
     {
         $tag = "com_virtuemart, com_virtuemart.vendor:" . $data->virtuemart_vendor_id;
-        $this->plugin->lscInstance->purgePublic($tag);
         $this->plugin->purgeObject->tags[] = $tag;
+        $this->plugin->purgeAction();
     }
 
     public function plgVmConfirmedOrder($cart, $orderDetails)
@@ -118,16 +123,19 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         $tag .= $category_tag;
         $this->plugin->purgeObject->tags[] = $tag;
         if($this->plugin->purgeObject->autoRecache==0){
+            $this->plugin->purgeAction();
             return;
         }
         $urls = $this->getProductCategoryUrls($id);
         $this->plugin->purgeObject->urls = array_merge($urls, $productUrls);
+        $this->plugin->purgeAction();
     }
 
     public function onPurgeContent($context, $row)
     {
         if ($context == "com_virtuemart.product") {
             $this->plgVmOnDeleteProduct($row->virtuemart_product_id,true);
+            
         } else if ($context == "com_virtuemart.category") {
             $tag = "com_virtuemart, com_virtuemart.category:" . $row->virtuemart_category_id;
             $this->plugin->purgeObject->tags[] = $tag;
@@ -163,7 +171,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
     {
         $db = JFactory::getDbo();
         $query = $db->getQuery(true)
-                ->select($db->quoteName(array('virtuemart_category_id, virtuemart_product_id')))
+                ->select($db->quoteName(array('virtuemart_category_id', 'virtuemart_product_id')))
                 ->from('#__virtuemart_product_categories');
         if (is_array($productid)) {
             $products = implode(',', $productid);
@@ -216,7 +224,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
                 ->from('#__virtuemart_categories');
         try {
             $db->setQuery($query);
-            $cateids = $db->loadColumns();
+            $cateids = $db->loadColumn();
             foreach($cateids as $cateid){
                 $comUrls[] = 'index.php?option=com_virtuemart&view=category&virtuemart_category_id='.$cateid;
             }
@@ -225,7 +233,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         }
 
         $query = $db->getQuery(true)
-                ->select($db->quoteName(array('virtuemart_category_id, virtuemart_product_id')))
+                ->select($db->quoteName(array('virtuemart_category_id', 'virtuemart_product_id')))
                 ->from('#__virtuemart_product_categories');
         try {
             $db->setQuery($query);
@@ -241,7 +249,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         }
 
         $query = $db->getQuery(true)
-                ->select($db->quoteName(array('virtuemart_category_id, virtuemart_product_id')))
+                ->select($db->quoteName('virtuemart_product_id'))
                 ->from('#__virtuemart_products');
         try {
             $db->setQuery($query);

@@ -10,10 +10,13 @@
 class LSCacheModuleJoomlaLogin extends LSCacheModuleBase
 {
     public function getModuleTags(){
-        if($this->plugin->getModuleCacheType($this->module)!=1){
-            $this->module->cache_type = 1;
-            $this->module->lscache_type = -1;
-            $this->module->lscache_ttl = 14;
+        $loginCachable = $this->plugin->settings->get('loginCachable', 0) == 1 ? true : false;
+        if ($loginCachable) {
+            if($this->plugin->getModuleCacheType($this->module)!=1){
+                $this->module->cache_type = 1;
+                $this->module->lscache_type = -1;
+                $this->module->lscache_ttl = 14;
+            }
         }
         return "";
     }
