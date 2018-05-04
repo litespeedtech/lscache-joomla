@@ -42,6 +42,12 @@
             <option value="0">JDISABLED</option>
             <option value="1">JENABLED</option>
         </field>
+
+        <field name="loginESI" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_LOGIN_ESI_LABEL" description="COM_LSCACHE_FIELD_LOGIN_ESI_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
+        
         <field name="homePageCacheTimeout" type="text" default="2000" label="COM_LSCACHE_FIELD_HOMEPAGE_TIMEOUT_LABEL" description="COM_LSCACHE_FIELD_HOMEPAGE_TIMEOUT_DESC"/>
         <field name="mobileCacheVary" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_VARY_MOBILE_LABEL" description="COM_LSCACHE_FIELD_VARY_MOBILE_DESC">
             <option value="0">JDISABLED</option>

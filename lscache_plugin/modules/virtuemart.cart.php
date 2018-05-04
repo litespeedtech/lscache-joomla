@@ -14,8 +14,9 @@ class LSCacheModuleVirtueMartCart extends LSCacheModuleBase
             $this->module->cache_type = 1;
             $this->module->lscache_type = -1;
             $this->module->lscache_ttl = 120;
+            $this->module->lscache_tag = 'com_virtuemart.cart';
         }
-        return "com_virtuemart.cart";
+        return "";
     }
     
 }
