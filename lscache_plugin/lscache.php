@@ -52,7 +52,7 @@ class plgSystemLSCache extends JPlugin
         parent::__construct($subject, $config);
 
         $this->settings = JComponentHelper::getParams('com_lscache');
-        if(empty($this->settings->get('firstRun'))){
+        if(empty($this->settings->get('cacheEnabled'))){
             $this->saveComponent(true);
             $this->saveHtaccess(true);
         }
@@ -1630,9 +1630,11 @@ class plgSystemLSCache extends JPlugin
     
     private function saveComponent($firstRun = false){
         if($firstRun){
-            $this->settings->set('firstRun', date("Y-m-d H:i:s"));
-            $this->settings->set('cleanCache', md5((String)rand()));
             $this->settings->set('excludeOptions', array('com_users'));
+        }
+        
+        if($this->settings->get('cleanCache', 'purgeAllCache')=="purgeAllCache"){
+            $this->settings->set('cleanCache', md5((String)rand()));
         }
         $componentid = JComponentHelper::getComponent('com_lscache')->id;
         $table = JTable::getInstance('extension');
