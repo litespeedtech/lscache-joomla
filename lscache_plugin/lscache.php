@@ -16,6 +16,10 @@ defined('_JEXEC') or die;
 class plgSystemLSCache extends JPlugin
 {
 
+    const LOG_ERROR = 3;
+    const LOG_INFO = 6;
+    const LOG_DEBUG = 8;
+    
     const MODULE_ESI = 1;
     const MODULE_PURGEALL = 2;
     const MODULE_PURGETAG = 3;
@@ -1063,7 +1067,7 @@ class plgSystemLSCache extends JPlugin
      *
      * @since    1.1.0
      */
-    public function log($content = null, $logLevel = JLOG::INFO)
+    public function log($content = null, $logLevel = self::LOG_INFO)
     {
         if ($content == null) {
             if (!$this->lscInstance) {
@@ -1482,6 +1486,7 @@ class plgSystemLSCache extends JPlugin
             else{
                 $url = JRoute::_ ($url,FALSE);
             }
+            
             curl_setopt($ch, CURLOPT_URL, $root . $url);
             curl_setopt($ch, CURLOPT_HEADER, false);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -1493,7 +1498,7 @@ class plgSystemLSCache extends JPlugin
             $buffer = curl_exec($ch);
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
-            //$this->debug( $root . $url);
+            $this->log( $root . $url, self::LOG_DEBUG);
 
             if (in_array($httpcode, $acceptCode)) {
                 $success++;
