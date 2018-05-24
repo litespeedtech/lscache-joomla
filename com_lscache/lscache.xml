@@ -8,7 +8,7 @@
     <authorEmail>info@litespeedtech.com</authorEmail>
     <authorUrl>www.litespeedtech.com</authorUrl>
     <copyright>Copyright Info</copyright>
-    <license>License Info</license>
+    <license>GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html</license>
     <!--  The version string is recorded in the components table -->
     <version>1.2.0</version>
     <!-- The description is optional and defaults to the name -->
