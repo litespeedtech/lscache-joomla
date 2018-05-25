@@ -61,6 +61,9 @@ class plgSystemLSCache extends JPlugin
             $this->saveHtaccess(true);
         }
         
+        $lang = JFactory::getLanguage();
+        $lang->load('plg_system_lscache', JPATH_ADMINISTRATOR, null, false, true);        
+
         $this->cacheEnabled = $this->settings->get('cacheEnabled', 1) == 1 ? true : false;
         if (!$this->cacheEnabled) {
             return;
@@ -111,9 +114,6 @@ class plgSystemLSCache extends JPlugin
 
         $this->purgeObject = (object) array('tags' => array(), 'urls' => array(), 'option' => "", 'idField' => "", 'ids' => array(), 'purgeAll' => false, 'recacheAll' => false);
         $this->purgeObject->autoRecache = $this->settings->get('autoRecache', 0);
-        
-        $lang = JFactory::getLanguage();
-        $lang->load('plg_system_lscache', JPATH_ADMINISTRATOR, null, false, true);        
     }
 
     /**
@@ -776,7 +776,6 @@ class plgSystemLSCache extends JPlugin
         foreach ($arr as $key => $val) {
             $arr1[] = urlencode($key) . $d2 . urlencode($val);
         }
-
         return implode($d1, $arr1);
     }
 
@@ -787,7 +786,6 @@ class plgSystemLSCache extends JPlugin
         }
         $this->purgeInstallation($eid, true);
         $this->purgeAction();
-        
     }
 
     public function onExtensionAfterUpdate($installer, $eid)
@@ -797,7 +795,6 @@ class plgSystemLSCache extends JPlugin
         }
         $this->purgeInstallation($eid);
         $this->purgeAction();
-        
     }
 
     public function onExtensionBeforeUninstall($eid)
@@ -1273,9 +1270,9 @@ class plgSystemLSCache extends JPlugin
 
             $appInstance = JApplication::getInstance('site');
             $router = $appInstance->getRouter();
-            $result = $router->parse($uri);
-            if(isset($result['itemid'])){
-                $menuid=$result['itemid'];
+            $result = $router->parse(clone $uri);
+            if(isset($result['Itemid'])){
+                $menuid=$result['Itemid'];
                 $app->getMenu()->setActive($menuid);
             }
         }
