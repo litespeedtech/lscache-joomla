@@ -944,27 +944,6 @@ class plgSystemLSCache extends JPlugin
         if (!empty($module->cache_type)) {
             return $module->cache_type;
         }
-
-        $query = $db->getQuery(true)
-                ->select('*')
-                ->from('#__modules_lscache')
-                ->where($db->quoteName('moduleid') . '=' . (int) $module->id);
-        $db->setQuery($query);
-        $rows = $db->loadObjectList();
-        if (count($rows) > 0) {
-            $module->cache_type = self::MODULE_ESI;
-            $module->lscache_type = $rows[0]->lscache_type;
-            $module->lscache_ttl = $rows[0]->lscache_ttl;
-            return self::MODULE_ESI;
-        }
-
-        if(($this->settings->get('loginESI',1)==1) && ((stripos($module->module, 'login')!==FALSE) || (stripos($module->title, 'login')!==FALSE))) {
-            $module->cache_type = self::MODULE_ESI;
-            $module->lscache_type = -1;
-            $module->lscache_ttl = 14;
-            $module->lscache_tag = 'joomla.login';
-            return self::MODULE_ESI;
-        }
         
         $query1 = $db->getQuery(true)
                 ->select('MIN(menuid)')
@@ -972,20 +951,43 @@ class plgSystemLSCache extends JPlugin
                 ->where($db->quoteName('moduleid') . '=' . (int) $module->id);
         $db->setQuery($query1);
         $pages = (int) $db->loadResult();
-
+        $module->pages = $pages;
         if ($pages === null) {
             $module->cache_type = self::MODULE_EMBED;
-            return self::MODULE_EMBED;
         } else if (empty($module->position)) {
             $module->cache_type = self::MODULE_EMBED;
-            return self::MODULE_EMBED;
         } else if ($pages <= 0) {
             $module->cache_type = self::MODULE_PURGEALL;
-            return self::MODULE_PURGEALL;
+        } else {
+            $module->cache_type = self::MODULE_PURGETAG;
+        }
+        
+        $query = $db->getQuery(true)
+                ->select('*')
+                ->from('#__modules_lscache')
+                ->where($db->quoteName('moduleid') . '=' . (int) $module->id);
+        $db->setQuery($query);
+        $rows = $db->loadObjectList();
+        if (count($rows) > 0) {
+            $module->original_cache_type = $module->cache_type;
+            $module->cache_type = self::MODULE_ESI;
+            $module->lscache_type = $rows[0]->lscache_type;
+            $module->lscache_ttl = $rows[0]->lscache_ttl;
+        } else  if(($this->settings->get('loginESI',1)==1) && ((stripos($module->module, 'login')!==FALSE) || (stripos($module->title, 'login')!==FALSE))) {
+            $module->original_cache_type = $module->cache_type;
+            $module->cache_type = self::MODULE_ESI;
+    if(($module->original_cache_type == self::MODULE_PURGEALL ) || ($this->menuItem->home)){
+                $module->lscache_type = -1;
+                $module->lscache_ttl = 14;
+                $module->lscache_tag = 'joomla.login';
+            } else {
+                $module->lscache_type = 0;
+                $module->lscache_ttl = 0;
+            }
         }
 
-        $module->cache_type = self::MODULE_PURGETAG;
-        return self::MODULE_PURGETAG;
+        return $module->cache_type;
+
     }
 
     protected function getModules($element)
@@ -1261,7 +1263,29 @@ class plgSystemLSCache extends JPlugin
             $attribs = $this->explode2($attrib, ';', ',');
         }
 
-        if (isset($_SERVER['HTTP_REFERER'])) {
+        if($module->original_cache_type==self::MODULE_PURGEALL){
+            $root = JURI::root() ;
+            $config = JFactory::getConfig();
+            $sef_rewrite = $config->get('sef_rewrite');
+            if($sef_rewrite!=1){
+                $root .= 'index.php';
+            }
+
+            $uri = JURI::getinstance();
+            $uri->setPath("");
+            $uri->setQuery("");
+            $uri->setFragment("");
+            $uri->parse( $root);
+
+            $appInstance = JApplication::getInstance('site');
+            $router = $appInstance->getRouter();
+            $uri1 = clone $uri ;
+            $result = $router->parse($uri1);
+            if(isset($result['Itemid'])){
+                $menuid=$result['Itemid'];
+                $app->getMenu()->setActive($menuid);
+            }
+        } else  if (isset($_SERVER['HTTP_REFERER'])) {
             $uri = JURI::getinstance();
             $uri->setPath("");
             $uri->setQuery("");
@@ -1274,6 +1298,11 @@ class plgSystemLSCache extends JPlugin
             if(isset($result['Itemid'])){
                 $menuid=$result['Itemid'];
                 $app->getMenu()->setActive($menuid);
+            }
+        } else {
+            $menuItems = getModuleMenuItems($moduleid);
+            if(!empty($menuItems)){
+                $app->getMenu()->setActive($menuItems[0]);
             }
         }
 

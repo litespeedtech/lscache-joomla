@@ -11,6 +11,7 @@ class LSCacheModuleVirtueMartCart extends LSCacheModuleBase
 {
     public function getModuleTags(){
         if($this->plugin->getModuleCacheType($this->module)!=1){
+            $this->module->original_cache_type = $this->module->cache_type;
             $this->module->cache_type = 1;
             $this->module->lscache_type = -1;
             $this->module->lscache_ttl = 120;

@@ -13,6 +13,7 @@ class LSCacheModuleJoomlaLogin extends LSCacheModuleBase
 
         $cacheType = $this->plugin->getModuleCacheType($this->module);
         if(($cacheType!=plgSystemLSCache::MODULE_ESI) && ($this->plugin->settings->get('loginESI',1)==1)){
+            $this->module->original_cache_type = $this->module->cache_type;
             $this->module->cache_type = plgSystemLSCache::MODULE_ESI;
             $this->module->lscache_type = -1;
             $this->module->lscache_ttl = 14;
