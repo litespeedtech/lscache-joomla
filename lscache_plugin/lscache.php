@@ -1591,11 +1591,13 @@ class plgSystemLSCache extends JPlugin {
     private function saveComponent($firstRun = false) {
         if ($firstRun) {
             $this->settings->set('excludeOptions', array('com_users'));
+            $this->settings->set('cacheEnabled', "1");
         }
 
         if ($this->settings->get('cleanCache', 'purgeAllCache') == "purgeAllCache") {
             $this->settings->set('cleanCache', md5((String) rand()));
         }
+        
         $componentid = JComponentHelper::getComponent('com_lscache')->id;
         $table = JTable::getInstance('extension');
         $table->load($componentid);

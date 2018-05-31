@@ -85,7 +85,7 @@
         </field>
         <field name="note_autorecache" type="note" class="alert alert-success" label="COM_LSCACHE_FIELD_RECACHE_AUTORECACHE_DESC" description="COM_LSCACHE_FIELD_RECACHE_AUTORECACHE_NOTE" />
 
-        <field name="recacheDuration" type="text" default="30" label="COM_LSCACHE_FIELD_RECACHE_DURATION_LABEL" description="COM_LSCACHE_FIELD_RECACHE_DURATION_DESC"/>
+        <field name="recacheDuration" type="text" default="5" label="COM_LSCACHE_FIELD_RECACHE_DURATION_LABEL" description="COM_LSCACHE_FIELD_RECACHE_DURATION_DESC"/>
         <field name="recacheComponent" type="list" default="" label="COM_LSCACHE_FIELD_RECACHE_COMPONENT_LABEL"  description="COM_LSCACHE_FIELD_RECACHE_COMPONENT_DESC" >
             <option value="">Please Select</option>
             <option value="com_virtuemart">com_virtuemart: VirtueMart Component</option>
