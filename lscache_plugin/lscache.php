@@ -453,7 +453,7 @@ class plgSystemLSCache extends JPlugin {
         $this->log();
     }
 
-    public function onUserAfterDelete($user, $success, $msg) {
+    public function onUserBeforeDelete($user, $success, $msg) {
         if (!$this->cacheEnabled) {
             return;
         }
@@ -519,11 +519,14 @@ class plgSystemLSCache extends JPlugin {
         }
 
         if ($context == "com_users.user") {
+            if (!is_array($row)){
+                return;
+            }
             $purgeTags = 'com_users,com_users:' . $row["id"];
             $this->purgeObject->tags[] = $purgeTags;
             $this->purgeObject->option = $option;
             $this->purgeObject->idField = 'id';
-            $this->purgeObject[] = $row->id;
+            $this->purgeObject->ids[] = $row->id;
             return;
         }
         if ($this->componentHelper->supportComponent($option)) {
