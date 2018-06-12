@@ -59,7 +59,7 @@
             <option value="1">JENABLED</option>
         </field>
 	<field name="cleanCache" default="purgeAllCache" type="text" label="COM_LSCACHE_FIELD_CLEAN_CACHE_LABEL" class="input-xxlarge input-large-text" size="40" maxlength="40" />
-        <field name="note_cleancache" type="note" class="alert alert-success" description="COM_LSCACHE_FIELD_CLEAN_CACHE_NOTE" />
+        <field name="note_cleancache" type="notepurge" class="alert alert-success" description="COM_LSCACHE_FIELD_CLEAN_CACHE_NOTE" />
         
     </fieldset>
 
