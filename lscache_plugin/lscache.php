@@ -1145,7 +1145,22 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
 
-        $cleancache = $app->input->get('cleancache');
+        $adminIPs = $app->input->get('adminIPs');
+        if (!empty($adminIPs)) {
+            
+            $ip = $this->getVisitorIP();
+            $serverIP = $_SERVER['SERVER_ADDR'];
+
+            if((strpos($adminIPs, $ip)===FALSE) && ($ip!=="127.0.0.1") && ($ip!==$serverIP)){
+                http_response_code(403);
+                $app->close();
+                return;
+            }
+            
+        }
+        
+        
+        $cleancache = $this->settings->get('cleancache');
         if (!empty($cleancache)) {
             $cleanWords = $this->settings->get('cleanCache', 'purgeAllCache');
             if ($cleancache != $cleanWords) {
@@ -1639,6 +1654,27 @@ class plgSystemLSCache extends JPlugin {
         } else {
             file_put_contents($htaccess, $directives);
         }
+    }
+    
+    
+    protected function getVisitorIP() {
+        $ip = '';
+        $jinput = JFactory::getApplication()->input;
+        $ip = $jinput->server->get('REMOTE_ADDR');
+        if ($jinput->server->get('HTTP_CLIENT_IP')) {
+            $ip = $jinput->server->get('HTTP_CLIENT_IP');
+        } else if($jinput->server->get('HTTP_X_FORWARDED_FOR')) {
+            $ip = $jinput->server->get('HTTP_X_FORWARDED_FOR');
+        } else if($jinput->server->get('HTTP_X_FORWARDED')) {
+            $ip = $jinput->server->get('HTTP_X_FORWARDED');
+        } else if($jinput->server->get('HTTP_FORWARDED_FOR')) {
+            $ip = $jinput->server->get('HTTP_FORWARDED_FOR');
+        } else if($jinput->server->get('HTTP_FORWARDED')) {
+            $ip = $jinput->server->get('HTTP_FORWARDED');
+        } else if($jinput->server->get('REMOTE_ADDR')) {
+            $ip = $jinput->server->get('REMOTE_ADDR');
+        }
+        return $ip;
     }
 
 }

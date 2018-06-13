@@ -25,11 +25,14 @@ class JFormFieldNotePurge extends JFormFieldNote
 	protected function getLabel()
 	{
 		$description = (string) $this->element['description'];
+        $description = JText::_($description);
         $settings = JComponentHelper::getParams('com_lscache');
         $secureWords = $settings->get('cleanCache');
         $root = JURI::root();
-        $url = $root . 'index.php?option=com_lscache&cleancache=' . $secureWords ;
-        $this->element['description'] = JText::_($description) . '<a href="' . $url .'">' . $url . '</a>';
+        $description = str_replace('{webroot}', $root, $description);
+        $description = str_replace('{secureword}', $secureWords, $description);
+        
+        $this->element['description'] = $description;
         return parent::getLabel();
     }
     
