@@ -169,6 +169,10 @@ class plgSystemLSCache extends JPlugin {
                     $this->purgeAction();
                 }
             }
+            else if(!empty($option) && ($option == "com_plugins") && ($app->input->get('jchtask')=="cleancache")){
+                    $this->lscInstance->purgeAllPublic();
+                    $this->log();
+            }
         } else {
             $this->checkVary();
         }
