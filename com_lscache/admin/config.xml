@@ -54,10 +54,6 @@
             <option value="1">JENABLED</option>
         </field>
 
-        <field name="purgeMessage" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_PURGE_MESSAGE_LABEL" description="COM_LSCACHE_FIELD_PURGE_MESSAGE_DESC">
-            <option value="0">JDISABLED</option>
-            <option value="1">JENABLED</option>
-        </field>
         <field name="adminIPs" type="textarea" default="" class="input-xxlarge" rows="10" filter="raw" label="COM_LSCACHE_FIELD_ADMIN_IP_LABEL"  description="COM_LSCACHE_FIELD_ADMIN_IP_DESCRIPTION" hint="COM_LSCACHE_FIELD_ADMIN_IP_HINT" />
 	<field name="cleanCache" default="purgeAllCache" type="text" label="COM_LSCACHE_FIELD_CLEAN_CACHE_LABEL" class="input-xxlarge input-large-text" size="40" maxlength="40" />
         <field name="note_cleancache" type="notepurge" class="alert alert-success" description="COM_LSCACHE_FIELD_CLEAN_CACHE_NOTE" />

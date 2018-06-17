@@ -159,20 +159,7 @@ class plgSystemLSCache extends JPlugin {
 
         if ($app->isAdmin()) {
             $this->pageCachable = false;
-            if (!empty($option) && ($option == "com_templates") && isset($this->pageElements["view"]) && ($this->pageElements["view"] == "template")) {
-                $task = $app->input->get('task');
-                if (!empty($task) && in_array($task, array("template.save", "template.apply", "template.delete"))) {
-                    $this->purgeTemplate(true);
-                    $this->purgeAction();
-                } else if (!empty($task)) {
-                    $this->purgeTemplate(false);
-                    $this->purgeAction();
-                }
-            }
-            else if(!empty($option) && ($option == "com_plugins") && ($app->input->get('jchtask')=="cleancache")){
-                    $this->lscInstance->purgeAllPublic();
-                    $this->log();
-            }
+            $this->purgeAdmin($option);
         } else {
             $this->checkVary();
         }
@@ -723,6 +710,29 @@ class plgSystemLSCache extends JPlugin {
         }
     }
 
+    protected function purgeAdmin($option ){
+        $app = $this->app;
+
+        if (!empty($option) && ($option == "com_templates") && isset($this->pageElements["view"]) && ($this->pageElements["view"] == "template")) {
+            $task = $app->input->get('task');
+            if (!empty($task) && in_array($task, array("template.save", "template.apply", "template.delete"))) {
+                $this->purgeTemplate(true);
+                $this->purgeAction();
+            } else if (!empty($task)) {
+                $this->purgeTemplate(false);
+                $this->purgeAction();
+            }
+        }   else if(!empty($option) && ($option == "com_plugins") && ($app->input->get('jchtask')=="cleancache")){
+                $this->purgeObject->purgeAll = true;
+                $this->purgeAction();
+        }   else if(!empty($option) && ($option == "com_cache") && (!empty($task=$app->input->get('task')))){
+            if(in_array($task, array("deleteAll", "delete"))  ){
+                $this->purgeObject->purgeAll = true;
+                $this->purgeAction();
+            }
+        }
+    }
+    
     public function getModuleMenuItems($moduleid) {
         $db = JFactory::getDbo();
         $query = $db->getQuery(true)
@@ -1518,7 +1528,7 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
 
-        if ($this->purgeObject->autoRecache > 0) {
+        if ((!$this->purgeObject->purgeAll) && ($this->purgeObject->autoRecache > 0)) {
             $root = JUri::root();
             $cleanWords = $this->settings->get('cleanCache', 'purgeAllCache');
             $url = $root . "index.php?option=com_lscache&cleancache=" . $cleanWords;
@@ -1547,16 +1557,20 @@ class plgSystemLSCache extends JPlugin {
         } else if ($this->purgeObject->purgeAll) {
             $this->lscInstance->purgeAllPublic();
             $this->log();
+            if ($this->app->isAdmin()) {
+                $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_NEEDMANUALRECACHE'), "message");
+            }
+            
         } else if (count($this->purgeObject->tags) > 0) {
             $purgeTags = implode(',', $this->purgeObject->tags);
             $this->lscInstance->purgePublic($purgeTags);
             $this->log();
         }
 
-        $purgeMessage = $this->settings->get('purgeMessage', 1) == 1 ? true : false;
-        if ($this->app->isAdmin() && $purgeMessage) {
+        if ($this->app->isAdmin()) {
             $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_PURGEINFORMED'), "message");
         }
+        
     }
 
     private function recacheAction($recacheAll = true) {
@@ -1596,16 +1610,8 @@ class plgSystemLSCache extends JPlugin {
 
         $showProgress = ($recacheAll && (!$this->purgeObject->recacheAll)) ? true : false;
         $msg = $this->crawlUrls($urls, $showProgress);
-        $purgeMessage = $this->settings->get('purgeMessage', 1) == 1 ? true : false;
 
-        if (!$this->app->isAdmin()) {
-            return;
-        } else if (!$purgeMessage) {
-            return;
-        } else if ($this->purgeObject->purgeAll) {
-            $msg = JText::_('COM_LSCACHE_PLUGIN_NEEDMANUALRECACHE');
-            $this->app->enqueueMessage($msg, "message");
-        } else if (!empty($msg)) {
+        if ((!$this->app->isAdmin()) && (!empty($msg))) {
             $this->app->enqueueMessage($msg, "message");
         }
     }
