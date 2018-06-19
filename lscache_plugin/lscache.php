@@ -257,6 +257,10 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
 
+        if($context == "com_content.featured"){
+            return;
+        }
+        
         if (isset($this->pageElements["id"])) {
             if (empty($row->id)) {
                 return;
@@ -710,10 +714,12 @@ class plgSystemLSCache extends JPlugin {
         }
     }
 
+
     protected function purgeAdmin($option ){
         $app = $this->app;
-
-        if (!empty($option) && ($option == "com_templates") && isset($this->pageElements["view"]) && ($this->pageElements["view"] == "template")) {
+        if (empty($option)){
+            return;
+        }   else if (($option == "com_templates") && isset($this->pageElements["view"]) && ($this->pageElements["view"] == "template")) {
             $task = $app->input->get('task');
             if (!empty($task) && in_array($task, array("template.save", "template.apply", "template.delete"))) {
                 $this->purgeTemplate(true);
@@ -722,15 +728,24 @@ class plgSystemLSCache extends JPlugin {
                 $this->purgeTemplate(false);
                 $this->purgeAction();
             }
-        }   else if(!empty($option) && ($option == "com_plugins") && ($app->input->get('jchtask')=="cleancache")){
+        }   else if(($option == "com_plugins") && ($app->input->get('jchtask')=="cleancache")){
                 $this->purgeObject->purgeAll = true;
                 $this->purgeAction();
-        }   else if(!empty($option) && ($option == "com_cache") && (!empty($task=$app->input->get('task')))){
+        }   else if( ($option == "com_cache") && (!empty($task=$app->input->get('task')))){
             if(in_array($task, array("deleteAll", "delete"))  ){
                 $this->purgeObject->purgeAll = true;
                 $this->purgeAction();
             }
+        }   else if(($option == "com_content") && (!empty($task=$app->input->get('task')))){
+            if(in_array($task, array("articles.featured", "articles.unfeatured")) ){
+                $this->purgeObject->option = "com_content";
+                $this->purgeObject->tags[] = "com_content";
+                $this->purgeObject->idField = "view";
+                $this->purgeObject->ids[] = "featured";
+                $this->purgeAction();
+            }
         }
+
     }
     
     public function getModuleMenuItems($moduleid) {
@@ -1173,8 +1188,7 @@ class plgSystemLSCache extends JPlugin {
             
         }
         
-        
-        $cleancache = $this->settings->get('cleancache');
+        $cleancache = $this->settings->get('cleanCache');
         if (!empty($cleancache)) {
             $cleanWords = $this->settings->get('cleanCache', 'purgeAllCache');
             if ($cleancache != $cleanWords) {
