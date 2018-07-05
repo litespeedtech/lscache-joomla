@@ -1,6 +1,10 @@
 rm -f ./build/*.zip
-zip -r ./build/com_lscache.zip ../com_lscache/*
-zip -r ./build/lscache_plugin.zip ../lscache_plugin/*
-zip -r ./lscache-latest.zip ./build/*
+cd ../com_lscache
+zip -r ../package/build/com_lscache.zip ./*
+cd ../lscache_plugin
+zip -r ../package/build/lscache_plugin.zip .//*
+cd ../package/build
+zip -r ../lscache-latest.zip ./*
+cd ..
 echo Latest package has been built to lscache-latest.zip
 
