@@ -1188,7 +1188,7 @@ class plgSystemLSCache extends JPlugin {
             
         }
         
-        $cleancache = $this->settings->get('cleanCache');
+        $cleancache = $app->input->get('cleanCache');
         if (!empty($cleancache)) {
             $cleanWords = $this->settings->get('cleanCache', 'purgeAllCache');
             if ($cleancache != $cleanWords) {

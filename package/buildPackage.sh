@@ -1,4 +1,5 @@
 rm -f ./build/*.zip
+rm -f lscache-latest.zip
 cd ../com_lscache
 zip -r ../package/build/com_lscache.zip ./*
 cd ../lscache_plugin
