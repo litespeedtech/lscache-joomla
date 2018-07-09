@@ -807,6 +807,12 @@ class plgSystemLSCache extends JPlugin {
         $this->purgeAction();
     }
 
+    public function onLSCacheExpired() {
+        $this->lscInstance->purgeAllPublic();
+        $this->log();
+    }
+    
+    
     public function onExtensionAfterUninstall($eid) {
         if (!$this->cacheEnabled) {
             return;
@@ -1174,7 +1180,7 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
 
-        $adminIPs = $app->input->get('adminIPs');
+        $adminIPs = $this->settings->get('adminIPs');
         if (!empty($adminIPs)) {
             
             $ip = $this->getVisitorIP();
