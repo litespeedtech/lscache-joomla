@@ -260,8 +260,14 @@ class plgSystemLSCache extends JPlugin {
         if($context == "com_content.featured"){
             return;
         }
+
         
-        if (isset($this->pageElements["id"])) {
+                
+        if(in_array($context, self::CATEGORY_CONTEXTS) && isset($row->catid) && isset($this->pageElements["id"]) && ($row->catid==$this->pageElements["id"])){
+            $this->pageElements["context"] = $context;
+            return;
+        }
+        else if (isset($this->pageElements["id"])) {
             if (empty($row->id)) {
                 return;
             } else if ($row->id != $this->pageElements["id"]) {
@@ -506,6 +512,12 @@ class plgSystemLSCache extends JPlugin {
             if ($row->catid) {
                 $purgeTags .= ',com_categories:' . $row->catid;
                 $this->purgeObject->ids[] = $row->catid;
+                $category = JTable::getInstance('Category');
+                $category->load($row->catid);
+                if ($category->parent_id) {
+                    $purgeTags .= ',com_categories:' . $category->parent_id;
+                    $this->purgeObject->ids[] = $category->parent_id;
+                }
             }
             $this->purgeObject->tags[] = $purgeTags;
             $this->purgeObject->option = $option;
@@ -1691,6 +1703,7 @@ class plgSystemLSCache extends JPlugin {
         $ip = '';
         $jinput = JFactory::getApplication()->input;
         $ip = $jinput->server->get('REMOTE_ADDR');
+        
         if ($jinput->server->get('HTTP_CLIENT_IP')) {
             $ip = $jinput->server->get('HTTP_CLIENT_IP');
         } else if($jinput->server->get('HTTP_X_FORWARDED_FOR')) {
@@ -1703,6 +1716,8 @@ class plgSystemLSCache extends JPlugin {
             $ip = $jinput->server->get('HTTP_FORWARDED');
         } else if($jinput->server->get('REMOTE_ADDR')) {
             $ip = $jinput->server->get('REMOTE_ADDR');
+        } else if (getHostName()){
+            $ip = getHostByName(getHostName());
         }
         return $ip;
     }
