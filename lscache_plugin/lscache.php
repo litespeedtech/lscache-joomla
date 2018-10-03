@@ -401,7 +401,7 @@ class plgSystemLSCache extends JPlugin {
         $this->purgeAction();
     }
 
-    public function onUserAfterSave($user, $isNew, $success, $msg) {
+    public function onUserAfterSave($user, $isNew=false, $success=true, $msg="") {
         if (!$this->cacheEnabled) {
             return;
         }
@@ -454,7 +454,7 @@ class plgSystemLSCache extends JPlugin {
         $this->log();
     }
 
-    public function onUserBeforeDelete($user, $success, $msg) {
+    public function onUserBeforeDelete($user, $success=true, $msg="") {
         if (!$this->cacheEnabled) {
             return;
         }
