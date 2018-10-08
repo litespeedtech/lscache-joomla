@@ -1309,7 +1309,7 @@ class plgSystemLSCache extends JPlugin {
 
         $app->getMenu()->setActive($menuid);
 
-        $lang =& JFactory::getLanguage();
+        $lang = JFactory::getLanguage();
         $language = $app->input->get('language');
         if ($language && ($language!=$lang->getTag())) {
             $lang->setLanguage( $language );
