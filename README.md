@@ -22,7 +22,7 @@ See https://www.litespeedtech.com/products/cache-plugins for more information.
 Prerequisites
 -------------
 This version of LiteSpeed Cache requires Joomla 3.x or later and LiteSpeed Web Server 5.2.3+ or OpenLiteSpeed.
-
+This version of LiteSpeed Cache support virtuemart 3.2.4 or later, for lower version of virtuemart please contact us for support.
 
 
 Installing
