@@ -1,7 +1,7 @@
 <?php
 
 /**
- *  @since      1.2.0
+ *  @since      1.2.1
  *  @author     LiteSpeed Technologies <info@litespeedtech.com>
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
@@ -54,7 +54,7 @@ class plgSystemLSCache extends JPlugin {
         $this->settings = JComponentHelper::getParams('com_lscache');
         if (empty($this->settings->get('cacheEnabled'))) {
             $this->saveComponent(true);
-            $this->saveHtaccess(true);
+            $this->saveHtaccess();
         }
 
         $lang = JFactory::getLanguage();
@@ -162,6 +162,10 @@ class plgSystemLSCache extends JPlugin {
             $this->purgeAdmin($option);
         } else {
             $this->checkVary();
+            if($app->input->get("lscache_formtoken")=="1"){
+                $token = JSession::getFormToken();
+                $app->input->post->set($token,'1');
+            }
         }
 
         if (!$this->pageCachable) {
@@ -220,7 +224,7 @@ class plgSystemLSCache extends JPlugin {
                     $tag = 'public:' . $tag . ',' . $tag;
                     $module->content = '<esi:include src="index.php?option=com_lscache&view=esi&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="private,no-vary" cache-tag="' . $tag . '" />';
                 } else if ($module->lscache_type == 0) {
-                    $module->content = '<esi:include src="' . 'index.php?option=com_lscache&view=esi&moduleid=' . $module->id . $this->getModuleAttribs($attribs) . '" cache-control="no-cache"/>';
+                    $module->content = '<esi:include src="' . 'index.php?option=com_lscache&view=esi&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="no-cache"/>';
                 }
 
                 $this->esion = true;
@@ -358,6 +362,15 @@ class plgSystemLSCache extends JPlugin {
             $cacheTimeout = $this->settings->get('homePageCacheTimeout', 2000) * 60;
         }
 
+        $content = $this->app->getBody();
+        $token = JSession::getFormToken();
+        $search = '#<input.*?name="'. $token . '".*?>#';
+        $replace = '<input type="hidden" name="lscache_formtoken" value="1" />';
+        $data = preg_replace($search, $replace, $content, -1, $count);
+        if($count>0){
+            $this->app->setBody($data);
+        }
+        
         if (!LITESPEED_ESI_SUPPORT && $this->esiEnabled && $this->esion) {
             $cacheTimeout = min($cacheTimeout, $this->esittl);
             if ($cacheTimeout == 0) {
@@ -1671,16 +1684,15 @@ class plgSystemLSCache extends JPlugin {
         $table->store();
     }
 
-    private function saveHtaccess($firstRun = false) {
+    private function saveHtaccess() {
         $htaccess = JPATH_ROOT . '/.htaccess';
 
         $directives = '### LITESPEED_CACHE_START - Do not remove this line' . PHP_EOL;
         $directives .= '<IfModule LiteSpeed>' . PHP_EOL;
         $directives .= 'CacheLookup on' . PHP_EOL;
-        if ($this->settings->get('mobileCacheVary', 0) == 1) {
-            $directives .= 'RewriteEngine On' . PHP_EOL;
-            $directives .= 'RewriteCond %{HTTP_USER_AGENT} Mobile|Android|Silk/|Kindle|BlackBerry|Opera\ Mini|Opera\ Mobi [NC] RewriteRule .* - [E=Cache-Control:vary=ismobile]' . PHP_EOL;
-        }
+        $directives .= '## Uncomment the following directives if you has a separate mobile view' . PHP_EOL;
+        $directives .= '##RewriteEngine On' . PHP_EOL;
+        $directives .= '##RewriteCond %{HTTP_USER_AGENT} Mobile|Android|Silk/|Kindle|BlackBerry|Opera\ Mini|Opera\ Mobi [NC] RewriteRule .* - [E=Cache-Control:vary=ismobile]' . PHP_EOL;
         $directives .= '</IfModule>' . PHP_EOL;
         $directives .= '### LITESPEED_CACHE_END';
 
@@ -1690,19 +1702,35 @@ class plgSystemLSCache extends JPlugin {
             $content = file_get_contents($htaccess);
             $newContent = preg_replace($pattern, $directives, $content, -1, $count);
 
-            if (($count <= 0) && $firstRun) {
+            if ($count <= 0) {
                 $newContent = preg_replace('@\<IfModule\ LiteSpeed\>.*?\<\/IfModule\>@s', '', $content);
                 $newContent = preg_replace('@CacheLookup\ on@s', '', $newContent);
                 file_put_contents($htaccess, $newContent . PHP_EOL . $directives . PHP_EOL);
             } else if ($count > 0) {
                 file_put_contents($htaccess, $newContent);
-            } else {
-                file_put_contents($htaccess, PHP_EOL . $directives . PHP_EOL, FILE_APPEND);
             }
         } else {
             file_put_contents($htaccess, $directives);
         }
     }
+    
+	private function clearHtaccess()
+	{
+        $htaccess = realpath(DIR_APPLICATION . '/../') . '/.htaccess';
+
+        if (file_exists($htaccess))
+        {
+            $contents = file_get_contents($htaccess);
+            $pattern = '@\n?### LITESPEED_CACHE_START - Do not remove this line.*?### LITESPEED_CACHE_END@s';
+
+            $clean_contents = preg_replace($pattern, '', $contents, -1, $count);
+
+            if($count > 0)
+            {
+                file_put_contents($htaccess, $clean_contents);
+            }
+        }
+	}
     
     
     protected function getVisitorIP() {

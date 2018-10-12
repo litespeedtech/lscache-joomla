@@ -62,12 +62,15 @@ class Pkg_LSCacheInstallerScript
         $this->lscacheEnable();
     }
     
+    public function uninstall()
+    {
+        $this->clearHtaccess();
+    }
 
     public function update()
     {
         $this->lscacheEnable();
     }
-    
     
     protected function lscacheEnable()
     {
@@ -142,5 +145,24 @@ class Pkg_LSCacheInstallerScript
             return;
         }
     }
+    
+	private function clearHtaccess()
+	{
+        $htaccess = JPATH_ROOT  . '/.htaccess';
+
+        if (file_exists($htaccess))
+        {
+            $contents = file_get_contents($htaccess);
+            $pattern = '@\n?### LITESPEED_CACHE_START - Do not remove this line.*?### LITESPEED_CACHE_END@s';
+
+            $clean_contents = preg_replace($pattern, '', $contents, -1, $count);
+
+            if($count > 0)
+            {
+                file_put_contents($htaccess, $clean_contents);
+            }
+        }
+	}
+    
     
 }

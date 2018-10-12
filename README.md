@@ -22,31 +22,29 @@ See https://www.litespeedtech.com/products/cache-plugins for more information.
 Prerequisites
 -------------
 This version of LiteSpeed Cache requires Joomla 3.x or later and LiteSpeed Web Server 5.2.3+ or OpenLiteSpeed.
-This version of LiteSpeed Cache support virtuemart 3.2.4 or later, for lower version of virtuemart please contact us for support.
+
+This version is compatible with virtuemart 3.2.4 or later, for lower version of virtuemart please contact us for support.
 
 
 Installing
 -------------
-Modify the .htaccess file in the Joomla site directory, adding the following directives:
-
-    <IfModule LiteSpeed>
-    CacheLookup on
-    </IfModule>
-
-If your Joomla site has a separate mobile view, please add the following directives:
-
-    <IfModule LiteSpeed>
-    RewriteEngine On
-    RewriteCond %{HTTP_USER_AGENT} Mobile|Android|Silk/|Kindle|BlackBerry|Opera\ Mini|Opera\ Mobi [NC] RewriteRule .* - [E=Cache-Control:vary=ismobile]
-    </IfModule>
-
 Download the latest version zip file from github *package* folder and install the zip file using the Joomla Administrator menu: 
 *Extensions->Manage->Install->Upload Package File*
 
 Disable other caching plugins if possible to avoid conflicts. 
 
+If your Joomla site has a separate mobile view, please uncomment Rewrite directives in .htaccess file:
+
+    <IfModule LiteSpeed>
+    CacheLookup on
+    ## Uncomment the following directives if you has a separate mobile view
+    RewriteEngine On
+    RewriteCond %{HTTP_USER_AGENT} Mobile|Android|Silk/|Kindle|BlackBerry|Opera\ Mini|Opera\ Mobi [NC] RewriteRule .* - [E=Cache-Control:vary=ismobile]
+    </IfModule>
+
+If you need generate latest package from the latest souce code in github, you can run *buildPackage.sh* from *package* folder.
+
 
 Configuration
 --------------
-
 Using Joomla administrator menu: *Components->LiteSpeed Cache* , click *Options* button to change LiteSpeed Cache settings.
