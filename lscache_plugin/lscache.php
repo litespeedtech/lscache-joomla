@@ -272,7 +272,7 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
         else if (isset($this->pageElements["id"])) {
-            if (empty($row->id)) {
+            if (!isset($row->id)) {
                 return;
             } else if ($row->id != $this->pageElements["id"]) {
                 return;
@@ -320,6 +320,12 @@ class plgSystemLSCache extends JPlugin {
             $option = $this->getOption($context);
         }
 
+        
+        if($option=="com_content" && isset($this->pageElements["view"]) && ($this->pageElements["view"]=='category')){
+                $context = 'com_categories.category';
+                $option = 'com_categories';
+        }
+        
         if (isset($this->pageElements["id"])) {
             $id = $this->pageElements["id"];
         }

@@ -21,8 +21,9 @@ abstract class LSCacheComponentBase  extends JPlugin
     }
     
     
-    //return purgeTags or false
-    abstract public function onPurgeContent($context, $row);
+    public function onPurgeContent($context, $row){
+        
+    }
     
     //return cache tags;
     public function getTags($option, $pageElements){
