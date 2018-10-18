@@ -25,9 +25,9 @@
 
         <field name="logLevel"  type="radio" default="-1" class="btn-group btn-group-yesno radio" label="COM_LSCACHE_FIELD_LOG_PRIORITIES_LABEL" description="COM_LSCACHE_FIELD_LOG_PRIORITIES_DESC">
             <option value="-1">JNO</option>
-            <option value="3">COM_LSCACHE_FIELD_LOG_LEVEL_ERROR</option>
-            <option value="6">COM_LSCACHE_FIELD_LOG_LEVEL_INFO</option>
-            <option value="8">COM_LSCACHE_FIELD_LOG_LEVEL_DEBUG</option>
+            <option value="8">COM_LSCACHE_FIELD_LOG_LEVEL_ERROR</option>
+            <option value="64">COM_LSCACHE_FIELD_LOG_LEVEL_INFO</option>
+            <option value="128">COM_LSCACHE_FIELD_LOG_LEVEL_DEBUG</option>
         </field>
     </fieldset>
     

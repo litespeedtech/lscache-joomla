@@ -15,16 +15,13 @@ defined('_JEXEC') or die;
  */
 class plgSystemLSCache extends JPlugin {
 
-    const LOG_ERROR = 3;
-    const LOG_INFO = 6;
-    const LOG_DEBUG = 8;
     const MODULE_ESI = 1;
     const MODULE_PURGEALL = 2;
     const MODULE_PURGETAG = 3;
     const MODULE_EMBED = 4;
     const CATEGORY_CONTEXTS = array('com_categories.category', 'com_banners.category', 'com_contact.category', 'com_content.category', 'com_newsfeeds.category', 'com_users.category',
         'com_categories.categories', 'com_banners.categories', 'com_contact.categories', 'com_content.categories', 'com_newsfeeds.categories', 'com_users.categories');
-    const CONTENT_CONTEXTS = array('com_content.article', 'com_content.featured', 'com_banner.banner', 'com_contact.contact', 'com_newsfeeds.newsfeed');
+    const CONTENT_CONTEXTS = array('com_content.article', 'com_content.featured', 'com_banner.banner', 'com_contact.contact', 'com_newsfeeds.newsfeed', 'com_content');
 
     protected $app;
     protected $cacheEnabled;
@@ -52,7 +49,7 @@ class plgSystemLSCache extends JPlugin {
         parent::__construct($subject, $config);
 
         $this->settings = JComponentHelper::getParams('com_lscache');
-        if (empty($this->settings->get('cacheEnabled'))) {
+        if ($this->settings->get('cacheEnabled', 3) == 3) {
             $this->saveComponent(true);
             $this->saveHtaccess();
         }
@@ -368,8 +365,8 @@ class plgSystemLSCache extends JPlugin {
             $cacheTimeout = $this->settings->get('homePageCacheTimeout', 2000) * 60;
         }
 
-        $content = $this->app->getBody();
         $token = JSession::getFormToken();
+        $content = $this->app->getBody();
         $search = '#<input.*?name="'. $token . '".*?>#';
         $replace = '<input type="hidden" name="lscache_formtoken" value="1" />';
         $data = preg_replace($search, $replace, $content, -1, $count);
@@ -1081,7 +1078,7 @@ class plgSystemLSCache extends JPlugin {
      *
      * @since    1.1.0
      */
-    public function log($content = null, $logLevel = self::LOG_INFO) {
+    public function log($content = null, $logLevel = JLog::INFO) {
         if ($content == null) {
             if (!$this->lscInstance) {
                 return;
@@ -1101,7 +1098,7 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
 
-        JLog::add($content, $logLevel, 'LiteSpeedCache Plugin');
+        JLog::add($content, $logLevel, 'LiteSpeedCache');
     }
 
     protected function isOptionExcluded($option) {
@@ -1519,15 +1516,24 @@ class plgSystemLSCache extends JPlugin {
         $root = JUri::getInstance()->toString(array('scheme', 'host', 'port'));
         $recacheDuration = $this->settings->get('recacheDuration', 30) * 1000000;
         if ($output) {
-            ob_implicit_flush(TRUE);
-            echo '<h3>It may take several minutes</h3><br/>';
+            //ob_implicit_flush(TRUE);
+            echo '<h3>Rebuild LiteSpeed Cache may take several minutes</h3><br/>';
+            ob_flush();
+            flush();
+            
         }
 
         foreach ($urls as $url) {
             $start = microtime();
             $ch = curl_init();
             if ($this->app->isAdmin()) {
-                $url = $router->build($url);
+                try {
+                    $url = @$router->build($url);
+                } catch (Error $ex) {
+                    $this->log($ex->getMessage(), JLog::DEBUG);
+                    continue;
+                }
+                
                 $url = str_replace("/administrator", "", $url);
             } else {
                 $url = JRoute::_($url, FALSE);
@@ -1544,7 +1550,7 @@ class plgSystemLSCache extends JPlugin {
             $buffer = curl_exec($ch);
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
-            $this->log($root . $url, self::LOG_DEBUG);
+            $this->log($root . $url, JLog::DEBUG);
 
             if (in_array($httpcode, $acceptCode)) {
                 $success++;
@@ -1556,6 +1562,8 @@ class plgSystemLSCache extends JPlugin {
                 if ($current % 10 == 0) {
                     echo floor($current * 100 / $count) . '%<br/>';
                 }
+                ob_flush();
+                flush();
             } else if (($current % 10 == 0) && ($this->microtimeMinus($begin, microtime()) > $recacheDuration)) {
                 break;
             }
@@ -1719,26 +1727,8 @@ class plgSystemLSCache extends JPlugin {
             file_put_contents($htaccess, $directives);
         }
     }
-    
-	private function clearHtaccess()
-	{
-        $htaccess = realpath(DIR_APPLICATION . '/../') . '/.htaccess';
 
-        if (file_exists($htaccess))
-        {
-            $contents = file_get_contents($htaccess);
-            $pattern = '@\n?### LITESPEED_CACHE_START - Do not remove this line.*?### LITESPEED_CACHE_END@s';
-
-            $clean_contents = preg_replace($pattern, '', $contents, -1, $count);
-
-            if($count > 0)
-            {
-                file_put_contents($htaccess, $clean_contents);
-            }
-        }
-	}
-    
-    
+   
     protected function getVisitorIP() {
         $ip = '';
         $jinput = JFactory::getApplication()->input;

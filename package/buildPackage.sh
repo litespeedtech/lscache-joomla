@@ -7,5 +7,6 @@ zip -r ../package/build/lscache_plugin.zip ./*
 cd ../package/build
 zip -r ../lscache-latest.zip ./*
 cd ..
+rm -f ./build/*.zip
 echo Latest package has been built to lscache-latest.zip
 

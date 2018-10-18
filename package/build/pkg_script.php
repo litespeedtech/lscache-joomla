@@ -57,6 +57,14 @@ class Pkg_LSCacheInstallerScript
         }
     }
 
+    public function postflight( $type, $parent ) {
+        if (function_exists('opcache_reset')){
+            opcache_reset();
+        } else if (function_exists('phpopcache_reset')){
+            phpopcache_reset();
+        }
+    }
+    
     public function install()
     {
         $this->lscacheEnable();
@@ -141,8 +149,8 @@ class Pkg_LSCacheInstallerScript
         		->where($db->quoteName('virtuemart_config_id') . ' = 1' );
         try {
             $db->setQuery($query)->execute();
-        } catch (RuntimeException $ex) {
-            return;
+        } catch (Exception $ex) {
+
         }
     }
     
