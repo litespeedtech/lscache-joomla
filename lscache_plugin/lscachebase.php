@@ -53,6 +53,10 @@ class LiteSpeedCacheBase
         $tags = explode(",", $rawTags);
         
         foreach ($tags as $tag) {
+            if(trim($tag)==""){
+                continue;
+            }
+                        
             $tagStr = $prefix . trim($tag);
             if(!in_array($tagStr, $tagArray, false)){
                 array_push($tagArray, $tagStr);

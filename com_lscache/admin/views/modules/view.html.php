@@ -1,6 +1,6 @@
 <?php
 /**
- *  @since      1.0.0
+ *  @since      1.3.0
  *  @author     LiteSpeed Technologies <info@litespeedtech.com>
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
@@ -66,8 +66,6 @@ class LSCacheViewModules extends JViewLegacy
 		return parent::display($tpl);
 	}
 
-
-    
     
 	/**
 	 * Add the page title and toolbar.
@@ -83,10 +81,9 @@ class LSCacheViewModules extends JViewLegacy
 		$canDo = JHelperContent::getActions('com_lscache');
 		$user  = JFactory::getUser();
 
-		// Get the toolbar object instance
 		$bar = JToolbar::getInstance('toolbar');
 
-		JToolbarHelper::title(JText::_('COM_LSCACHE_TOOLBAR_TITLE'), 'flash');
+		JToolbarHelper::title(JText::_('COM_LSCACHE_TOOLBAR_TITLE'), 'lsc-jml-icon-b');
 
 		if ($canDo->get('core.admin'))
 		{
@@ -97,19 +94,22 @@ class LSCacheViewModules extends JViewLegacy
                 JToolbarHelper::custom('modules.esi', 'featured', 'loop', 'COM_LSCACHE_RENDER_ESI', true);
             }
             
-			//JToolbarHelper::custom('modules.tag', 'tag', 'tag2', 'COM_LSCACHE_MODULE_TAG', true);
-			//JToolbarHelper::custom('modules.purge', 'stack', 'stack', 'COM_LSCACHE_MODULE_PURGE', true);
-
     		$bar = JToolbar::getInstance('toolbar');
             $layout = new JLayoutFile('toolbar.purgeall');
 			$bar->appendButton('Custom', $layout->render(array()));
 
-            JToolbarHelper::custom('modules.rebuild', 'refresh', 'loop','COM_LSCACHE_BTN_REBUILD',false);
+            JToolbarHelper::custom('modules.rebuild', 'flash', 'refresh','COM_LSCACHE_BTN_REBUILD',false);
+			$title = JText::_('COM_LSCACHE_BTN_PURGE_URL');
+
+			$layout = new JLayoutFile('toolbar.purgeurl');
+
+			$dhtml = $layout->render(array('title' => $title));
+			$bar->appendButton('Custom', $dhtml);
+
+            JToolbarHelper::custom('modules.purgeModule', 'folder-minus', 'folder-remove','COM_LSCACHE_BTN_PURGE_MODULE',false);
             
 			JToolbarHelper::preferences('com_lscache');
 		}
-
-		JToolbarHelper::help('JHELP_EXTENSIONS_MODULE_MANAGER');
 
 		if (JHtmlSidebar::getEntries())
 		{

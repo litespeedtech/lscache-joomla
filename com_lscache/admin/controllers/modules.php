@@ -102,4 +102,81 @@ class LSCacheControllerModules extends JControllerAdmin
         //$this->setRedirect('index.php?option=com_lscache');        
     }
     
+    public function purgeModule(){
+
+		JSession::checkToken() or jexit(JText::_('JINVALID_TOKEN'));
+
+		$pks = $this->input->post->get('cid', array(), 'array');
+		$pks = ArrayHelper::toInteger($pks);
+
+		try
+		{
+			if (empty($pks))
+			{
+				throw new Exception(JText::_('COM_LSCACHE_ERROR_NO_MODULES_SELECTED'));
+			}
+
+            $dispatcher = JEventDispatcher::getInstance();
+            $dispatcher->trigger("onContentChangeState", array('com_modules.module', $pks, true));
+            
+		}
+		catch (Exception $e)
+		{
+			JError::raiseWarning(500, $e->getMessage());
+		}
+
+		$this->setRedirect('index.php?option=com_lscache');        
+
+    }
+    
+    public function purgeURL(){
+
+		JSession::checkToken() or jexit(JText::_('JINVALID_TOKEN'));
+        if(!isset($_POST['purgeURLs'])){
+            $app = JFactory::getApplication();
+            $app->enqueueMessage(JText::_('COM_LSCACHE_ERROR_NO_URLS_INPUT'));
+    		$this->setRedirect('index.php?option=com_lscache');
+            return;
+        }
+        
+        $url = $_POST['purgeURLs'];
+        if(empty($url)){
+            $app = JFactory::getApplication();
+            $app->enqueueMessage(JText::_('COM_LSCACHE_ERROR_NO_URLS_INPUT'));
+    		$this->setRedirect('index.php?option=com_lscache');
+            return;
+        }
+        $urls = explode("\n", str_replace(array("\r\n", "\r"), "\n", $url));
+        $this->purgeURLs($urls);
+		$this->setRedirect('index.php?option=com_lscache');        
+        
+    }
+
+    private function purgeURLs($slugs) {
+        
+        $success = 0;
+        $acceptCode = array(200, 201);
+        
+        foreach ($slugs as $key => $path) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $path);
+            curl_setopt($ch, CURLOPT_VERBOSE, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PURGE");
+            $buffer = curl_exec($ch);
+            $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            if (in_array($httpcode, $acceptCode)) {
+                $success++;
+            }
+        }
+        $msg = str_replace('%d', $success, JText::_('COM_LSCACHE_URL_PURGED'));
+        $app = JFactory::getApplication();
+        $app->enqueueMessage($msg);
+        
+        return true;
+        
+    }
+    
 }

@@ -1,7 +1,7 @@
 <?php
 
 /**
- *  @since      1.2.1
+ *  @since      1.3.0
  *  @author     LiteSpeed Technologies <info@litespeedtech.com>
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
@@ -185,7 +185,7 @@ class plgSystemLSCache extends JPlugin {
         }
     }
 
-    public function onAfterRenderModule($module, $attribs) {
+    public function onAfterRenderModule($module, $attribs="") {
         if (!$this->pageCachable) {
             return;
         }
@@ -288,8 +288,7 @@ class plgSystemLSCache extends JPlugin {
         }
 
         if ($this->purgeObject->recacheAll) {
-            $this->purgeObject->recacheAll = false;
-            $this->recacheAction();
+            $this->recacheAction(true,true);
             $this->app->redirect('index.php?option=com_lscache');
         }
 
@@ -400,7 +399,7 @@ class plgSystemLSCache extends JPlugin {
         return $parts[0];
     }
 
-    public function onContentAfterSave($context, $row, $isNew) {
+    public function onContentAfterSave($context, $row, $isNew=false) {
         if (!$this->cacheEnabled) {
             return;
         }
@@ -569,7 +568,7 @@ class plgSystemLSCache extends JPlugin {
         $this->purgeObject->tags[] = $option;
     }
 
-    public function onContentChangeState($context, $pks, $value) {
+    public function onContentChangeState($context, $pks, $value=true) {
         if (!$this->cacheEnabled) {
             return;
         }
@@ -614,7 +613,7 @@ class plgSystemLSCache extends JPlugin {
         $this->purgeAction();
     }
 
-    public function onExtensionBeforeSave($context, $row, $isNew) {
+    public function onExtensionBeforeSave($context, $row, $isNew=false) {
         if (!$this->cacheEnabled) {
             return;
         }
@@ -625,7 +624,7 @@ class plgSystemLSCache extends JPlugin {
         }
     }
 
-    public function onExtensionAfterSave($context, $row, $isNew) {
+    public function onExtensionAfterSave($context, $row, $isNew = false) {
         if (!$this->cacheEnabled) {
             return;
         }
@@ -730,6 +729,7 @@ class plgSystemLSCache extends JPlugin {
 
         if ($option == "com_config") {
             if ($row->element == "com_lscache") {
+                $this->app->setUserState("lscacheOption","debug");
                 $settings = json_decode($row->params);
                 $cacheEnabled = $settings->cacheEnabled;
                 if (!$cacheEnabled) {
@@ -865,7 +865,7 @@ class plgSystemLSCache extends JPlugin {
         }
 
         if (in_array($extension->type, array('language', 'plugin'))) {
-            if (($extension->element == "lscache") && ($extension->folder == "system")) {
+            if (($extension->element == "lscache") && ($extension->folder == "system") && (!$isNew)) {
                 $this->purgeObject->purgeAll = true;
                 return;
             }
@@ -874,7 +874,7 @@ class plgSystemLSCache extends JPlugin {
         }
 
         if ($extension->type == "component") {
-            if ($extension->element == "com_lscache") {
+            if (($extension->element == "com_lscache") && (!$isNew)) {
                 $this->purgeObject->purgeAll = true;
                 return;
             }
@@ -1092,9 +1092,9 @@ class plgSystemLSCache extends JPlugin {
         $logLevelSetting = $this->settings->get('logLevel', -1);
         if ($logLevelSetting < 0) {
             return;
-        }
-
-        if ($logLevel > $logLevelSetting) {
+        } else if(($logLevelSetting==JLog::DEBUG) && ($this->app->getUserState('lscacheOption',"")=="debug")){
+            
+        } else if ($logLevel > $logLevelSetting) {
             return;
         }
 
@@ -1208,22 +1208,18 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
 
+        $ipPass = true;
         $adminIPs = $this->settings->get('adminIPs');
         if (!empty($adminIPs)) {
-            
             $ip = $this->getVisitorIP();
             $serverIP = $_SERVER['SERVER_ADDR'];
-
             if((strpos($adminIPs, $ip)===FALSE) && ($ip!=="127.0.0.1") && ($ip!==$serverIP)){
-                http_response_code(403);
-                $app->close();
-                return;
+                $ipPass = false;
             }
-            
         }
         
         $cleancache = $app->input->get('cleanCache');
-        if (!empty($cleancache)) {
+        if($ipPass && (!empty($cleancache))) {
             $cleanWords = $this->settings->get('cleanCache', 'purgeAllCache');
             if ($cleancache != $cleanWords) {
                 http_response_code(403);
@@ -1243,6 +1239,20 @@ class plgSystemLSCache extends JPlugin {
             $app->close();
             return;
         }
+        
+        $recache = $app->input->get('recache');
+        if ($ipPass && (!empty($recache))) {
+            $cleanWords = $this->settings->get('cleanCache', 'purgeAllCache');
+            if ($recache != $cleanWords) {
+                http_response_code(403);
+                $app->close();
+                return;
+            }
+            $this->recacheAction(true,true);
+            $app->close();
+            return;
+        }
+        
 
         if (!$this->esiEnabled) {
             http_response_code(403);
@@ -1351,6 +1361,7 @@ class plgSystemLSCache extends JPlugin {
                 $this->lscInstance->cachePublic($tag);
                 $this->log();
             } else if ($module->lscache_type == -1) {
+                $this->lscInstance->checkPrivateCookie();
                 $this->lscInstance->cachePrivate($tag, $tag);
                 $this->log();
             }
@@ -1515,12 +1526,15 @@ class plgSystemLSCache extends JPlugin {
         $router = $appInstance->getRouter();
         $root = JUri::getInstance()->toString(array('scheme', 'host', 'port'));
         $recacheDuration = $this->settings->get('recacheDuration', 30) * 1000000;
+        $printURL = ($this->settings->get('logLevel', -1)==JLog::DEBUG) && $this->app->isAdmin();
+        $break = false;
         if ($output) {
             //ob_implicit_flush(TRUE);
             echo '<h3>Rebuild LiteSpeed Cache may take several minutes</h3><br/>';
-            ob_flush();
+            if (ob_get_contents()){
+                ob_flush();
+            }
             flush();
-            
         }
 
         foreach ($urls as $url) {
@@ -1530,7 +1544,7 @@ class plgSystemLSCache extends JPlugin {
                 try {
                     $url = @$router->build($url);
                 } catch (Error $ex) {
-                    $this->log($ex->getMessage(), JLog::DEBUG);
+                    $this->log($ex->getMessage());
                     continue;
                 }
                 
@@ -1550,28 +1564,52 @@ class plgSystemLSCache extends JPlugin {
             $buffer = curl_exec($ch);
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
-            $this->log($root . $url, JLog::DEBUG);
+            $this->log($root . $url);
 
             if (in_array($httpcode, $acceptCode)) {
                 $success++;
+            } else if($httpcode==428){
+                echo 'Web Server crawler feature not enabled, please check <a href="https://www.litespeedtech.com/support/wiki/doku.php/litespeed_wiki:cache:lscwp:configuration:enabling_the_crawler" target="_blank">web server settings</a>';
+                $this->log('httpcode:'.$httpcode);
+                sleep(5);
+                $break = true;
+                break;
+            } else {
+                $this->log('httpcode:'.$httpcode);
             }
             $current++;
 
             if ($output) {
-                echo '*';
+                if($printURL){
+                    echo '<p>'. $root . $url . ' :  '. $httpcode . '</p>';
+                } else {
+                    echo '*';
+                }
                 if ($current % 10 == 0) {
                     echo floor($current * 100 / $count) . '%<br/>';
                 }
-                ob_flush();
+                if (ob_get_contents()){
+                    ob_flush();
+                }
                 flush();
             } else if (($current % 10 == 0) && ($this->microtimeMinus($begin, microtime()) > $recacheDuration)) {
+                $break = true;
                 break;
             }
+            
             $end = microtime();
             $diff = $this->microtimeMinus($start, $end);
             usleep(round($diff));
         }
 
+        if($output & (!$break)){
+            echo '100%';
+            if (ob_get_contents()){
+                ob_flush();
+            }
+            flush();
+        }
+            
         $totalTime = round($this->microtimeMinus($begin, microtime()) / 1000000);
         if ($count == $current) {
             $msg = str_replace('%d', $totalTime, JText::_('COM_LSCACHE_PLUGIN_PAGERECACHED'));
@@ -1619,6 +1657,8 @@ class plgSystemLSCache extends JPlugin {
                 $this->purgeObject->recacheAll = true;
             }
             $this->recacheAction($this->purgeObject->recacheAll);
+            $this->purgeObject->recacheAll = false;
+
         } else if ($this->purgeObject->purgeAll) {
             $this->lscInstance->purgeAllPublic();
             $this->log();
@@ -1638,7 +1678,7 @@ class plgSystemLSCache extends JPlugin {
         
     }
 
-    private function recacheAction($recacheAll = true) {
+    private function recacheAction($recacheAll = true, $showProgress=false) {
         if ($recacheAll) {
             $menus = $this->getSiteMap();
             $urls = array_map(function($menu) {
@@ -1673,7 +1713,6 @@ class plgSystemLSCache extends JPlugin {
             }
         }
 
-        $showProgress = ($recacheAll && (!$this->purgeObject->recacheAll)) ? true : false;
         $msg = $this->crawlUrls($urls, $showProgress);
 
         if ((!$this->app->isAdmin()) && (!empty($msg))) {
