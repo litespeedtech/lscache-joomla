@@ -9,11 +9,11 @@
 
 defined('_JEXEC') or die;
 
-JHtml::_('behavior.core');
-$text = $displayData['title'];
+$text = JText::_('COM_LSCACHE_BTN_PURGE_URL');
+$title = JText::_('COM_LSCACHE_BTN_PURGE_URL_TIP');
 ?>
 
-<button data-toggle="modal" onclick="jQuery( '#collapseModal' ).modal('show')" class="btn btn-small btn-success" title="<?php echo $text; ?>">
+<button data-toggle="modal" onclick="jQuery( '#collapseModal' ).modal('show')" class="btn btn-small btn-success" title="<?php echo $title; ?>">
 	<span class="icon-file-minus" aria-hidden="true"></span>
 	<?php echo $text; ?>
 </button>

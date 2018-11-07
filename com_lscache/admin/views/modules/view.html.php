@@ -1,6 +1,6 @@
 <?php
 /**
- *  @since      1.3.0
+ *  @since      1.0.0
  *  @author     LiteSpeed Technologies <info@litespeedtech.com>
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
@@ -95,15 +95,14 @@ class LSCacheViewModules extends JViewLegacy
             }
             
     		$bar = JToolbar::getInstance('toolbar');
+
             $layout = new JLayoutFile('toolbar.purgeall');
 			$bar->appendButton('Custom', $layout->render(array()));
 
             JToolbarHelper::custom('modules.rebuild', 'flash', 'refresh','COM_LSCACHE_BTN_REBUILD',false);
-			$title = JText::_('COM_LSCACHE_BTN_PURGE_URL');
 
-			$layout = new JLayoutFile('toolbar.purgeurl');
-
-			$dhtml = $layout->render(array('title' => $title));
+            $layout = new JLayoutFile('toolbar.purgeurl');
+			$dhtml = $layout->render(array());
 			$bar->appendButton('Custom', $dhtml);
 
             JToolbarHelper::custom('modules.purgeModule', 'folder-minus', 'folder-remove','COM_LSCACHE_BTN_PURGE_MODULE',false);

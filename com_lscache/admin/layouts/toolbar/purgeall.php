@@ -10,8 +10,9 @@
 defined('_JEXEC') or die;
 
 $text = JText::_('COM_LSCACHE_BTN_PURGE_ALL');
+$title = JText::_('COM_LSCACHE_BTN_PURGE_ALL_TIP');
 ?>
-<button onclick="Joomla.submitbutton('modules.purgeall')" class="btn btn-small btn-success" title="<?php echo $text; ?>">
+<button onclick="Joomla.submitbutton('modules.purgeall')" class="btn btn-small btn-success" title="<?php echo $title; ?>">
 	<span class="icon-purge icon-white" aria-hidden="true"></span>
 	<?php echo $text; ?>
 </button>
