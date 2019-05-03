@@ -19,6 +19,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         $this->dispatcher->register("plgVmOnDeleteProduct", $this);
         $this->dispatcher->register("plgVmAfterVendorStore", $this);
         $this->dispatcher->register("plgVmConfirmedOrder", $this);
+        $this->dispatcher->register("onContentPrepare", $this);
 
         $db = JFactory::getDbo();
         $query = $db->getQuery(true)
@@ -265,5 +266,31 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         }
         return $comUrls;
     }
+    
+    
+    public function onContentPrepare($context, &$row, &$params, $page = 0) {
+        $productModel = VmModel::getModel('Product');
+        $total = $productModel->getTotal();
+        $limitstart = $productModel->_limitStart;
+        $limit = $productModel->_limit;
+        $pagination = $productModel->_pagination;
+        
+        if($limitstart>$total){
+            $this->plugin->pageCachable = false;
+            return;
+        }
+        
+        if($pagination instanceof VmPagination){
+            if($limitstart!=$pagination->limitstart){
+                $this->plugin->pageCachable = false;
+                return;
+            }
+            if($limit!=$pagination->limit){
+                $this->plugin->pageCachable = false;
+                return;
+            }
+        }
+    }
+    
     
 }
