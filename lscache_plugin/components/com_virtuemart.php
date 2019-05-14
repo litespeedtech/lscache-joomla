@@ -273,7 +273,14 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         $total = $productModel->getTotal();
         $limitstart = $productModel->_limitStart;
         $limit = $productModel->_limit;
+        $app = JFactory::getApplication();
+        $start = $app->input->get('start', $limitstart);
         $pagination = $productModel->_pagination;
+        
+        if(($start>0) && ($pagination->pages.current==1)){
+            $this->plugin->pageCachable = false;
+            return;
+        }
         
         if($limitstart>$total){
             $this->plugin->pageCachable = false;
@@ -291,6 +298,6 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
             }
         }
     }
-    
-    
+
+   
 }
