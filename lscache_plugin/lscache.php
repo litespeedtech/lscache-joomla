@@ -165,6 +165,14 @@ class plgSystemLSCache extends JPlugin {
             }
         }
 
+        //avoid some application have expired login session serve 
+        $session = JFactory::getSession();
+        $user = JFactory::getUser();
+        if(($session->get('lscacheLogin')!='1') && !$user->get('guest')){
+            $this->pageCachable = false;
+        }
+        
+        
         if (!$this->pageCachable) {
             
         } else if (JDEBUG) {
@@ -282,7 +290,7 @@ class plgSystemLSCache extends JPlugin {
         $this->pageElements["content"] = $row;
     }
 
-    public function onAfterRender() {
+    public function onBeforeRender() {
         if (!$this->cacheEnabled) {
             return;
         }
@@ -434,6 +442,9 @@ class plgSystemLSCache extends JPlugin {
     }
 
     public function onUserAfterLogin($options) {
+        $session = JFactory::getSession();
+        $session->set('lscacheLogin', '1');
+        
         if (!$this->cacheEnabled) {
             return;
         }
@@ -450,6 +461,9 @@ class plgSystemLSCache extends JPlugin {
     }
 
     public function onUserAfterLogout($options) {
+        $session = JFactory::getSession();
+        $session->set('lscacheLogin', '0');
+        
         if (!$this->cacheEnabled) {
             return;
         }
@@ -794,7 +808,7 @@ class plgSystemLSCache extends JPlugin {
 
         $Parts = explode($d1, trim($str));
         foreach ($Parts as $part1) {
-            list( $key, $val ) = explode($d2, trim($part1));
+            list( $key, $val ) = explode($d2, trim($part1).$d2);
             $result[urldecode($key)] = urldecode($val);
         }
 
