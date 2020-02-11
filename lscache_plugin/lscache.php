@@ -200,6 +200,16 @@ class plgSystemLSCache extends JPlugin {
 
         $tag = $this->moduleHelper->getModuleTags($module);
         $cacheType = $this->getModuleCacheType($module);
+        
+        $m = $this->getModule($module->id);
+        //register access level only render after logged in
+        if(($m->access==2) && $user->get('guest')){
+            return;
+        }
+        //register access level only render before logged in
+        if(($m->access==5) && !$user->get('guest')){
+            return;
+        }
 
         $etag = 'com_modules:' . $module->id;
         if (!empty($module->lscache_tag)) {
