@@ -291,7 +291,7 @@ class plgSystemLSCache extends JPlugin {
         $this->pageElements["content"] = $row;
     }
 
-    public function onBeforeRender() {
+    public function onAfterRender() {
         if (!$this->cacheEnabled) {
             return;
         }
