@@ -173,6 +173,7 @@ class plgSystemLSCache extends JPlugin {
         }
         
         
+        
         if (!$this->pageCachable) {
             
         } else if (JDEBUG) {
@@ -201,16 +202,6 @@ class plgSystemLSCache extends JPlugin {
         $tag = $this->moduleHelper->getModuleTags($module);
         $cacheType = $this->getModuleCacheType($module);
         
-        $m = $this->getModule($module->id);
-        //register access level only render after logged in
-        if(($m->access==2) && $user->get('guest')){
-            return;
-        }
-        //register access level only render before logged in
-        if(($m->access==5) && !$user->get('guest')){
-            return;
-        }
-
         $etag = 'com_modules:' . $module->id;
         if (!empty($module->lscache_tag)) {
             $etag .= ',' . $module->lscache_tag;
@@ -1421,7 +1412,15 @@ class plgSystemLSCache extends JPlugin {
             $this->lscInstance->checkPrivateCookie();
             $loginCachable = $this->settings->get('loginCachable', 0) == 1 ? true : false;
             if ($loginCachable) {
-                if ($this->settings->get('loginCacheVary', 0) == 1) {
+                if ($this->settings->get('loginCacheVary', 0) == 2) {
+                    $groups = $user->get('groups');
+                    if(count($groups)>1){
+                        $this->pageCachable = false;
+                        $this->vary['login'] = 'true';
+                    } else if(count($groups)==1){
+                        $this->vary['login'] = reset($groups);
+                    }
+                } else if ($this->settings->get('loginCacheVary', 0) == 1) {
                     $this->vary['login'] = 'true';
                 } else if (!empty($this->settings->get('loginExcludeMenus'))) {
                     $this->vary['login'] = 'true';
