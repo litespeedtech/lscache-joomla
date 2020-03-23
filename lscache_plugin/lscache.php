@@ -173,14 +173,20 @@ class plgSystemLSCache extends JPlugin {
         }
         
         
+        if ($app->input->getMethod() != 'GET') {
+            $this->pageCachable = false;
+            if ($this->menuItem) {
+                $purgeTags = "com_menus:" . $this->menuItem->id;
+                $this->lscInstance->purgePublic($purgeTags);
+                $this->log();
+            }
+        }
         
         if (!$this->pageCachable) {
             
         } else if (JDEBUG) {
             $this->pageCachable = false;
         } else if (count($app->getMessageQueue())) {
-            $this->pageCachable = false;
-        } else if ($app->input->getMethod() != 'GET') {
             $this->pageCachable = false;
         } else if ($this->isExcluded()) {
             $this->pageCachable = false;
