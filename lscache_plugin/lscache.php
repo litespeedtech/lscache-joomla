@@ -21,7 +21,7 @@ class plgSystemLSCache extends JPlugin {
     const MODULE_EMBED = 4;
     const CATEGORY_CONTEXTS = array('com_categories.category', 'com_banners.category', 'com_contact.category', 'com_content.category', 'com_newsfeeds.category', 'com_users.category',
         'com_categories.categories', 'com_banners.categories', 'com_contact.categories', 'com_content.categories', 'com_newsfeeds.categories', 'com_users.categories');
-    const CONTENT_CONTEXTS = array('com_content.article', 'com_content.featured', 'com_banner.banner', 'com_contact.contact', 'com_newsfeeds.newsfeed', 'com_content');
+    const CONTENT_CONTEXTS = array('com_content.article', 'com_content.featured', 'com_content.form', 'com_banner.banner', 'com_contact.contact', 'com_newsfeeds.newsfeed', 'com_content');
 
     protected $app;
     protected $cacheEnabled;
@@ -278,23 +278,23 @@ class plgSystemLSCache extends JPlugin {
         }
 
         
-                
-        if(in_array($context, self::CATEGORY_CONTEXTS) && isset($row->catid) && isset($this->pageElements["id"]) && ($row->catid==$this->pageElements["id"])){
-            $this->pageElements["context"] = $context;
+        // if already have context ignore category context
+        if(in_array($context, self::CATEGORY_CONTEXTS) && isset($this->pageElements["context"]) && ($context!=$this->pageElements["context"])){
             return;
         }
-        else if (isset($this->pageElements["id"])) {
-            if (!isset($row->id)) {
-                return;
-            } else if ($row->id != $this->pageElements["id"]) {
-                return;
-            }
-        } else if (isset($this->pageElements["context"])) {
+        
+        // if it has category context, override it with no-category context                
+        if(!in_array($context, self::CATEGORY_CONTEXTS) && isset($this->pageElements["context"]) &&  in_array($this->pageElements["context"], self::CATEGORY_CONTEXTS)){
+            $this->pageElements["context"] = $context;
+            $this->pageElements["content"] = $row;
             return;
         }
 
-        $this->pageElements["context"] = $context;
-        $this->pageElements["content"] = $row;
+        if(!isset($this->pageElements["context"])){
+            $this->pageElements["context"] = $context;
+            $this->pageElements["content"] = $row;
+            return;
+        }
     }
 
     public function onAfterRender() {
@@ -330,20 +330,14 @@ class plgSystemLSCache extends JPlugin {
         if (isset($context)) {
             $option = $this->getOption($context);
         }
-
-        
-        if($option=="com_content" && isset($this->pageElements["view"]) && ($this->pageElements["view"]=='category')){
-                $context = 'com_categories.category';
-                $option = 'com_categories';
-        }
-        
+              
         if (isset($this->pageElements["id"])) {
             $id = $this->pageElements["id"];
         }
 
         if (isset($this->pageElements["content"])) {
             $content = $this->pageElements["content"];
-            if ($content && isset($content->id)) {
+            if ($content && isset($content->id) && !in_array($context, self::CATEGORY_CONTEXTS)) {
                 $id = $content->id;
             }
         }
