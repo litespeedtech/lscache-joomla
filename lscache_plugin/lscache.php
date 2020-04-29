@@ -172,8 +172,11 @@ class plgSystemLSCache extends JPlugin {
             $this->pageCachable = false;
         }
         
+        if (($option=='com_content') && ($app->input->get('view')=='form' )){
+            $this->pageCachable = false;
+        }
         
-        if ($app->input->getMethod() != 'GET') {
+        if ($this->pageCachable && ($app->input->getMethod() != 'GET')) {
             $this->pageCachable = false;
             if ($this->menuItem) {
                 $purgeTags = "com_menus:" . $this->menuItem->id;
@@ -532,10 +535,6 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
 
-        if ($this->isOptionExcluded($option)) {
-            return;
-        }
-
         if (in_array($context, self::CONTENT_CONTEXTS)) {
             $purgeTags = $option . ',' . $option . ':' . $row->id;
             $this->purgeObject->ids[] = $row->id;
@@ -560,6 +559,10 @@ class plgSystemLSCache extends JPlugin {
                 return;
             }
             $purgeTags = 'com_users,com_users:' . $row["id"];
+            $purgeContactsTag = $this->getUserContactTag($row["id"]);
+            if(!empty($purgeContactsTag)){
+                $purgeTags .= ',' . $purgeContactsTag;
+            }
             $this->purgeObject->tags[] = $purgeTags;
             $this->purgeObject->option = $option;
             $this->purgeObject->idField = 'id';
@@ -1050,6 +1053,19 @@ class plgSystemLSCache extends JPlugin {
 
         $template = $db->loadObject();
         return $template;
+    }
+    
+    protected function getUserContactTag($uid){
+        $db = JFactory::getDbo();
+        $query = $db->getQuery(true)
+            ->select('c.id')
+            ->from($db->quoteName('#__contact_details', 'c'))
+            ->where('c.published = 1')
+            ->where('c.user_id = ' . (int) $uid);
+        $db->setQuery($query);
+        $contact_ids = $db->loadColumn();
+        
+        return implode(',' ,array_map(function($value) { return 'com_contact:' . $value ;}, $contact_ids ));
     }
 
     protected function getExtension($eid) {
