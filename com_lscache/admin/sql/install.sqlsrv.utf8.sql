@@ -5,6 +5,7 @@ CREATE TABLE [#__modules_lscache] (
   [moduleid] bigint NOT NULL,
   [lscache_type] smallint DEFAULT 0,
   [lscache_ttl] smallint  DEFAULT 0,
+  [module_type] smallint DEFAULT 0,
   CONSTRAINT [PK_#__modules_lscache] PRIMARY KEY CLUSTERED (
 	[moduleid] ASC
 ));

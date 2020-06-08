@@ -61,7 +61,7 @@ class plgSystemLSCache extends JPlugin {
         if (!$this->cacheEnabled) {
             return;
         }
-        $this->esiEnabled = $this->settings->get('esiEnabled', 1) == 1 ? true : false;
+        $this->esiEnabled = $this->settings->get('esiEnabled', 1);
 
         // Server type
         if (!defined('LITESPEED_SERVER_TYPE')) {
@@ -146,6 +146,17 @@ class plgSystemLSCache extends JPlugin {
         }
         //$this->debug(__FUNCTION__ . var_export($this->pageElements,true));
 
+        if ($app->isAdmin()) {
+            $this->pageCachable = false;
+            $this->purgeAdmin($option);
+        } else {
+            $this->checkVary();
+            if((!$this->esiEnabled) && ($app->input->get("lscache_formtoken")=="1")){
+                $token = JSession::getFormToken();
+                $app->input->post->set($token,'1');
+            }
+        }
+
         if (isset($this->pageElements["option"])) {
             $option = $this->pageElements["option"];
             $this->componentHelper->registerEvents($option);
@@ -153,18 +164,7 @@ class plgSystemLSCache extends JPlugin {
             $this->pageCachable = false;
             return;
         }
-
-        if ($app->isAdmin()) {
-            $this->pageCachable = false;
-            $this->purgeAdmin($option);
-        } else {
-            $this->checkVary();
-            if($app->input->get("lscache_formtoken")=="1"){
-                $token = JSession::getFormToken();
-                $app->input->post->set($token,'1');
-            }
-        }
-
+        
         //avoid some application have expired login session serve 
         $session = JFactory::getSession();
         $user = JFactory::getUser();
@@ -172,18 +172,28 @@ class plgSystemLSCache extends JPlugin {
             $this->pageCachable = false;
         }
         
+        //login esi override and esi always on implement
+        if($this->settings->get('loginOverrideESI', 0)  && !$user->get('guest')){
+            $this->esiEnabled = $this->settings->get('loginOverrideESI');
+        }        
+        if($this->esiEnabled==2){
+            $this->esion=true;
+        }
+        
+        //avoid article edit form been cached
         if (($option=='com_content') && ($app->input->get('view')=='form' )){
             $this->pageCachable = false;
         }
         
-        if ($this->pageCachable && ($app->input->getMethod() != 'GET')) {
-            $this->pageCachable = false;
-            if ($this->menuItem) {
-                $purgeTags = "com_menus:" . $this->menuItem->id;
-                $this->lscInstance->purgePublic($purgeTags);
-                $this->log();
-            }
-        }
+//        //if post back, purge current page, disabled in case purge search post back
+//        if ($this->pageCachable && ($app->input->getMethod() != 'GET')) {
+//            $this->pageCachable = false;
+//            if ($this->menuItem) {
+//                $purgeTags = "com_menus:" . $this->menuItem->id;
+//                $this->lscInstance->purgePublic($purgeTags);
+//                $this->log();
+//            }
+//        }
         
         if (!$this->pageCachable) {
             
@@ -276,6 +286,10 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
 
+        if (strpos($context, "text") === 0) {
+            return;
+        }
+        
         if($context == "com_content.featured"){
             return;
         }
@@ -302,6 +316,9 @@ class plgSystemLSCache extends JPlugin {
 
     public function onAfterRender() {
         if (!$this->cacheEnabled) {
+            if($this->esion){
+                header('X-LiteSpeed-Cache-Control:esi=on');
+            }
             return;
         }
 
@@ -333,7 +350,7 @@ class plgSystemLSCache extends JPlugin {
         if (isset($context)) {
             $option = $this->getOption($context);
         }
-              
+        
         if (isset($this->pageElements["id"])) {
             $id = $this->pageElements["id"];
         }
@@ -376,11 +393,20 @@ class plgSystemLSCache extends JPlugin {
             $cacheTimeout = $this->settings->get('homePageCacheTimeout', 2000) * 60;
         }
 
-        $token = JSession::getFormToken();
         $content = $this->app->getBody();
-        $search = '#<input.*?name="'. $token . '".*?>#';
-        $replace = '<input type="hidden" name="lscache_formtoken" value="1" />';
-        $data = preg_replace($search, $replace, $content, -1, $count);
+        if($this->esiEnabled){
+            $search = JHtml::_( 'form.token' );
+            $replace = $this->esiTokenBlock();
+            $data = str_replace($search, $replace, $content,  $count);
+            if($count>0){
+                $this->esion = true;
+            }            
+        } else {
+            $token = JSession::getFormToken();
+            $search = '#<input.*?name="'. $token . '".*?>#';
+            $replace = '<input type="hidden" name="lscache_formtoken" value="1" />';
+            $data = preg_replace($search, $replace, $content, -1, $count);
+        }        
         if($count>0){
             $this->app->setBody($data);
         }
@@ -1014,12 +1040,14 @@ class plgSystemLSCache extends JPlugin {
             $module->cache_type = self::MODULE_ESI;
             $module->lscache_type = $rows[0]->lscache_type;
             $module->lscache_ttl = $rows[0]->lscache_ttl;
+            $module->module_type = $rows[0]->module_type;
         } else if (($this->settings->get('loginESI', 1) == 1) && ((stripos($module->module, 'login') !== FALSE) || (stripos($module->title, 'login') !== FALSE))) {
             $module->original_cache_type = $module->cache_type;
             $module->cache_type = self::MODULE_ESI;
             $module->lscache_type = -1;
             $module->lscache_ttl = 14;
             $module->lscache_tag = 'joomla.login';
+            $module->module_type = 0;
         }
 
         return $module->cache_type;
@@ -1304,6 +1332,12 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
 
+        if ($moduleid == -2) {
+            $this->esiTokenForm();
+            $app->close();
+            return;
+        }
+        
         $module = $this->getModule($moduleid);
         if (!$module) {
             http_response_code(403);
@@ -1398,8 +1432,11 @@ class plgSystemLSCache extends JPlugin {
             }
 
             $app->setBody($content);
-            echo $app->toString();
-            $app->close();
+//            if ($module->module_type == 0) {
+                echo $app->toString();
+                $app->close();
+//            }
+//            $this->cacheEnabled = false;
         }
     }
 
@@ -1829,5 +1866,16 @@ class plgSystemLSCache extends JPlugin {
         }
         return $ip;
     }
+    
+    protected function esiTokenForm(){
+        $this->lscInstance->checkPrivateCookie();
+        $this->lscInstance->cachePrivate('token','token');
+        echo JHtml::_( 'form.token' );
+    }
+
+    protected function esiTokenBlock(){
+        $block = '<esi:include src="index.php?option=com_lscache&view=esi&moduleid=-2" cache-control="private,no-vary" cache-tag="token" />' . PHP_EOL;
+        return $block;
+    }    
 
 }

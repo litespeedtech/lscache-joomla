@@ -40,7 +40,8 @@
     <fieldset name="advanced" label="COM_LSCACHE_FIELDSET_ADVANCED_LABEL"  description="COM_LSCACHE_FIELDSET_ADVANCED_DESC" >
         <field name="esiEnabled" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_ESI_ENABLED_LABEL" description="COM_LSCACHE_FIELD_ESI_ENABLED_DESC">
             <option value="0">JDISABLED</option>
-            <option value="1">JENABLED</option>
+            <option value="1">COM_LSCACHE_WITH_ESIMODULE</option>
+            <option value="2">COM_LSCACHE_ALWAYS_ENABLED</option>
         </field>
 
         <field name="loginESI" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_LOGIN_ESI_LABEL" description="COM_LSCACHE_FIELD_LOGIN_ESI_DESC">
@@ -63,6 +64,11 @@
     </fieldset>
 
     <fieldset name="login" label="COM_LSCACHE_FIELDSET_LOGIN_LABEL" description="COM_LSCACHE_FIELDSET_LOGIN_DESC" >
+        <field name="loginOverrideESI" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_ESI_OVERRIDE_LABEL" description="COM_LSCACHE_FIELD_ESI_OVERRIDE_DESC">
+            <option value="0">COM_LSCACHE_NOT_OVERRIDE</option>
+            <option value="2">COM_LSCACHE_ALWAYS_ENABLED</option>
+        </field>
+
         <field name="loginCachable" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_LOGIN_CACHABLE_LABEL"  description="COM_LSCACHE_FIELD_LOGIN_CACHABLE_DESC" >
             <option value="0">JDISABLED</option>
             <option value="1">JENABLED</option>
