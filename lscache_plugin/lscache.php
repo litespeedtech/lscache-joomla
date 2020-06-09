@@ -146,6 +146,16 @@ class plgSystemLSCache extends JPlugin {
         }
         //$this->debug(__FUNCTION__ . var_export($this->pageElements,true));
 
+
+        if (isset($this->pageElements["option"])) {
+            $option = $this->pageElements["option"];
+            $this->componentHelper->registerEvents($option);
+        } else {
+            $this->pageCachable = false;
+            return;
+        }
+
+        
         if ($app->isAdmin()) {
             $this->pageCachable = false;
             $this->purgeAdmin($option);
@@ -157,13 +167,6 @@ class plgSystemLSCache extends JPlugin {
             }
         }
 
-        if (isset($this->pageElements["option"])) {
-            $option = $this->pageElements["option"];
-            $this->componentHelper->registerEvents($option);
-        } else {
-            $this->pageCachable = false;
-            return;
-        }
         
         //avoid some application have expired login session serve 
         $session = JFactory::getSession();
