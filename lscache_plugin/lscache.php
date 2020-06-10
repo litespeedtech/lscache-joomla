@@ -407,7 +407,7 @@ class plgSystemLSCache extends JPlugin {
         } else {
             $token = JSession::getFormToken();
             $search = '#<input.*?name="'. $token . '".*?>#';
-            $replace = '<input type="hidden" name="lscache_formtoken" value="1" />';
+            $replace = '<input type="hidden" name="lscache_formtoken" value="1">';
             $data = preg_replace($search, $replace, $content, -1, $count);
         }        
         if($count>0){
@@ -1368,7 +1368,7 @@ class plgSystemLSCache extends JPlugin {
             $uri = JURI::getinstance();
             $uri->setPath("");
             $uri->setQuery("");
-            $uri->setFragment("");
+            $uri->setFragment(""); 
             $uri->parse($_SERVER['HTTP_REFERER']);
 
             $appInstance = JApplication::getInstance('site');
