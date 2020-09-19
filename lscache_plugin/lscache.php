@@ -1501,6 +1501,8 @@ class plgSystemLSCache extends JPlugin {
             ksort($this->vary);
             $varyKey = $this->implode2($this->vary, ',', ':');
             return $varyKey;
+        } else if ($this->settings->get('loginRemember', 0) == 1) {
+            return 'login:false';
         } else {
             return '';
         }
@@ -1522,19 +1524,19 @@ class plgSystemLSCache extends JPlugin {
 
         if ($value == "") {
             if (isset($_COOKIE[LiteSpeedCacheBase::VARY_COOKIE])) {
-                $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, null, time() - 1);
+                $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, null, time() - 1, '/');
                 return false;
             }
             return true;
         }
 
         if (!isset($_COOKIE[LiteSpeedCacheBase::VARY_COOKIE])) {
-            $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, $value, 0);
+            $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, $value, 0, '/');
             return false;
         }
 
         if ($_COOKIE[LiteSpeedCacheBase::VARY_COOKIE] != $value) {
-            $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, $value, 0);
+            $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, $value, 0, '/');
             return false;
         }
 
