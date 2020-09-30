@@ -32,6 +32,12 @@
             </schemas>
     </update>
     
+    <files folder="component">
+            <filename component="com_lscache">lscache.php</filename>
+            <filename>controller.php</filename>
+            <filename>index.html</filename>
+            <folder>views/</folder>
+    </files>
 
     <administration>
         <menu link='index.php?option=com_lscache'>COM_LSCACHE_MENU</menu>

@@ -17,7 +17,8 @@
  <description>Package to install the LiteSpeed LSCache pluginwith supporting component</description>
  <scriptfile>pkg_script.php</scriptfile>
  <files>
-   <file type="component" id="com_lscache" client="administrator">com_lscache.zip</file>
+   <file type="component" id="com_lscache">com_lscache.zip</file>
    <file type="plugin" id="lscache" group="system">lscache_plugin.zip</file>
+   <file type="template" id="esitemplate">esitemplate.zip</file>
  </files>
  </extension>

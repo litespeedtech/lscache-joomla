@@ -78,10 +78,6 @@
             <option value="1">COM_LSCACHE_FIELD_LOGIN_CACHEVARY_ALLUSER</option>
             <option value="2">COM_LSCACHE_FIELD_LOGIN_CACHEVARY_BYGROUP</option>
         </field>
-        <field name="loginRemember" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_LOGIN_REMEMBER_LABEL"  description="COM_LSCACHE_FIELD_LOGIN_REMEMBER_DESC" >
-            <option value="0">JDISABLED</option>
-            <option value="1">JENABLED</option>
-        </field>
         <field name="loginExcludeMenus" type="menuitem" menuType="mainmenu" published="1" clientId="0" multiple="multiple" label="COM_LSCACHE_FIELD_EXCLUDE_MENU_LABEL" />
         <field name="loginExcludeURLs" type="textarea" default="" class="input-xxlarge" rows="15" filter="raw" label="COM_LSCACHE_FIELD_EXCLUDE_URL_LABEL" hint="COM_LSCACHE_FIELD_EXCLUDE_URL_DESC" />
         <field name="note_loginexclude" type="note" class="alert alert-success"  description="COM_LSCACHE_FIELD_LOGIN_EXCLUDE_NOTE" />

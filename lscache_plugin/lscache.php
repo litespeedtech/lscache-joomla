@@ -29,6 +29,7 @@ class plgSystemLSCache extends JPlugin {
     protected $esion = false;
     protected $esittl = 0;
     protected $esipublic = true;
+    protected $esiModule = null;
     protected $menuItem;
     protected $moduleHelper;
     protected $componentHelper;
@@ -216,6 +217,13 @@ class plgSystemLSCache extends JPlugin {
         }
     }
 
+    public function onAfterModuleList($modules){
+        if($this->esiModule!=null){
+            $modules[] =$this->esiModule;
+            $this->pageCachable = false;
+        }
+    }
+    
     public function onAfterRenderModule($module, $attribs="") {
         if (!$this->pageCachable) {
             return;
@@ -247,12 +255,12 @@ class plgSystemLSCache extends JPlugin {
                 }
 
                 if ($module->lscache_type == 1) {
-                    $module->content = '<esi:include src="index.php?option=com_lscache&view=esi&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="public,no-vary" cache-tag="' . $tag . '" />';
+                    $module->content = '<esi:include src="index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="public,no-vary" cache-tag="' . $tag . '" />';
                 } else if ($module->lscache_type == -1) {
                     $tag = 'public:' . $tag . ',' . $tag;
-                    $module->content = '<esi:include src="index.php?option=com_lscache&view=esi&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="private,no-vary" cache-tag="' . $tag . '" />';
+                    $module->content = '<esi:include src="index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="private,no-vary" cache-tag="' . $tag . '" />';
                 } else if ($module->lscache_type == 0) {
-                    $module->content = '<esi:include src="' . 'index.php?option=com_lscache&view=esi&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="no-cache"/>';
+                    $module->content = '<esi:include src="' . 'index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="no-cache"/>';
                 }
 
                 $this->esion = true;
@@ -496,7 +504,7 @@ class plgSystemLSCache extends JPlugin {
     public function onUserAfterLogout($options) {
         $session = JFactory::getSession();
         $session->set('lscacheLogin', '0');
-        
+
         if (!$this->cacheEnabled) {
             return;
         }
@@ -1434,12 +1442,15 @@ class plgSystemLSCache extends JPlugin {
                 $this->log();
             }
 
-            $app->setBody($content);
-//            if ($module->module_type == 0) {
-                echo $app->toString();
+            if ($module->module_type == 0) {
+                echo $content;
                 $app->close();
-//            }
-//            $this->cacheEnabled = false;
+            } else {
+                $module->position='esi';
+                $module->menuid=0;
+                $this->esiModule = $module;
+                $this->app->setTemplate('esitemplate');
+            }
         }
     }
 
@@ -1501,8 +1512,6 @@ class plgSystemLSCache extends JPlugin {
             ksort($this->vary);
             $varyKey = $this->implode2($this->vary, ',', ':');
             return $varyKey;
-        } else if ($this->settings->get('loginRemember', 0) == 1) {
-            return 'login:false';
         } else {
             return '';
         }
@@ -1826,7 +1835,12 @@ class plgSystemLSCache extends JPlugin {
         $directives .= 'CacheLookup on' . PHP_EOL;
         $directives .= '## Uncomment the following directives if you has a separate mobile view' . PHP_EOL;
         $directives .= '##RewriteEngine On' . PHP_EOL;
-        $directives .= '##RewriteCond %{HTTP_USER_AGENT} Mobile|Android|Silk/|Kindle|BlackBerry|Opera\ Mini|Opera\ Mobi [NC] RewriteRule .* - [E=Cache-Control:vary=ismobile]' . PHP_EOL;
+        $directives .= '##RewriteCond %{HTTP_USER_AGENT} Mobile|Android|Silk/|Kindle|BlackBerry|Opera\ Mini|Opera\ Mobi [NC] ' . PHP_EOL;
+        $directives .= '##RewriteRule .* - [E=Cache-Control:vary=ismobile]' . PHP_EOL;
+        $directives .= '## Uncomment the following directives to enable login remember me' . PHP_EOL;
+        $directives .= '##RewriteCond %{HTTP_COOKIE} ^.*joomla_remember_me.*$' . PHP_EOL;
+        $directives .= '##RewriteCond %{HTTP_COOKIE} !^.*_lscache_vary.*$' . PHP_EOL;
+        $directives .= '##RewriteRule .* - [E=cache-control:no-cache]' . PHP_EOL;        
         $directives .= '</IfModule>' . PHP_EOL;
         $directives .= '### LITESPEED_CACHE_END';
 
@@ -1879,7 +1893,7 @@ class plgSystemLSCache extends JPlugin {
     }
 
     protected function esiTokenBlock(){
-        $block = '<esi:include src="index.php?option=com_lscache&view=esi&moduleid=-2" cache-control="private,no-vary" cache-tag="token" />' . PHP_EOL;
+        $block = '<esi:include src="index.php?option=com_lscache&moduleid=-2" cache-control="private,no-vary" cache-tag="token" />' . PHP_EOL;
         return $block;
     }    
 
