@@ -225,6 +225,10 @@ class plgSystemLSCache extends JPlugin {
     }
     
     public function onAfterRenderModule($module, $attribs="") {
+        if(isset($module->output)){
+            $module->content = $module->output;
+        }
+        
         if (!$this->pageCachable) {
             return;
         }
@@ -1447,6 +1451,7 @@ class plgSystemLSCache extends JPlugin {
                 echo $content;
                 $app->close();
             } else {
+                $module->output = $content;
                 $module->content = $oldContent;
                 $module->position='esi';
                 $module->menuid=0;
