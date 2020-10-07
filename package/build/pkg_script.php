@@ -12,6 +12,8 @@ class Pkg_LSCacheInstallerScript
 
     public function preflight($type, $parent)
     {
+        $this->clearEsiTemplate();
+
         $app = JFactory::getApplication();
         
         $minimum_version = '3.0.0';
@@ -171,6 +173,47 @@ class Pkg_LSCacheInstallerScript
             }
         }
 	}
+
+	private function clearEsiTemplate()
+	{
+        $db = JFactory::getDbo();
+        $query = $db->getQuery(true);
+        $query->delete($db->quoteName('#__extensions'))
+        		->where($db->quoteName('type') . ' = '  . $db->quote('template'))
+        		->where($db->quoteName('element') . ' = ' . $db->quote('esitemplate'));
+        try {
+            $db->setQuery($query)->execute();
+        } catch (Exception $ex) {
+
+        }
+        
+        $query = $db->getQuery(true);
+        $query->delete($db->quoteName('#__template_styles'))
+        		->where($db->quoteName('template') . ' = ' . $db->quote('esitemplate'));
+        try {
+            $db->setQuery($query)->execute();
+        } catch (Exception $ex) {
+
+        }
+
+        define(JPATH_ROOT , '/home/user/joomla');
+        $esiTemplate = JPATH_ROOT  . '/templates/esitemplate';
+        try {
+            $this->rmrf($esiTemplate . '/*');
+            rmdir($esiTemplate);
+        } catch (Exception $ex) {
+
+        }
+    }
     
-    
+    private function rmrf($dir) {
+        foreach (glob($dir) as $file) {
+            if (is_dir($file)) { 
+                rmrf("$file/*");
+                rmdir($file);
+            } else {
+                unlink($file);
+            }
+        }
+    }    
 }

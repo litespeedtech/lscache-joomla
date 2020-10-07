@@ -5,7 +5,7 @@ defined('_JEXEC') or die;
 
 jimport('joomla.application.component.view');
 
-class LSCacheViewDefault extends JViewLegacy
+class lscacheViewDefault extends JViewLegacy
 {
 
 	protected $params;

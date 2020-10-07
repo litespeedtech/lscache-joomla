@@ -217,9 +217,9 @@ class plgSystemLSCache extends JPlugin {
         }
     }
 
-    public function onAfterModuleList($modules){
+    public function onAfterCleanModuleList(&$modules){
         if($this->esiModule!=null){
-            $modules[] =$this->esiModule;
+            $modules = array( $this->esiModule ) ;
             $this->pageCachable = false;
         }
     }
@@ -1418,6 +1418,7 @@ class plgSystemLSCache extends JPlugin {
             $lang->load();
         }
 
+        $oldContent = $module->content;
         $content = JModuleHelper::renderModule($module, $attribs);
         if ($content) {
             $tag = "com_modules:" . $module->id;
@@ -1446,6 +1447,7 @@ class plgSystemLSCache extends JPlugin {
                 echo $content;
                 $app->close();
             } else {
+                $module->content = $oldContent;
                 $module->position='esi';
                 $module->menuid=0;
                 $this->esiModule = $module;

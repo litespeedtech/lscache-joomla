@@ -3,9 +3,9 @@
 <extension version="3.1" type="template" client="site">
 	<name>esitemplate</name>
 	<version>1.0</version>
-	<creationDate>4/30/2012</creationDate>
-	<author>Kyle Ledbetter</author>
-	<authorEmail>admin@joomla.org</authorEmail>
+	<creationDate>9/30/2020</creationDate>
+	<author>litespeedtech.com</author>
+	<authorEmail>info@litespeedtech.com</authorEmail>
 	<copyright>Copyright (C) 2005 - 2018 Open Source Matters, Inc. All rights reserved.</copyright>
 	<description>ESI Template</description>
 	<files>
