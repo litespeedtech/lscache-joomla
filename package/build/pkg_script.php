@@ -12,7 +12,6 @@ class Pkg_LSCacheInstallerScript
 
     public function preflight($type, $parent)
     {
-        $this->clearEsiTemplate();
 
         $app = JFactory::getApplication();
         
@@ -60,6 +59,10 @@ class Pkg_LSCacheInstallerScript
     }
 
     public function postflight( $type, $parent ) {
+        
+        $package = $parent->getParent()->getPath('source');
+        $this->installEsiTemplate($package);
+        
         if (function_exists('opcache_reset')){
             opcache_reset();
         } else if (function_exists('phpopcache_reset')){
@@ -174,8 +177,22 @@ class Pkg_LSCacheInstallerScript
         }
 	}
 
-	private function clearEsiTemplate()
+	protected function installEsiTemplate($package)
 	{
+        $app = JFactory::getApplication();
+
+        $template_path = JPATH_ROOT . '/templates/esitemplate' ;       
+        if (JFolder::exists( $template_path )){
+            $app->enqueueMessage('esi template already exists, esi template installing ignored', 'warning');
+            return;
+        }
+
+        $template_package = $package.'/esiTemplate';
+        if (!JFolder::exists( $template_package )){
+            $app->enqueueMessage('esi template package not exists, esi template installing ignored', 'warning');
+            return;
+        }
+
         $db = JFactory::getDbo();
         $query = $db->getQuery(true);
         $query->delete($db->quoteName('#__extensions'))
@@ -196,24 +213,9 @@ class Pkg_LSCacheInstallerScript
 
         }
 
-        define(JPATH_ROOT , '/home/user/joomla');
-        $esiTemplate = JPATH_ROOT  . '/templates/esitemplate';
-        try {
-            $this->rmrf($esiTemplate . '/*');
-            rmdir($esiTemplate);
-        } catch (Exception $ex) {
-
-        }
+        $installer = new JInstaller;
+        $result = $installer->install($template_package);
+        
     }
     
-    private function rmrf($dir) {
-        foreach (glob($dir) as $file) {
-            if (is_dir($file)) { 
-                rmrf("$file/*");
-                rmdir($file);
-            } else {
-                unlink($file);
-            }
-        }
-    }    
 }

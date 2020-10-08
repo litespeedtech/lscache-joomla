@@ -19,6 +19,5 @@
  <files>
    <file type="component" id="com_lscache">com_lscache.zip</file>
    <file type="plugin" id="lscache" group="system">lscache_plugin.zip</file>
-   <file type="template" id="esitemplate">esitemplate.zip</file>
  </files>
  </extension>
