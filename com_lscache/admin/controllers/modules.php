@@ -156,7 +156,8 @@ class LSCacheControllerModules extends JControllerAdmin
         
         $success = 0;
         $acceptCode = array(200, 201);
-        
+
+        $msg = '';
         foreach ($slugs as $key => $path) {
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $path);
@@ -166,14 +167,17 @@ class LSCacheControllerModules extends JControllerAdmin
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PURGE");
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.6 (KHTML, like Gecko) Chrome/20.0.1090.0 Safari/536.6');            
             $buffer = curl_exec($ch);
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
             if (in_array($httpcode, $acceptCode)) {
                 $success++;
+            } else {
+                $msg .= $path ." Return code is " . $httpcode . curl_error($ch) .' , ' . PHP_EOL;
             }
         }
-        $msg = str_replace('%d', $success, JText::_('COM_LSCACHE_URL_PURGED'));
+        $msg .= str_replace('%d', $success, JText::_('COM_LSCACHE_URL_PURGED'));
         $app = JFactory::getApplication();
         $app->enqueueMessage($msg);
         
