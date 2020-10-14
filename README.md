@@ -23,7 +23,7 @@ Prerequisites
 -------------
 This version of LiteSpeed Cache requires Joomla 3.x or later and LiteSpeed Web Server 5.2.3+ or OpenLiteSpeed.
 
-This version is compatible with virtuemart 3.2.4 or later, for lower version of virtuemart please contact us for support.
+This version is compatible with VirtueMart 3.2.4 or later. For lower versions of VirtueMart, please contact us for support.
 
 
 Installing
@@ -37,12 +37,12 @@ If your Joomla site has a separate mobile view, please uncomment Rewrite directi
 
     <IfModule LiteSpeed>
     CacheLookup on
-    ## Uncomment the following directives if you has a separate mobile view
+    ## Uncomment the following directives if you have a separate mobile view
     RewriteEngine On
     RewriteCond %{HTTP_USER_AGENT} Mobile|Android|Silk/|Kindle|BlackBerry|Opera\ Mini|Opera\ Mobi [NC] RewriteRule .* - [E=Cache-Control:vary=ismobile]
     </IfModule>
 
-If you need generate latest package from the latest souce code in github, you can run *buildPackage.sh* from *package* folder.
+If you need to generate the latest package from the most recent source code in GitHub, you can run *buildPackage.sh* from the *package* folder.
 
 
 Configuration
