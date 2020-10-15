@@ -159,7 +159,6 @@ class LSCacheControllerModules extends JControllerAdmin
         $domain = JURI::getinstance()->toString(['host']);
         $host = $_SERVER['SERVER_ADDR'] ;
         $server = JURI::getinstance()->toString(['host','port']);
-        var_dump($server);
         $header = ['Host: ' . $server];
         $msg = '';
         foreach ($slugs as $key => $path) {
