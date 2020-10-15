@@ -153,13 +153,21 @@ class LSCacheControllerModules extends JControllerAdmin
     }
 
     private function purgeURLs($slugs) {
-        
         $success = 0;
         $acceptCode = array(200, 201);
-
+        
+        $domain = JURI::getinstance()->toString(['host']);
+        $host = $_SERVER['SERVER_ADDR'] ;
+        $server = JURI::getinstance()->toString(['host','port']);
+        var_dump($server);
+        $header = ['Host: ' . $server];
         $msg = '';
         foreach ($slugs as $key => $path) {
             $ch = curl_init();
+            if(strpos($path,$domain)!==FALSE){
+                $path = str_replace($domain, $host, $path);
+                curl_setopt($ch, CURLOPT_HTTPHEADER,$header);
+            }
             curl_setopt($ch, CURLOPT_URL, $path);
             curl_setopt($ch, CURLOPT_VERBOSE, true);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -167,7 +175,8 @@ class LSCacheControllerModules extends JControllerAdmin
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PURGE");
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.6 (KHTML, like Gecko) Chrome/20.0.1090.0 Safari/536.6');            
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.6 (KHTML, like Gecko) Chrome/20.0.1090.0 Safari/536.6');
+            
             $buffer = curl_exec($ch);
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             if (in_array($httpcode, $acceptCode)) {
@@ -180,7 +189,7 @@ class LSCacheControllerModules extends JControllerAdmin
         $msg .= str_replace('%d', $success, JText::_('COM_LSCACHE_URL_PURGED'));
         $app = JFactory::getApplication();
         $app->enqueueMessage($msg);
-        
+                
         return true;
         
     }
