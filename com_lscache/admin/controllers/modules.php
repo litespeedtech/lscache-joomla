@@ -157,37 +157,48 @@ class LSCacheControllerModules extends JControllerAdmin
         $acceptCode = array(200, 201);
         
         $domain = JURI::getinstance()->toString(['host']);
-        $host = $_SERVER['SERVER_ADDR'] ;
+        $host 	= $_SERVER['SERVER_ADDR'] ;
         $server = JURI::getinstance()->toString(['host','port']);
         $header = ['Host: ' . $server];
-        $msg = '';
-        foreach ($slugs as $key => $path) {
+        $msg 	= [];
+        
+            foreach ($slugs as $key => $path) {
+            
+		// Check that URL is in this domain
+		if ( strpos($path, $domain) === FALSE ) {
+		$msg[] = $path . ' - ' . JText::_('COM_LSCACHE_URL_WRONG_DOMAIN');
+		continue;
+		}
+	    
             $ch = curl_init();
-            if(strpos($path,$domain)!==FALSE){
-                $path = str_replace($domain, $host, $path);
-                curl_setopt($ch, CURLOPT_HTTPHEADER,$header);
-            }
-            curl_setopt($ch, CURLOPT_URL, $path);
+			
+            // Replace domain with host, and set Header Host, to support Cloudflare or reverse proxies
+            $host_path = str_replace($domain, $host, $path);
+            curl_setopt($ch, CURLOPT_HTTPHEADER,$header);
+			
+            curl_setopt($ch, CURLOPT_URL, $host_path);
             curl_setopt($ch, CURLOPT_VERBOSE, true);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             curl_setopt($ch, CURLOPT_TIMEOUT, 3);
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PURGE");
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.6 (KHTML, like Gecko) Chrome/20.0.1090.0 Safari/536.6');
             
             $buffer = curl_exec($ch);
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+			
             if (in_array($httpcode, $acceptCode)) {
                 $success++;
             } else {
-                $msg .= $path ." Return code is " . $httpcode . curl_error($ch) .' , ' . PHP_EOL;
+                $msg[] = $path . ' - ' . JText::_('COM_LSCACHE_URL_PURGE_FAIL') . $httpcode . curl_error($ch);
             }
+			
             curl_close($ch);
         }
-        $msg .= str_replace('%d', $success, JText::_('COM_LSCACHE_URL_PURGED'));
+	    
+        $msg[] = str_replace('%d', $success, JText::_('COM_LSCACHE_URL_PURGED'));
         $app = JFactory::getApplication();
-        $app->enqueueMessage($msg);
+        $app->enqueueMessage(implode("<br>", $msg));
                 
         return true;
         
