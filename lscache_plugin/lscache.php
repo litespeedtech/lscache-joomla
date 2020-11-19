@@ -1172,6 +1172,9 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
 
+        $link = JUri::getInstance();
+        if($link) { $content .= '   ' . $link; }
+
         JLog::add($content, $logLevel, 'LiteSpeedCache');
     }
 
