@@ -354,6 +354,11 @@ class plgSystemLSCache extends JPlugin {
             }
         }
 
+        $headers = $this->app->getHeaders();
+        if(isset($headers[0]) && isset($headers[0]['name']) && ($headers[0]['name']=='status') && (strpos($headers[0]['value'],'200')===FALSE) && (strpos($headers[0]['value'],'201')===FALSE)){
+            return;
+        }
+        
         if (isset($this->pageElements["context"])) {
             $context = $this->pageElements["context"];
             if ($context && in_array($context, self::CATEGORY_CONTEXTS)) {
@@ -378,7 +383,7 @@ class plgSystemLSCache extends JPlugin {
         }
 
         if (empty($option) && !empty($this->menuItem)) {
-            if (!$this->menuItem->home) {
+            if ($this->menuItem && !$this->menuItem->home) {
                 return;
             }
         } else if (isset($id) && in_array($option, array('com_content', 'com_contact', 'com_banners', 'com_newsfeed', 'com_categories', 'com_users'))) {
@@ -404,7 +409,7 @@ class plgSystemLSCache extends JPlugin {
         //$this->debug(__FUNCTION__ . $cacheTags . var_export($this->pageElements,true) );
 
         $cacheTimeout = $this->settings->get('cacheTimeout', 2000) * 60;
-        if ($this->menuItem->home) {
+        if ($this->menuItem && $this->menuItem->home) {
             $cacheTimeout = $this->settings->get('homePageCacheTimeout', 2000) * 60;
         }
 
