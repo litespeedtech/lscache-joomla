@@ -33,6 +33,7 @@ class plgSystemLSCache extends JPlugin {
     protected $menuItem;
     protected $moduleHelper;
     protected $componentHelper;
+    protected $esijs = array();
     public $settings;
     public $lscInstance;
     public $pageElements = array();
@@ -244,15 +245,16 @@ class plgSystemLSCache extends JPlugin {
             $etag .= ',' . $tag;
         }
 
+        $device = "desktop";
+        if ($this->app->client->mobile) {
+            $device = 'mobile';
+        }
+
         if ($cacheType == self::MODULE_ESI) {
             if (!$this->esiEnabled) {
                 $this->cacheTags[] = $etag;
             } else if (LITESPEED_ESI_SUPPORT) {
                 $tag = 'com_modules:' . $module->id;
-                $device = "desktop";
-                if ($this->app->client->mobile) {
-                    $device = 'mobile';
-                }
 
                 if ($module->lscache_ttl == 0) {
                     $module->lscache_type = 0;
@@ -270,16 +272,13 @@ class plgSystemLSCache extends JPlugin {
                 $this->esion = true;
                 return;
             } else if (!LITESPEED_ESI_SUPPORT) {
-                $this->cacheTags[] = $etag;
-                if ($module->lscache_type == 0) {
-                    $this->esittl = 0;
-                } else {
-                    $this->esittl = min($this->esittl, $module->lscache_ttl);
-                    if ($module->lscache_type == -1) {
-                        $this->esipublic = false;
-                    }
-                }
-
+                $url = 'index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) ;
+                $js = '$.ajax({url: "' . $url .'", success: function(result){' . PHP_EOL ;
+                $js .= '    $("#lscache_mod' . $module->id . '").replaceWith(result);' . PHP_EOL ;
+                $js .= '}});' .PHP_EOL ;
+                
+                $this->esijs[] = $js;
+                $module->content = '<div id="lscache_mod' .  $module->id  . '"><div>';
                 $this->esion = true;
                 return;
             }
@@ -427,29 +426,23 @@ class plgSystemLSCache extends JPlugin {
             $replace = '<input type="hidden" name="lscache_formtoken" value="1">';
             $data = preg_replace($search, $replace, $content, -1, $count);
         }        
-        if($count>0){
-            $this->app->setBody($data);
-        }
         
         if (!LITESPEED_ESI_SUPPORT && $this->esiEnabled && $this->esion) {
-            $cacheTimeout = min($cacheTimeout, $this->esittl);
-            if ($cacheTimeout == 0) {
-                return;
-            }
-            $this->lscInstance->config(array("public_cache_timeout" => $cacheTimeout, "private_cache_timeout" => $cacheTimeout));
-            if ($this->esipublic) {
-                $this->lscInstance->cachePublic($cacheTags, $this->esion);
-            } else {
-                $this->lscInstance->cachePrivate($cacheTags, $this->esion);
-            }
-        } else {
-            if ($cacheTimeout == 0) {
-                return;
-            }
-            $this->lscInstance->config(array("public_cache_timeout" => $cacheTimeout, "private_cache_timeout" => $cacheTimeout));
-            $this->lscInstance->cachePublic($cacheTags, $this->esion);
+            $data .= '<script> jQuery(document).ready(function($) {' .PHP_EOL;
+            $data .= implode(' ', $this->esijs) .PHP_EOL;
+            $data .= '}); </script>';
         }
+        
+        $this->app->setBody($data);
+
+        if ($cacheTimeout == 0) {
+            return;
+        }
+        
+        $this->lscInstance->config(array("public_cache_timeout" => $cacheTimeout, "private_cache_timeout" => $cacheTimeout));
+        $this->lscInstance->cachePublic($cacheTags, $this->esion);
         $this->log();
+        
     }
 
     private function getOption($context) {
@@ -1337,12 +1330,6 @@ class plgSystemLSCache extends JPlugin {
         
 
         if (!$this->esiEnabled) {
-            http_response_code(403);
-            $app->close();
-            return;
-        }
-
-        if (LITESPEED_ESI_SUPPORT === FALSE) {
             http_response_code(403);
             $app->close();
             return;
