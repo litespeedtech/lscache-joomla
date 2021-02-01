@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="module" version="3.1" client="administrator" method="upgrade">
+	<name>MOD_LSCACHE_NAME</name>
+	<author>LiteSpeed Technologies</author>
+	<creationDate>January 2021</creationDate>
+	<copyright>Copyright (C) 2005 - 2018 Open Source Matters. All rights reserved.</copyright>
+	<license>GNU General Public License version 2 or later; see LICENSE.txt</license>
+	<authorEmail>info@litespeedtech.com</authorEmail>
+	<authorUrl>www.litespeedtech.com</authorUrl>
+	<version>1.0.0</version>
+	<description>MOD_LSCACHE_XML_DESCRIPTION</description>
+
+	<files>
+		<filename module="mod_lscache">mod_lscache.php</filename>
+		<folder>tmpl</folder>
+	</files>
+
+</extension>

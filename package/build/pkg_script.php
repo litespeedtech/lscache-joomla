@@ -67,7 +67,7 @@ class Pkg_LSCacheInstallerScript
             opcache_reset();
         } else if (function_exists('phpopcache_reset')){
             phpopcache_reset();
-        }
+        }       
     }
     
     public function install()
@@ -88,6 +88,7 @@ class Pkg_LSCacheInstallerScript
     protected function lscacheEnable()
     {
         $db = JFactory::getDbo();
+        $app = JFactory::getApplication();
 
         $query = $db->getQuery(true);
         $query->update($db->quoteName('#__extensions'))
@@ -98,7 +99,7 @@ class Pkg_LSCacheInstallerScript
         try {
             $db->setQuery($query)->execute();
         } catch (RuntimeException $ex) {
-            $this->app->enqueueMessage($ex->getMessage(), 'error');
+            $app->enqueueMessage($ex->getMessage(), 'error');
         }
 
         $query = $db->getQuery(true);
@@ -109,7 +110,7 @@ class Pkg_LSCacheInstallerScript
         try {
             $db->setQuery($query)->execute();
         } catch (RuntimeException $ex) {
-            $this->app->enqueueMessage($ex->getMessage(), 'error');
+            $app->enqueueMessage($ex->getMessage(), 'error');
         }
 
         $query = $db->getQuery(true);
@@ -121,7 +122,7 @@ class Pkg_LSCacheInstallerScript
         try {
             $db->setQuery($query)->execute();
         } catch (RuntimeException $ex) {
-            $this->app->enqueueMessage($ex->getMessage(), 'error');
+            $app->enqueueMessage($ex->getMessage(), 'error');
         }
 
         $query = $db->getQuery(true);
@@ -133,7 +134,7 @@ class Pkg_LSCacheInstallerScript
         try {
             $db->setQuery($query)->execute();
         } catch (RuntimeException $ex) {
-            $this->app->enqueueMessage($ex->getMessage(), 'error');
+            $app->enqueueMessage($ex->getMessage(), 'error');
         }
         
         $query = $db->getQuery(true);
@@ -145,18 +146,78 @@ class Pkg_LSCacheInstallerScript
         try {
             $db->setQuery($query)->execute();
         } catch (RuntimeException $ex) {
-            $this->app->enqueueMessage($ex->getMessage(), 'error');
+            $app->enqueueMessage($ex->getMessage(), 'error');
         }
+
+        //Add module
+        $query = $db->getQuery(true);
+		$query->select($db->quoteName('id'))
+			->from('#__modules')
+			->where($db->quoteName('module') . ' = ' . $db->quote('mod_lscache'))
+			->where($db->quoteName('client_id') . ' = 1');                        
+		$db->setQuery($query, 0, 1);
+		$id = $db->loadResult();
+
+		if ( ! $id)
+		{
+			return;
+		}
+
+        $query = $db->getQuery(true);
+        $query->select($db->quoteName('moduleid'))
+			->from('#__modules_menu')
+			->where($db->quoteName('moduleid') . ' = ' . (int) $id);
+		$db->setQuery($query, 0, 1)->execute();
+		$exists = $db->loadResult();
+		if ($exists)
+		{
+			return;
+		}
+
+        $query = $db->getQuery(true);
+		$query->select($db->quoteName('ordering'))
+			->from('#__modules')
+			->where($db->quoteName('position') . ' = ' . $db->quote('status'))
+			->where($db->quoteName('client_id') . ' = 1')
+			->order('ordering DESC');
+		$db->setQuery($query, 0, 1)->execute();
+		$ordering = $db->loadResult();
+		$ordering++;
         
         $query = $db->getQuery(true);
-        $query->update($db->quoteName('#__virtuemart_configs'))
-                ->set("config = replace ( config, 'enable_content_plugin=" . '"0"' . "', 'enable_content_plugin=". '"1"' ."')")
-        		->where($db->quoteName('virtuemart_config_id') . ' = 1' );
+        $query->update($db->quoteName('#__modules'))
+			->set($db->quoteName('published') . ' = 1')
+			->set($db->quoteName('ordering') . ' = ' . (int)$ordering)
+			->set($db->quoteName('position') . ' = ' . $db->quote('status'))
+			->where($db->quoteName('id') . ' = ' . (int)$id);
         try {
             $db->setQuery($query)->execute();
         } catch (Exception $ex) {
-
+            $app->enqueueMessage($ex->getMessage(), 'error');
         }
+
+        $query = $db->getQuery(true);
+		$query->insert('#__modules_menu')
+			->columns([$db->quoteName('moduleid'), $db->quoteName('menuid')])
+			->values((int) $id . ', 0');
+        try {
+            $db->setQuery($query)->execute();
+        } catch (Exception $ex) {
+            $app->enqueueMessage($ex->getMessage(), 'error');
+        }
+
+
+        $query = $db->getQuery(true);
+        try {
+            $query->update($db->quoteName('#__virtuemart_configs'))
+                ->set("config = replace ( config, 'enable_content_plugin=" . '"0"' . "', 'enable_content_plugin=". '"1"' ."')")
+        		->where($db->quoteName('virtuemart_config_id') . ' = 1' );
+            $db->setQuery($query)->execute();
+        } catch (Exception $ex) {
+            error_log($ex->getMessage());
+        }
+        
+        
     }
     
 	private function clearHtaccess()
