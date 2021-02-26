@@ -1606,6 +1606,11 @@ class plgSystemLSCache extends JPlugin {
     private function crawlUrls($urls, $output = true) {
         set_time_limit(0);
 
+        $cli = false;
+        if (php_sapi_name() == 'cli') {
+            $cli = true;
+        }
+        
         $count = count($urls);
         if ($count < 1) {
             return "";
@@ -1620,7 +1625,6 @@ class plgSystemLSCache extends JPlugin {
         $router = $appInstance->getRouter();
         $root = JUri::getInstance()->toString(array('scheme', 'host', 'port'));
         $recacheDuration = $this->settings->get('recacheDuration', 30) * 1000000;
-        $printURL = ($this->settings->get('logLevel', -1)==JLog::DEBUG) && $this->app->isAdmin();
         $break = false;
         if ($output) {
             //ob_implicit_flush(TRUE);
@@ -1674,14 +1678,12 @@ class plgSystemLSCache extends JPlugin {
             $current++;
 
             if ($output) {
-                if($printURL){
-                    echo '<p>'. $root . $url . ' :  '. $httpcode . '</p>';
+                if ($cli) {
+                    echo $current . '/' . $count . ' ' . $root . $url . ' : ' . $httpcode . PHP_EOL;
                 } else {
-                    echo '*';
+                    echo $current . '/' . $count . ' ' . $root . $url . ' : ' . $httpcode . '<br/>' . PHP_EOL;
                 }
-                if ($current % 10 == 0) {
-                    echo floor($current * 100 / $count) . '%<br/>';
-                }
+                
                 if (ob_get_contents()){
                     ob_flush();
                 }
