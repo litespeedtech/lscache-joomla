@@ -893,10 +893,12 @@ class plgSystemLSCache extends JPlugin {
     }
 
     public function onLSCacheExpired() {
-        $this->lscInstance->purgeAllPublic();
-        $this->log();
+        if (!$this->cacheEnabled) {
+            return;
+        }
+        $this->purgeObject->purgeAll = true;
+        $this->purgeAction();
     }
-    
     
     public function onExtensionAfterUninstall($eid) {
         if (!$this->cacheEnabled) {
