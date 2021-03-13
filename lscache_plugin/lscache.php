@@ -1416,7 +1416,7 @@ class plgSystemLSCache extends JPlugin {
             $lang->setLanguage( $language );
             $lang->load();
         }
-        $moduleLanguage = 'mod_' . strtolower($module->module);
+        $moduleLanguage = strtolower($module->module);
         $lang->load($moduleLanguage, JPATH_SITE);
 
         $oldContent = $module->content;
