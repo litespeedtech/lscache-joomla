@@ -15,4 +15,3 @@ cd ..
 rm -f ./build/*.zip
 rm -rf ./build/esiTemplate
 echo Latest package has been built to lscache-latest.zip
-
