@@ -545,31 +545,9 @@ class plgSystemLSCache extends JPlugin {
 
         $option = $this->getOption($context);
 
-        if (in_array($context, self::CATEGORY_CONTEXTS)) {
-            $purgeTags = 'com_categories, com_categories:' . $row->id;
-            $this->purgeObject->ids[] = $row->id;
-            if ($row->parent_id) {
-                $purgeTags .= ',com_categories:' . $row->parent_id;
-                $this->purgeObject->ids[] = $row->parent_id;
-            }
-            $this->purgeObject->tags[] = $purgeTags;
-            $this->purgeObject->option = empty($row->extension) ? $option : $row->extension;
-            $this->purgeObject->idField = 'id';
-            return;
-        }
-
         $menu_contexts = array('com_menus.item', 'com_menus.menu');
         if (in_array($context, $menu_contexts)) {
-            $purgeTags = 'com_menus,com_menus:' . $row->id;
-            if ($row->menutype) {
-                $purgeTags .= ",com_menus:" . $row->menutype;
-            }
-            $menu = $row;
-            while ($menu && ($menu->level > 1) && $menu->parent_id) {
-                $purgeTags .= ',com_menus:' . $menu->parent_id;
-                $menu = $this->app->getMenu()->getItem($menu->id);
-            }
-            $this->purgeObject->tags[] = $purgeTags;
+            $this->purgeObject->tags[] = 'com_menus:' . $row->id;;
             $this->purgeObject->urls[] = 'index.php?Itemid=' . $row->id;
             return;
         }

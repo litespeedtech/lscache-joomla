@@ -16,18 +16,11 @@ class LSCacheModuleJoomlaMenu extends LSCacheModuleBase
         $moduleParams = new Registry;
         $moduleParams->loadString($this->module->params);
         $menuid = $moduleParams->get('base', FALSE);
-        $menutype = $moduleParams->get('menutype', FALSE);
         if($menuid){
             return 'com_menus:' . $menuid;
         }
-        else if($menutype){
-            if($this->plugin->getModuleCacheType($this->module)==2){
-                return 'com_menus';
-            }
-            return 'com_menus:' . $menutype;
-        }
         else{
-            return 'com_menus';
+            return '';
         }
         
     }
