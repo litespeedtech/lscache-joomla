@@ -7,6 +7,9 @@
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
 
+use Joomla\Registry\Registry;
+use Joomla\Utilities\ArrayHelper;
+
 class Pkg_LSCacheInstallerScript
 {
 
@@ -149,6 +152,19 @@ class Pkg_LSCacheInstallerScript
             $app->enqueueMessage($ex->getMessage(), 'error');
         }
 
+        // disable gzip
+	$data = ArrayHelper::fromObject(new JConfig);
+        $data["gzip"] = '0';
+	$config = new Registry($data);
+	// Attempt to write the configuration file as a PHP class named JConfig.
+	$configuration = $config->toString('PHP', array('class' => 'JConfig', 'closingtag' => false));
+	$file = JPATH_CONFIGURATION . '/configuration.php';
+        JPath::setPermissions($file, '0644');        
+	if (!JFile::write($file, $configuration))
+	{
+            $app->enqueueMessage('Fail to write configuration file to disable gzip', 'error');
+	}             
+        
         //Add module
         $query = $db->getQuery(true);
 		$query->select($db->quoteName('id'))
@@ -216,8 +232,7 @@ class Pkg_LSCacheInstallerScript
         } catch (Exception $ex) {
             error_log($ex->getMessage());
         }
-        
-        
+           
     }
     
 	private function clearHtaccess()
