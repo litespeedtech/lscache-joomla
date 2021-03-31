@@ -817,9 +817,14 @@ class plgSystemLSCache extends JPlugin {
                 $this->purgeObject->purgeAll = true;
                 $this->purgeAction();
         }   else if( ($option == "com_cache") && (!empty($task=$app->input->get('task')))){
-            if(in_array($task, array("deleteAll", "delete"))  ){
+            if(in_array($task, array("deleteAll"))  ){
                 $this->purgeObject->purgeAll = true;
                 $this->purgeAction();
+            } else if(in_array($task, array("delete"))){
+                $cid = $app->input->get('cid');
+                $this->purgeObject->tags = $cid;
+                $this->purgeAction();
+                $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_PURGEINFORMED'), "message");            
             }
         }   else if(($option == "com_content") && (!empty($task=$app->input->get('task')))){
             if(in_array($task, array("articles.featured", "articles.unfeatured")) ){
