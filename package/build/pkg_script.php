@@ -159,11 +159,13 @@ class Pkg_LSCacheInstallerScript
 	// Attempt to write the configuration file as a PHP class named JConfig.
 	$configuration = $config->toString('PHP', array('class' => 'JConfig', 'closingtag' => false));
 	$file = JPATH_CONFIGURATION . '/configuration.php';
-        JPath::setPermissions($file, '0644');        
-	if (!JFile::write($file, $configuration))
+                
+	if (!JPath::setPermissions($file, '0644') || !JFile::write($file, $configuration))
 	{
             $app->enqueueMessage('Fail to write configuration file to disable gzip', 'error');
-	}             
+	} else {
+            JPath::setPermissions($file, '0444');
+        }             
         
         //Add module
         $query = $db->getQuery(true);
