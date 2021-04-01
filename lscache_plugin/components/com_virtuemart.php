@@ -54,18 +54,27 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
 
     public function plgVmOnAddToCart($cart)
     {
+        if (!$this->plugin->lscInstance) {
+            return;
+        }
         $this->plugin->lscInstance->purgePrivate("com_virtuemart.cart");
         $this->plugin->log();
     }
 
     public function plgVmOnRemoveFromCart($cart, $prodid)
     {
+        if (!$this->plugin->lscInstance) {
+            return;
+        }
         $this->plugin->lscInstance->purgePrivate("com_virtuemart.cart");
         $this->plugin->log();
     }
 
     public function plgVmOnUpdateCart($cart, $force, $html)
     {
+        if (!$this->plugin->lscInstance) {
+            return;
+        }
         $this->plugin->lscInstance->purgePrivate("com_virtuemart.cart");
         $this->plugin->log();
     }

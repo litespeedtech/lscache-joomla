@@ -485,6 +485,9 @@ class plgSystemLSCache extends JPlugin {
     }
 
     public function onUserAfterLogin($options) {
+        if (!$this->cacheEnabled) {
+            return;
+        }
         $session = JFactory::getSession();
         $session->set('lscacheLogin', '1');
         
@@ -504,6 +507,9 @@ class plgSystemLSCache extends JPlugin {
     }
 
     public function onUserAfterLogout($options) {
+        if (!$this->cacheEnabled) {
+            return;
+        }
         $session = JFactory::getSession();
         $session->set('lscacheLogin', '0');
 
@@ -522,6 +528,9 @@ class plgSystemLSCache extends JPlugin {
     }
 
     public function onUserLoginFailure($respond) {
+        if (!$this->cacheEnabled) {
+            return;
+        }
         $this->lscInstance->purgePrivate('joomla.login');
         $this->log();
     }
