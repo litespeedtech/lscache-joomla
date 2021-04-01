@@ -555,7 +555,7 @@ class plgSystemLSCache extends JPlugin {
         if (in_array($context, self::CONTENT_CONTEXTS)) {
             $purgeTags = $option . ',' . $option . ':' . $row->id;
             $this->purgeObject->ids[] = $row->id;
-            if ($row->catid) {
+            if (($this->settings->get("autoPurgeArticleCategory", 0) == 1) && $row->catid) {
                 $purgeTags .= ',com_categories:' . $row->catid;
                 $this->purgeObject->ids[] = $row->catid;
                 $category = JTable::getInstance('Category');

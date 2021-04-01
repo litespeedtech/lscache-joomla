@@ -23,6 +23,11 @@
             <option value="1">JENABLED</option>
         </field>
 
+        <field name="autoPurgeArticleCategory" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_AUTOPURGE_ARTICLE_CATEGORY" description="COM_LSCACHE_FIELD_AUTOPURGE_ARTICLE_CATEGORY_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
+
         <field name="logLevel"  type="radio" default="-1" class="btn-group btn-group-yesno radio" label="COM_LSCACHE_FIELD_LOG_PRIORITIES_LABEL" description="COM_LSCACHE_FIELD_LOG_PRIORITIES_DESC">
             <option value="-1">JNO</option>
             <option value="8">COM_LSCACHE_FIELD_LOG_LEVEL_ERROR</option>
