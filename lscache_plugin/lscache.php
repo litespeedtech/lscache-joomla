@@ -381,6 +381,10 @@ class plgSystemLSCache extends JPlugin {
             }
         }
 
+        if (!empty($option)){
+            $this->cacheTags[] = 'cmp:' . $option;
+        }
+        
         if (empty($option) && !empty($this->menuItem)) {
             if ($this->menuItem && !$this->menuItem->home) {
                 return;
@@ -809,7 +813,7 @@ class plgSystemLSCache extends JPlugin {
                 $this->purgeAction();
             } else if(in_array($task, array("delete"))){
                 $cid = $app->input->get('cid');
-                $this->purgeObject->tags = $cid;
+                $this->purgeObject->tags[] = 'cmp:' . $cid;
                 $this->purgeAction();
                 $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_PURGEINFORMED'), "message");            
             }
