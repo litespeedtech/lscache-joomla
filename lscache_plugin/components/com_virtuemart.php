@@ -129,6 +129,10 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
             $productUrls[] = 'index.php?option=com_virtuemart&view=productdetails&virtuemart_product_id=' . $product->virtuemart_product_id .'&virtuemart_category_id=0';
         }
         
+        if(empty($productids)){
+            return;
+        }
+        
         $category_tag = $this->getProductCategoryTags($productids);
         $tag .= $category_tag;
         $this->plugin->purgeObject->tags[] = $tag;
