@@ -687,6 +687,13 @@ class plgSystemLSCache extends JPlugin {
         if (!$this->cacheEnabled) {
             return;
         }
+        
+        if($row->element=='com_lscache'){
+            $newSetting = json_decode($row->params);
+            if($this->settings->get('mobileCacheVary') != $newSetting->mobileCacheVary){
+                $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_CHECKHTACCESS'), "warning");            
+            }
+        }
 
         $this->purgeExtension($context, $row);
         $this->purgeAction();
