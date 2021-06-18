@@ -328,11 +328,22 @@ class plgSystemLSCache extends JPlugin {
         }
     }
 
+    public function onBeforeRender() {
+        if ($this->settings->get('beforeRender', 0) == 1) {
+            $this->onAfterRender();
+            define('LSCACHE_RENDERED',true);
+        }
+    }
+    
     public function onAfterRender() {
         if (!$this->cacheEnabled) {
             if($this->esion){
                 header('X-LiteSpeed-Cache-Control:esi=on');
             }
+            return;
+        }
+        
+        if(defined('LSCACHE_RENDERED')){
             return;
         }
 
@@ -1442,7 +1453,11 @@ class plgSystemLSCache extends JPlugin {
                 $this->log();
             }
 
-            if ($module->module_type == 0) {
+            if ($module->vary_language == 1) {
+                $this->checkVary('language:' . $lang->getTag());
+            }
+            
+            if ($module->module_type == 0) {                
                 echo $content;
                 $app->close();
             } else {
