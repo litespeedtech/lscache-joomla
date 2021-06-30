@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    @since      1.0.0
+    @author     LiteSpeed Technologies <info@litespeedtech.com>
+    @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
+    @license    https://opensource.org/licenses/GPL-3.0
+-->
+<config>
+    <fieldset name="basic" label="COM_LSCACHE_FIELDSET_BASIC_LABEL"  description="COM_LSCACHE_FIELDSET_BASIC_DESC" >
+        <field name="cacheEnabled" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_CACHE_ENABLED_LABEL" description="COM_LSCACHE_FIELD_CACHE_ENABLED_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
+        <field name="cacheTimeout" type="text" default="2000" label="COM_LSCACHE_FIELD_CACHE_TIMEOUT_LABEL" description="COM_LSCACHE_FIELD_CACHE_TIMEOUT_DESC"/>
+
+        <field name="autoPurgePlugin" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_AUTOPURGE_PLUGIN_LABEL" description="COM_LSCACHE_FIELD_AUTOPURGE_PLUGIN_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
+        
+        <field name="autoPurgeLanguage" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_AUTOPURGE_LANGUAGES_LABEL" description="COM_LSCACHE_FIELD_AUTOPURGE_LANGUAGES_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
+
+        <field name="autoPurgeArticleCategory" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_AUTOPURGE_ARTICLE_CATEGORY" description="COM_LSCACHE_FIELD_AUTOPURGE_ARTICLE_CATEGORY_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
+
+        <field name="logLevel"  type="radio" default="-1" class="btn-group btn-group-yesno radio" label="COM_LSCACHE_FIELD_LOG_PRIORITIES_LABEL" description="COM_LSCACHE_FIELD_LOG_PRIORITIES_DESC">
+            <option value="-1">JNO</option>
+            <option value="8">COM_LSCACHE_FIELD_LOG_LEVEL_ERROR</option>
+            <option value="64">COM_LSCACHE_FIELD_LOG_LEVEL_INFO</option>
+            <option value="128">COM_LSCACHE_FIELD_LOG_LEVEL_DEBUG</option>
+        </field>
+    </fieldset>
+    
+    <fieldset name="exclude"  addfieldpath="/administrator/components/com_lscache/models/fields"  label="COM_LSCACHE_FIELDSET_EXCLUDE_LABEL" description="COM_LSCACHE_FIELDSET_EXCLUDE_DESC" >
+        <field name="excludeOptions" type="components" required="false" multiple="multiple" label="COM_LSCACHE_FIELD_EXCLUDE_COMPONENT_LABEL"/>
+        <field name="excludeMenus" type="menuitem" menuType="mainmenu" published="1" clientId="0" multiple="multiple" label="COM_LSCACHE_FIELD_EXCLUDE_MENU_LABEL" />
+        <field name="excludeURLs" type="textarea" default="" class="input-xxlarge" rows="15" filter="raw" label="COM_LSCACHE_FIELD_EXCLUDE_URL_LABEL" hint="COM_LSCACHE_FIELD_EXCLUDE_URL_DESC" />
+    </fieldset>
+
+    <fieldset name="advanced" label="COM_LSCACHE_FIELDSET_ADVANCED_LABEL"  description="COM_LSCACHE_FIELDSET_ADVANCED_DESC" >
+        <field name="esiEnabled" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_ESI_ENABLED_LABEL" description="COM_LSCACHE_FIELD_ESI_ENABLED_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">COM_LSCACHE_WITH_ESIMODULE</option>
+            <option value="2">COM_LSCACHE_ALWAYS_ENABLED</option>
+        </field>
+
+        <field name="loginESI" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_LOGIN_ESI_LABEL" description="COM_LSCACHE_FIELD_LOGIN_ESI_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
+        
+        <field name="homePageCacheTimeout" type="text" default="2000" label="COM_LSCACHE_FIELD_HOMEPAGE_TIMEOUT_LABEL" description="COM_LSCACHE_FIELD_HOMEPAGE_TIMEOUT_DESC"/>
+        <field name="mobileCacheVary" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_VARY_MOBILE_LABEL" description="COM_LSCACHE_FIELD_VARY_MOBILE_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
+
+        <field name="adminIPs" type="textarea" default="" class="input-xxlarge" rows="10" filter="raw" label="COM_LSCACHE_FIELD_ADMIN_IP_LABEL"  description="COM_LSCACHE_FIELD_ADMIN_IP_DESCRIPTION" hint="COM_LSCACHE_FIELD_ADMIN_IP_HINT" />
+	<field name="cleanCache" default="purgeAllCache" type="text" label="COM_LSCACHE_FIELD_CLEAN_CACHE_LABEL" class="input-xxlarge input-large-text" size="40" maxlength="40" />
+        <field name="beforeRender" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_BEFORE_RENDER_LABEL" description="COM_LSCACHE_FIELD_BEFORE_RENDER_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
+        <field name="note_cleancache" type="notepurge" class="alert alert-success" description="COM_LSCACHE_FIELD_CLEAN_CACHE_NOTE" />
+        <field name="note_recache" type="notepurge" class="alert alert-success" description="COM_LSCACHE_FIELD_RECACHE_NOTE" />
+
+                
+    </fieldset>
+
+    <fieldset name="login" label="COM_LSCACHE_FIELDSET_LOGIN_LABEL" description="COM_LSCACHE_FIELDSET_LOGIN_DESC" >
+        <field name="loginOverrideESI" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_ESI_OVERRIDE_LABEL" description="COM_LSCACHE_FIELD_ESI_OVERRIDE_DESC">
+            <option value="0">COM_LSCACHE_NOT_OVERRIDE</option>
+            <option value="2">COM_LSCACHE_ALWAYS_ENABLED</option>
+        </field>
+
+        <field name="loginCachable" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_LOGIN_CACHABLE_LABEL"  description="COM_LSCACHE_FIELD_LOGIN_CACHABLE_DESC" >
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
+        <field name="loginCacheVary" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_LOGIN_CACHEVARY_LABEL"  description="COM_LSCACHE_FIELD_LOGIN_CACHEVARY_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">COM_LSCACHE_FIELD_LOGIN_CACHEVARY_ALLUSER</option>
+            <option value="2">COM_LSCACHE_FIELD_LOGIN_CACHEVARY_BYGROUP</option>
+        </field>
+        <field name="loginExcludeMenus" type="menuitem" menuType="mainmenu" published="1" clientId="0" multiple="multiple" label="COM_LSCACHE_FIELD_EXCLUDE_MENU_LABEL" />
+        <field name="loginExcludeURLs" type="textarea" default="" class="input-xxlarge" rows="15" filter="raw" label="COM_LSCACHE_FIELD_EXCLUDE_URL_LABEL" hint="COM_LSCACHE_FIELD_EXCLUDE_URL_DESC" />
+        <field name="note_loginexclude" type="note" class="alert alert-success"  description="COM_LSCACHE_FIELD_LOGIN_EXCLUDE_NOTE" />
+    </fieldset>
+
+    <fieldset name="recache" label="COM_LSCACHE_FIELDSET_RECACHE_LABEL" description="COM_LSCACHE_FIELDSET_RECACHE_DESC" >
+        <field name="autoRecache" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_RECACHE_AUTORECACHE_LABEL">
+            <option value="2">COM_LSCACHE_FIELD_RECACHE_AUTORECACHE_AGGRESSIVE</option>
+            <option value="1">COM_LSCACHE_FIELD_RECACHE_AUTORECACHE_MODERATE</option>
+            <option value="0">JDISABLED</option>
+        </field>
+        <field name="note_autorecache" type="note" class="alert alert-success" label="COM_LSCACHE_FIELD_RECACHE_AUTORECACHE_DESC" description="COM_LSCACHE_FIELD_RECACHE_AUTORECACHE_NOTE" />
+        <field name="recacheDuration" type="text" default="5" label="COM_LSCACHE_FIELD_RECACHE_DURATION_LABEL" description="COM_LSCACHE_FIELD_RECACHE_DURATION_DESC"/>
+        <field name="recacheComponent" type="list" default="" label="COM_LSCACHE_FIELD_RECACHE_COMPONENT_LABEL"  description="COM_LSCACHE_FIELD_RECACHE_COMPONENT_DESC" >
+            <option value="">Please Select</option>
+            <option value="com_virtuemart">com_virtuemart: VirtueMart Component</option>
+        </field>
+                
+    </fieldset>
+
+    <fieldset name="permissions" label="JCONFIG_PERMISSIONS_LABEL" description="JCONFIG_PERMISSIONS_DESC" >
+        <field name="rules" type="rules" label="JCONFIG_PERMISSIONS_LABEL" class="inputbox" filter="rules" validate="rules" component="com_lscache" section="component" />
+    </fieldset>
+
+    <fieldset name="support" label="COM_LSCACHE_FIELDSET_SUPPORT_LABEL" >
+        <field name="note_support_forum" type="note"  label="COM_LSCACHE_FIELD_SUPPORT_FORUM_LABEL" description="COM_LSCACHE_FIELD_SUPPORT_FORUM_DESC" />
+        <field name="note_support_slack" type="note"  label="COM_LSCACHE_FIELD_SUPPORT_SLACK_LABEL" description="COM_LSCACHE_FIELD_SUPPORT_SLACK_DESC" />
+        <field name="note_support_wiki" type="note"  label="COM_LSCACHE_FIELD_SUPPORT_WIKI_LABEL" description="COM_LSCACHE_FIELD_SUPPORT_WIKI_DESC" />
+        <field name="note_support_github" type="note"  label="COM_LSCACHE_FIELD_SUPPORT_GITHUB_LABEL" description="COM_LSCACHE_FIELD_SUPPORT_GITHUB_DESC" />
+    </fieldset>
+
+</config>
