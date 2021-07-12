@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ @since      1.0.0
+ @author     LiteSpeed Technologies <info@litespeedtech.com>
+ @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
+ @license    https://opensource.org/licenses/GPL-3.0
+-->
+ <extension type="package" version="3.0" method="upgrade">
+ <name>LiteSpeed LSCache Package</name>
+ <author>LiteSpeed Technologies</author> 
+ <creationDate>March 2018</creationDate>
+ <packagename>lscache</packagename>
+ <version>1.5.1</version>
+ <url>http://www.litespeedtech.com/</url>
+ <packager>LiteSpeed Technologies</packager>
+ <packagerurl>https://www.litespeedtech.com/products#cpl</packagerurl>
+ <description>Package to install the LiteSpeed LSCache pluginwith supporting component</description>
+ <scriptfile>pkg_script.php</scriptfile>
+ <files>
+   <file type="component" id="com_lscache">com_lscache.zip</file>
+   <file type="plugin" id="lscache" group="system">lscache_plugin.zip</file>
+   <file type="module" id="mod_lscache">mod_lscache.zip</file>
+ </files>
+ </extension>
