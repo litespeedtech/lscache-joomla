@@ -55,8 +55,22 @@
                             <option value="0">COM_LSCACHE_ESI_MODULETYPE_DEFAULT</option>
                             <option value="1">COM_LSCACHE_ESI_MODULETYPE_ADVANCED</option>
                 </field>
-                
+
                 <field name="note_module_type" type="note" class="alert alert-success" description="COM_LSCACHE_ESI_MODULETYPE_NOTE" />
+
+		<field
+				name="vary_language"
+				type="radio"
+				label="COM_LSCACHE_ESI_VARY_LANGUAGE_LABEL"
+				description="COM_LSCACHE_ESI_VARY_LANGUAGE_DESC"
+				size="40"
+				class="btn-group btn-group-yesno radio"
+				default="1"
+				>
+                                <option value="0">JDISABLED</option>
+                                <option value="1">JENABLED</option>
+                </field>
+
 
 	</fieldset>
 </form>

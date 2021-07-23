@@ -260,13 +260,18 @@ class plgSystemLSCache extends JPlugin {
                     $module->lscache_type = 0;
                 }
 
+                $language = '';
+                if ($module->vary_language) {
+                    $language = '&language=' . JFactory::getLanguage()->getTag();
+                }
+                
                 if ($module->lscache_type == 1) {
-                    $module->content = '<esi:include src="index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="public,no-vary" cache-tag="' . $tag . '" />';
+                    $module->content = '<esi:include src="index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . $language . $this->getModuleAttribs($attribs) . '" cache-control="public,no-vary" cache-tag="' . $tag . '" />';
                 } else if ($module->lscache_type == -1) {
                     $tag = 'public:' . $tag . ',' . $tag;
-                    $module->content = '<esi:include src="index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="private,no-vary" cache-tag="' . $tag . '" />';
+                    $module->content = '<esi:include src="index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . $language  . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="private,no-vary" cache-tag="' . $tag . '" />';
                 } else if ($module->lscache_type == 0) {
-                    $module->content = '<esi:include src="' . 'index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="no-cache"/>';
+                    $module->content = '<esi:include src="' . 'index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . $language . $this->getModuleAttribs($attribs) . '" cache-control="no-cache"/>';
                 }
 
                 $this->esion = true;
@@ -1923,4 +1928,9 @@ class plgSystemLSCache extends JPlugin {
         return $block;
     }    
 
+    protected function isAdmin(){
+        //var_dump($this->app);
+        return false;
+    }
+    
 }
