@@ -18,7 +18,7 @@ class LSCacheComponentKomento extends LSCacheComponentBase{
             return;
         }
         
-        if($app->isAdmin() && in_array($namespace, array('admin.views.comments.stick','admin.views.comments.unstick','admin.views.comments.publish','admin.views.comments.unpublish'))){
+        if($app->isClient('administrator')  && in_array($namespace, array('admin.views.comments.stick','admin.views.comments.unstick','admin.views.comments.publish','admin.views.comments.unpublish'))){
             $ids=$app->input->get('ids', array());
             if(count($ids)<1){
                 return;
@@ -26,7 +26,7 @@ class LSCacheComponentKomento extends LSCacheComponentBase{
                 $this->purgeComment($ids);
             }
             
-        } else if($app->isAdmin() && ($task=='remove')){
+        } else if($app->isClient('administrator')  && ($task=='remove')){
             $ids=$app->input->get('cid', array());
             if(count($ids)<1){
                 return;

@@ -42,7 +42,7 @@ class LSCacheComponentK2 extends LSCacheComponentBase{
         $this->plugin->purgeObject->idField = "id";
         if($context == "com_k2.item"){
             $purgeTags =  'com_k2,com_k2.item:' . $row->id . ",com_k2.category:" . $row->catid . ",com_k2.user:" . $row->created_by;
-            $tags = JRequest::getVar('tags', NULL, 'POST', 'array');
+            $tags = JFactory::getApplication()->input->get('tags', NULL, 'POST', 'array');
 			if (count($tags))
 			{
 				$tags = array_unique($tags);

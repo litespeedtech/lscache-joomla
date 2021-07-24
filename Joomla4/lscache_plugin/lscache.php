@@ -7,13 +7,20 @@
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
 defined('_JEXEC') or die;
-
+use Joomla\CMS\Factory;
+use Joomla\CMS\Plugin\CMSPlugin;
+use Joomla\CMS\Plugin\PluginHelper;
+use Joomla\CMS\Profiler\Profiler;
+use Joomla\CMS\Uri\Uri;
+use Joomla\CMS\Application\CMSApplication;
+use Joomla\CMS\Application\CMSApplicationInterface;
+/**
 /**
  * LiteSpeed Cache Plugin for Joomla running on LiteSpeed Webserver (LSWS).
  *
  * @since  1.0
  */
-class plgSystemLSCache extends JPlugin {
+class plgSystemLSCache extends CMSPlugin {
 
     const MODULE_ESI = 1;
     const MODULE_PURGEALL = 2;
@@ -116,7 +123,7 @@ class plgSystemLSCache extends JPlugin {
      *
      * @since   1.0.0
      */
-    public function onAfterRoute() {
+    public function onAfterInitialise() {
         if (!$this->cacheEnabled) {
             return;
         }
@@ -156,9 +163,8 @@ class plgSystemLSCache extends JPlugin {
             $this->pageCachable = false;
             return;
         }
-
         
-        if ($app->isAdmin()) {
+        if ($this->isAdmin()) {
             $this->pageCachable = false;
             $this->purgeAdmin($option);
         } else {
@@ -205,6 +211,8 @@ class plgSystemLSCache extends JPlugin {
         } else if (JDEBUG) {
             $this->pageCachable = false;
         } else if (count($app->getMessageQueue())) {
+            $this->pageCachable = false;
+        } else if ($app->get('offline', '0')){
             $this->pageCachable = false;
         } else if ($this->isExcluded()) {
             $this->pageCachable = false;
@@ -260,13 +268,18 @@ class plgSystemLSCache extends JPlugin {
                     $module->lscache_type = 0;
                 }
 
+                $language = '';
+                if ($module->vary_language) {
+                    $language = '&language=' . JFactory::getLanguage()->getTag();
+                }
+                
                 if ($module->lscache_type == 1) {
-                    $module->content = '<esi:include src="index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="public,no-vary" cache-tag="' . $tag . '" />';
+                    $module->content = '<esi:include src="index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . $language . $this->getModuleAttribs($attribs) . '" cache-control="public,no-vary" cache-tag="' . $tag . '" />';
                 } else if ($module->lscache_type == -1) {
                     $tag = 'public:' . $tag . ',' . $tag;
-                    $module->content = '<esi:include src="index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="private,no-vary" cache-tag="' . $tag . '" />';
+                    $module->content = '<esi:include src="index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . $language  . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="private,no-vary" cache-tag="' . $tag . '" />';
                 } else if ($module->lscache_type == 0) {
-                    $module->content = '<esi:include src="' . 'index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="no-cache"/>';
+                    $module->content = '<esi:include src="' . 'index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . $language . $this->getModuleAttribs($attribs) . '" cache-control="no-cache"/>';
                 }
 
                 $this->esion = true;
@@ -510,7 +523,7 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
 
-        if ($this->app->isAdmin()) {
+        if ($this->isAdmin()) {
             return;
         }
         $this->lscInstance->checkPrivateCookie();
@@ -532,7 +545,7 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
 
-        if ($this->app->isAdmin()) {
+        if ($this->isAdmin()) {
             return;
         }
         $this->checkVary();
@@ -1288,14 +1301,14 @@ class plgSystemLSCache extends JPlugin {
     }
 
     //ESI Render;
-    public function onAfterInitialise() {
+    public function onAfterDispatch() {
         $app = $this->app;
         $option = $app->input->get('option');
         if ($option != "com_lscache") {
             return;
         }
 
-        if ($app->isAdmin()) {
+        if ($this->isAdmin()) {
             return;
         }
 
@@ -1577,7 +1590,7 @@ class plgSystemLSCache extends JPlugin {
     }
 
     public function onLSCacheRebuildAll() {
-        if (!$this->app->isAdmin()) {
+        if (!$this->isAdmin()) {
             return;
         }
 
@@ -1641,8 +1654,7 @@ class plgSystemLSCache extends JPlugin {
         $begin = microtime();
         $success = 0;
         $current = 0;
-        $appInstance = JApplication::getInstance('site');
-        $router = $appInstance->getRouter();
+        $router =  CMSApplication::getInstance('site')->getRouter('site'); //$appInstance->getRouter();
         $root = JUri::getInstance()->toString(array('scheme', 'host', 'port'));
         $recacheDuration = $this->settings->get('recacheDuration', 30) * 1000000;
         $break = false;
@@ -1658,7 +1670,7 @@ class plgSystemLSCache extends JPlugin {
         foreach ($urls as $url) {
             $start = microtime();
             $ch = curl_init();
-            if ($this->app->isAdmin()) {
+            if ($this->isAdmin()) {
                 try {
                     $url = @$router->build($url);
                 } catch (Error $ex) {
@@ -1778,7 +1790,7 @@ class plgSystemLSCache extends JPlugin {
         } else if ($this->purgeObject->purgeAll) {
             $this->lscInstance->purgeAllPublic();
             $this->log();
-            if ($this->app->isAdmin()) {
+            if ($this->isAdmin()) {
                 $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_NEEDMANUALRECACHE'), "message");
             }
             
@@ -1788,7 +1800,7 @@ class plgSystemLSCache extends JPlugin {
             $this->log();
         }
 
-        if ($this->app->isAdmin()) {
+        if ($this->isAdmin()) {
             $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_PURGEINFORMED'), "message");
         }
         
@@ -1831,7 +1843,7 @@ class plgSystemLSCache extends JPlugin {
 
         $msg = $this->crawlUrls($urls, $showProgress);
 
-        if ((!$this->app->isAdmin()) && (!empty($msg))) {
+        if ((!$this->isAdmin()) && (!empty($msg))) {
             $this->app->enqueueMessage($msg, "message");
         }
     }
@@ -1921,11 +1933,10 @@ class plgSystemLSCache extends JPlugin {
     protected function esiTokenBlock(){
         $block = '<esi:include src="index.php?option=com_lscache&moduleid=-2" cache-control="private,no-vary" cache-tag="token" />' . PHP_EOL;
         return $block;
-    }    
-
+    }
+    
     protected function isAdmin(){
-        //var_dump($this->app);
-        return false;
+        return $this->app->isClient('administrator') ;
     }
     
 }

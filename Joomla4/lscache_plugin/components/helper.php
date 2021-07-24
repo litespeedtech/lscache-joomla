@@ -22,7 +22,7 @@ class LSCacheComponentsHelper
         require_once (__DIR__ . '/list.php');
         
         $this->plugin = $plugin;
-        $this->dispatcher =  JEventDispatcher::getInstance();
+        $this->dispatcher =  JFactory::getApplication();
         $this->activeComponents = $lscacheComponents;
         
         if(count($filter)>0){

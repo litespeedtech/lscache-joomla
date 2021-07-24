@@ -47,7 +47,7 @@ class lscacheViewDefault extends JViewLegacy
 			$this->document->setMetadata('robots', $params->get('robots'));
 		}
 
-		$this->assignRef('params',		$params);
+		$this->params = $params;
 
 		parent::display($tpl);
 	}

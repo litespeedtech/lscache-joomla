@@ -10,7 +10,7 @@ class LSCacheController extends JControllerLegacy
 
 	public function display($cachable = false, $urlparams = false)
 	{
-		JRequest::setVar('view','default'); // force it to be the search view
+		JFactory::getApplication()->input->set('view','default'); // force it to be the search view
 
 		return parent::display($cachable, $urlparams);
 	}

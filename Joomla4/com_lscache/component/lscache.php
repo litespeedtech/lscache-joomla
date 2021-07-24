@@ -3,7 +3,7 @@
 defined( '_JEXEC' ) or die( 'Restricted access' );
 
 $app = JFactory::getApplication();
-$admin = $app->isAdmin();
+$admin = $app->isClient('administrator');
 if($admin==1)
 	{
 ?>
@@ -23,7 +23,7 @@ else
 	$controller = JControllerLegacy::getInstance('LSCache');
 
 	// Perform the Request task
-	$controller->execute(JRequest::getCmd('task'));
+	$controller->execute(JFactory::getApplication()->input->getCmd('task'));
 
 	// Redirect if set by the controller
 	$controller->redirect();

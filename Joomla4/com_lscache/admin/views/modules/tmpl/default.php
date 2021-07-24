@@ -7,6 +7,14 @@
  */
 
 defined('_JEXEC') or die;
+use Joomla\CMS\Factory;
+use Joomla\CMS\Helper\ModuleHelper;
+use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Language\Multilanguage;
+use Joomla\CMS\Language\Text;
+use Joomla\CMS\Layout\LayoutHelper;
+use Joomla\CMS\Router\Route;
+use Joomla\CMS\Session\Session;
 
 JHtml::_('bootstrap.tooltip');
 JHtml::_('behavior.multiselect');
@@ -44,7 +52,8 @@ $colSpan = $clientId === 1 ? 8 : 10;
 <?php else : ?>
 	<div id="j-main-container">
 <?php endif;?>
-		<?php echo JLayoutHelper::render('joomla.searchtools.default', array('view' => $this, 'options' => array('selectorFieldName' => 'lscache_type'))); ?>
+		<?php echo LayoutHelper::render('joomla.searchtools.default', array('view' => $this, 'options' => array('selectorFieldName' => 'lscache_type'))); ?>
+
 		<?php if ($this->total > 0) : ?>
 			<table class="table table-striped" id="moduleList">
 				<thead>
