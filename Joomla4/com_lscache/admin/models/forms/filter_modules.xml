@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <form>
-	<fieldset addfieldpath="/administrator/components/com_modules/models/fields" />
+	<fieldset addfieldprefix="Joomla\Component\Modules\Administrator\Field" />
 
 	<field
 		name="lscache_type"
@@ -32,12 +32,14 @@
 		</field>
 		<field
 			name="position"
-			type="modulesposition"
+			type="ModulesPosition"
 			label="COM_MODULES_FIELD_POSITION_LABEL"
+			client="administrator"
 			onchange="this.form.submit();"
 			>
 			<option value="">COM_MODULES_OPTION_SELECT_POSITION</option>
 		</field>
+
 		<field
 			name="module"
 			type="ModulesModule"
