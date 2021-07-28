@@ -6,7 +6,6 @@
 		name="lscache_type"
 		type="list"
 		filtermode="selector"
-		layout="default"
 		onchange="jQuery('#filter_position, #filter_module, #filter_language').val('');this.form.submit();"
 		>
 		<option value="0">COM_LSCACHE_MODULE_NORMAL</option>
