@@ -48,7 +48,8 @@ class LSCacheControllerModules extends JControllerAdmin {
             $model->renderESI($pks);
             $this->setMessage(count($pks) . JText::_('COM_LSCACHE_MODULES_RENDER_ESI'));
         } catch (Exception $e) {
-            JError::raiseWarning(500, $e->getMessage());
+            $application = JFactory::getApplication();
+            $application->enqueueMessage($e->getMessage(), 'error');
         }
 
         $this->setRedirect('index.php?option=com_lscache');
@@ -69,7 +70,8 @@ class LSCacheControllerModules extends JControllerAdmin {
             $model->renderNormal($pks);
             $this->setMessage(count($pks) . JText::_('COM_LSCACHE_MODULES_RENDER_NORMAL'));
         } catch (Exception $e) {
-            JError::raiseWarning(500, $e->getMessage());
+            $application = JFactory::getApplication();
+            $application->enqueueMessage($e->getMessage(), 'error');
         }
 
         $this->setRedirect('index.php?option=com_lscache');
@@ -117,7 +119,8 @@ class LSCacheControllerModules extends JControllerAdmin {
             }
             $app->triggerEvent("onContentChangeState", array('com_modules.module', $pks, true));
         } catch (Exception $e) {
-            JError::raiseWarning(500, $e->getMessage());
+            $application = JFactory::getApplication();
+            $application->enqueueMessage($e->getMessage(), 'error');
         }
 
         $this->setRedirect('index.php?option=com_lscache');

@@ -41,7 +41,7 @@ class LSCacheModelModule extends JModelAdmin {
         $user = JFactory::getUser();
 
         if (!$user->authorise('core.admin', 'com_lscache')) {
-            JError::raiseWarning(403, JText::_('COM_LSCACHE_TASK_NOT_ALLOWED'));
+            $app->enqueueMessage(JText::_('COM_LSCACHE_TASK_NOT_ALLOWED'), 'error');
             return;
         }
 
@@ -71,7 +71,7 @@ class LSCacheModelModule extends JModelAdmin {
         $user = JFactory::getUser();
 
         if (!$user->authorise('core.admin', 'com_lscache')) {
-            JError::raiseWarning(403, JText::_('COM_LSCACHE_TASK_NOT_ALLOWED'));
+            $app->enqueueMessage(JText::_('COM_LSCACHE_TASK_NOT_ALLOWED'), 'error');
             return;
         }
 
