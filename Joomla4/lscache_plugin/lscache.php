@@ -236,6 +236,7 @@ class plgSystemLSCache extends CMSPlugin {
     public function onAfterRenderModule($module, $attribs="") {
         if(isset($module->output)){
             $module->content = $module->output;
+            return;
         }
         
         if (!$this->pageCachable) {

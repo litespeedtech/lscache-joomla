@@ -228,6 +228,7 @@ class plgSystemLSCache extends JPlugin {
     public function onAfterRenderModule($module, $attribs="") {
         if(isset($module->output)){
             $module->content = $module->output;
+            return;
         }
         
         if (!$this->pageCachable) {
