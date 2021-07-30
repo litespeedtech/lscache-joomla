@@ -196,16 +196,22 @@ class plgSystemLSCache extends CMSPlugin {
             $this->pageCachable = false;
         }
         
-//        //if post back, purge current page, disabled in case purge search post back
-//        if ($this->pageCachable && ($app->input->getMethod() != 'GET')) {
-//            $this->pageCachable = false;
-//            if ($this->menuItem) {
-//                $purgeTags = "com_menus:" . $this->menuItem->id;
-//                $this->lscInstance->purgePublic($purgeTags);
-//                $this->log();
-//            }
-//        }
-        
+     //if post back, purge current page, disabled in case purge search post back
+        if ($this->pageCachable && ($app->input->getMethod() != 'GET')) {
+            $this->pageCachable = false;
+            if ($this->menuItem && ($this->settings->get('purgePostBack', 0) == 1) ) {
+                $purgeTags = "com_menus:" . $this->menuItem->id;
+                $this->lscInstance->purgePublic($purgeTags);
+                $session->set('lastPostBack', $this->menuItem->id);
+                $this->log();
+            }
+        } else {
+            if($session->get('lastPostBack')==$this->menuItem->id){
+                $this->pageCachable = false;
+                $session->clear('lastPostBack');
+            }
+        }
+
         if (!$this->pageCachable) {
             
         } else if (JDEBUG) {
@@ -234,6 +240,11 @@ class plgSystemLSCache extends CMSPlugin {
     }
     
     public function onAfterRenderModule($module, $attribs="") {
+        
+        if(isset($module->esiRending) && $module->esiRending){
+            return;
+        }
+        
         if(isset($module->output)){
             $module->content = $module->output;
             return;
@@ -1450,6 +1461,7 @@ class plgSystemLSCache extends CMSPlugin {
         $lang->load($moduleLanguage, JPATH_SITE);
 
         $oldContent = $module->content;
+        $module->esiRending = true;
         $content = JModuleHelper::renderModule($module, $attribs);
         if ($content) {
             $tag = "com_modules:" . $module->id;

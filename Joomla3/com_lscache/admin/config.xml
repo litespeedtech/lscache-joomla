@@ -66,6 +66,10 @@
             <option value="0">JDISABLED</option>
             <option value="1">JENABLED</option>
         </field>
+        <field name="purgePostBack" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_PURGE_POSTBACK_LABEL" description="COM_LSCACHE_FIELD_PURGE_POSTBACK_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
         <field name="note_cleancache" type="notepurge" class="alert alert-success" description="COM_LSCACHE_FIELD_CLEAN_CACHE_NOTE" />
         <field name="note_recache" type="notepurge" class="alert alert-success" description="COM_LSCACHE_FIELD_RECACHE_NOTE" />
 
