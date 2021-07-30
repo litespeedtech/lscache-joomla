@@ -1464,10 +1464,6 @@ class plgSystemLSCache extends JPlugin {
                 $this->lscInstance->cachePrivate($tag, $tag);
                 $this->log();
             }
-
-            if ($module->vary_language == 1) {
-                $this->checkVary('language:' . $lang->getTag());
-            }
             
             if ($module->module_type == 0) {                
                 echo $content;
