@@ -290,7 +290,8 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         $start = $app->input->get('start', $limitstart);
         $pagination = $productModel->_pagination;
         
-        if(($start>0) && ($pagination->pages.current==1)){
+        $pageCurrent = "pages.current";
+        if(($start>0) && ($pagination->$pageCurrent==1)){
             $this->plugin->pageCachable = false;
             return;
         }
