@@ -73,9 +73,9 @@ class LSCacheComponentsHelper
         if (!class_exists($className)){
             return NULL;
         }
-        
-        $instance = new $className($this->dispatcher, array());
-        $instance->init($this->dispatcher,$this->plugin);
+        $dispatcher = $this->plugin->getDispatcher();
+        $instance = new $className($dispatcher, array());
+        $instance->init($dispatcher,$this->plugin);
         return $instance;
         
     }
