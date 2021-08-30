@@ -13,12 +13,13 @@ class LSCacheComponentsHelper
     const COM_ELEMENT = 1;
     const COM_FILE = 2;
     const COM_CLASSNAME = 3;
+    const COM_RUNADMIN = 4;
         
     protected $activeComponents;
     protected $plugin;
     protected $dispatcher;
     
-	public function __construct (&$plugin, $filter = array()) {
+    public function __construct (&$plugin, $filter = array()) {
         require_once (__DIR__ . '/list.php');
         
         $this->plugin = $plugin;
@@ -34,6 +35,13 @@ class LSCacheComponentsHelper
     
     public function supportComponent($com_name){
         if(isset($this->activeComponents[$com_name])){
+            $app = JFactory::getApplication();
+            if($app->isClient('administrator')){
+                $component = $this->activeComponents[$com_name];
+                if(!$component[self::COM_RUNADMIN]){
+                    return false;
+                }
+            }
             return true;
         }
         else{
