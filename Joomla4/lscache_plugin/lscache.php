@@ -123,7 +123,7 @@ class plgSystemLSCache extends CMSPlugin {
      *
      * @since   1.0.0
      */
-    public function onAfterInitialise() {
+    public function onAfterRoute() {
         if (!$this->cacheEnabled) {
             return;
         }
