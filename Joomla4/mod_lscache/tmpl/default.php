@@ -1,11 +1,16 @@
 <?php
 defined('_JEXEC') or die;
-?>
 
-<div class="btn-group lscache">
-    <span class="btn-group separator"></span>
-	<a href="index.php?option=com_lscache&task=modules.purgelscache"
-		title="<?php echo JText::_('MOD_LSCACHE'); ?>">
-		<span class="icon-purge" ></span><?php echo JText::_('MOD_LSCACHE'); ?>
-	</a>
-</div>
+$text = JText::_('MOD_LSCACHE');
+
+?>
+<a  href="index.php?option=com_lscache&task=modules.purgelscache"
+    class="header-item-content" title="<?php echo $text; ?>">
+	<div class="header-item-icon">
+		<span class="icon-trash" aria-hidden="true"></span>
+	</div>
+    
+        <div class="header-item-text">
+                <?php echo $text; ?>
+        </div>
+</a>
