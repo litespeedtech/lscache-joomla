@@ -1757,7 +1757,7 @@ class plgSystemLSCache extends JPlugin {
         if ((!$this->purgeObject->purgeAll) && ($this->purgeObject->autoRecache > 0)) {
             $root = JUri::root();
             $cleanWords = $this->settings->get('cleanCache', 'purgeAllCache');
-            $url = $root . "index.php?option=com_lscache&cleancache=" . $cleanWords;
+            $url = $root . "index.php?option=com_lscache&cleanCache=" . $cleanWords;
             if ($this->purgeObject->purgeAll) {
                 $this->purgeObject->recacheAll = false;
             } else if (count($this->purgeObject->tags) > 0) {
