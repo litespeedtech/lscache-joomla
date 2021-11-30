@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="module" version="3.1" client="administrator" method="upgrade">
-	<name>MOD_LSCACHE_NAME</name>
+	<name>mod_lscache_purge</name>
 	<author>LiteSpeed Technologies</author>
 	<creationDate>January 2021</creationDate>
 	<copyright>Copyright (C) 2005 - 2018 Open Source Matters. All rights reserved.</copyright>
@@ -8,11 +8,12 @@
 	<authorEmail>info@litespeedtech.com</authorEmail>
 	<authorUrl>www.litespeedtech.com</authorUrl>
 	<version>1.0.0</version>
-	<description>MOD_LSCACHE_XML_DESCRIPTION</description>
+	<description>MOD_LSCACHE_PURGE_DESC</description>
 
 	<files>
-		<filename module="mod_lscache">mod_lscache.php</filename>
+		<filename module="mod_lscache_purge">mod_lscache_purge.php</filename>
 		<folder>tmpl</folder>
+		<folder>language</folder>
 	</files>
 
 </extension>

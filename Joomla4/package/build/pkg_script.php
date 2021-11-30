@@ -81,6 +81,23 @@ class Pkg_LSCacheInstallerScript
     public function uninstall()
     {
         $this->clearHtaccess();
+
+        $db = JFactory::getDbo();        
+        $query = $db->getQuery(true);
+        $query->select($db->quoteName('extension_id'));
+        $query->from($db->quoteName('#__extensions'));
+        $query->where($db->quoteName('type') . ' = ' . $db->Quote('module'));
+        $query->where($db->quoteName('element') . ' = ' . $db->Quote('mod_lscache_purge'));
+        $db->setQuery($query, 0, 1);
+        $id = $db->loadResult();
+
+        if ( ! $id)
+        {
+            return;
+        }
+        
+        $installer = new JInstaller();
+        $installer->uninstall('module', $id);        
     }
 
     public function update()
@@ -168,62 +185,6 @@ class Pkg_LSCacheInstallerScript
                 JPath::setPermissions($file, '0444');
             }             
         }
-        //Add module
-        $query = $db->getQuery(true);
-		$query->select($db->quoteName('id'))
-			->from('#__modules')
-			->where($db->quoteName('module') . ' = ' . $db->quote('mod_lscache'))
-			->where($db->quoteName('client_id') . ' = 1');                        
-		$db->setQuery($query, 0, 1);
-		$id = $db->loadResult();
-
-		if ( ! $id)
-		{
-			return;
-		}
-
-        $query = $db->getQuery(true);
-        $query->select($db->quoteName('moduleid'))
-			->from('#__modules_menu')
-			->where($db->quoteName('moduleid') . ' = ' . (int) $id);
-		$db->setQuery($query, 0, 1)->execute();
-		$exists = $db->loadResult();
-		if ($exists)
-		{
-			return;
-		}
-
-        $query = $db->getQuery(true);
-		$query->select($db->quoteName('ordering'))
-			->from('#__modules')
-			->where($db->quoteName('position') . ' = ' . $db->quote('status'))
-			->where($db->quoteName('client_id') . ' = 1')
-			->order('ordering DESC');
-		$db->setQuery($query, 0, 1)->execute();
-		$ordering = $db->loadResult();
-		$ordering++;
-        
-        $query = $db->getQuery(true);
-        $query->update($db->quoteName('#__modules'))
-			->set($db->quoteName('published') . ' = 1')
-			->set($db->quoteName('ordering') . ' = ' . (int)$ordering)
-			->set($db->quoteName('position') . ' = ' . $db->quote('status'))
-			->where($db->quoteName('id') . ' = ' . (int)$id);
-        try {
-            $db->setQuery($query)->execute();
-        } catch (Exception $ex) {
-            $app->enqueueMessage($ex->getMessage(), 'error');
-        }
-
-        $query = $db->getQuery(true);
-		$query->insert('#__modules_menu')
-			->columns([$db->quoteName('moduleid'), $db->quoteName('menuid')])
-			->values((int) $id . ', 0');
-        try {
-            $db->setQuery($query)->execute();
-        } catch (Exception $ex) {
-            $app->enqueueMessage($ex->getMessage(), 'error');
-        }
 
 
         $query = $db->getQuery(true);
@@ -236,6 +197,55 @@ class Pkg_LSCacheInstallerScript
             error_log($ex->getMessage());
         }
            
+
+        //Add module
+        $query = $db->getQuery(true);
+		$query->select($db->quoteName('id'))
+			->from('#__modules')
+			->where($db->quoteName('module') . ' = ' . $db->quote('mod_lscache_purge'))
+			->where($db->quoteName('client_id') . ' = 1');                        
+        $db->setQuery($query, 0, 1);
+        $id = $db->loadResult();
+
+        if ( ! $id)
+        {
+            return;
+        }
+
+        $query = $db->getQuery(true);
+        $query->update($db->quoteName('#__modules'))
+			->set($db->quoteName('published') . ' = 1')
+			->set($db->quoteName('ordering') . ' = 1' )
+			->set($db->quoteName('access') . ' = 3' )
+			->set($db->quoteName('position') . ' = ' . $db->quote('status'))
+			->where($db->quoteName('id') . ' = ' . (int)$id);
+        try {
+            $db->setQuery($query)->execute();
+        } catch (Exception $ex) {
+            $app->enqueueMessage($ex->getMessage(), 'error');
+        }
+
+        $query = $db->getQuery(true);
+        $query->select($db->quoteName('moduleid'))
+			->from('#__modules_menu')
+			->where($db->quoteName('moduleid') . ' = ' . (int) $id);
+        $db->setQuery($query, 0, 1)->execute();
+        $exists = $db->loadResult();
+        if ($exists)
+        {
+                return;
+        }
+        
+        $query = $db->getQuery(true);
+		$query->insert('#__modules_menu')
+			->columns([$db->quoteName('moduleid'), $db->quoteName('menuid')])
+			->values((int) $id . ', 0');
+        try {
+            $db->setQuery($query)->execute();
+        } catch (Exception $ex) {
+            $app->enqueueMessage($ex->getMessage(), 'error');
+        }
+
     }
     
 	private function clearHtaccess()

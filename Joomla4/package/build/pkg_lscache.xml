@@ -19,6 +19,6 @@
  <files>
    <file type="component" id="com_lscache">com_lscache.zip</file>
    <file type="plugin" id="lscache" group="system">lscache_plugin.zip</file>
-   <file type="module" id="mod_lscache">mod_lscache.zip</file>
+   <file type="module" id="mod_lscache_purge">mod_lscache_purge.zip</file>
  </files>
  </extension>

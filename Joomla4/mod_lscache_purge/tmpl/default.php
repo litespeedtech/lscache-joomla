@@ -1,7 +1,7 @@
 <?php
 defined('_JEXEC') or die;
 
-$text = JText::_('MOD_LSCACHE');
+$text = JText::_('MOD_LSCACHE_PURGE_TITLE');
 
 ?>
 <a  href="index.php?option=com_lscache&task=modules.purgelscache"
