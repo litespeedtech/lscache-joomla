@@ -200,7 +200,7 @@ class plgSystemLSCache extends JPlugin {
                 $this->log();
             }
         } else {
-            if($session->get('lastPostBack')==$this->menuItem->id){
+            if($this->menuItem && ($session->get('lastPostBack')==$this->menuItem->id)){
                 $this->pageCachable = false;
                 $session->clear('lastPostBack');
             }
