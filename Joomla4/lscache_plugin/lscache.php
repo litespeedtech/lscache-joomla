@@ -467,14 +467,6 @@ class plgSystemLSCache extends CMSPlugin {
             $data = preg_replace($search, $replace, $content, -1, $count);
         }        
         
-        if (!LITESPEED_ESI_SUPPORT && $this->esiEnabled && $this->esion) {
-            $data .= '<script> jQuery(document).ready(function($) {' .PHP_EOL;
-            $data .= implode(' ', $this->esijs) .PHP_EOL;
-            $data .= '}); </script>';
-        }
-        
-        $this->app->setBody($data);
-
         if ($cacheTimeout == 0) {
             return;
         }
