@@ -13,6 +13,7 @@ use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\Profiler\Profiler;
 use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\Application\CMSApplication;
+use Joomla\CMS\Application\SiteApplication;
 use Joomla\CMS\Application\CMSApplicationInterface;
 /**
 /**
@@ -1610,31 +1611,24 @@ class plgSystemLSCache extends CMSPlugin {
     }
 
     private function getSiteMap($option = "") {
-        $db = JFactory::getDbo();
-        $query = $db->getQuery(true)
-                ->select(array($db->quoteName('id'), $db->quoteName('link'), $db->quoteName('type'), $db->quoteName('path')))
-                ->from('#__menu')
-                ->where($db->quoteName('client_id') . '=0')
-                ->where($db->quoteName('published') . '=1')
-                ->where($db->quoteName('type') . 'in ("component","alias")');
-        if (!empty($option)) {
-            $query->where($db->quoteName('link') . ' like "%option=' . $option . '%"');
-        }
-        $query->order($db->quoteName('level') . ' ASC');
-
-        $db->setQuery($query);
-        $menus = $db->loadObjectList();
-
+        $app  = Factory::getContainer()->get(SiteApplication::class);
+        $appmenus = $app->getMenu();
+        $menus = $appmenus->getMenu();
+        $curlMenus = array();
         if (!empty($menus) && is_array($menus)) {
             foreach ($menus as $menu) {
-                if ($menu->type != "alias") {
-                    $menu->path = 'index.php?Itemid=' . $menu->id;
+                if (($menu->type != "alias")) {
+                    $menu->path = $menu->link . '&Itemid=' . $menu->id;
+                    if(!empty($menu->link)){
+                        if($menu->language!="*"){
+                            $menu->path = $menu->path . '&lang=' . $menu->language;
+                        }
+                    }
+                    $curlMenus[]=$menu;
                 }
             }
-        } else {
-            $menus = array();
-        }
-        return $menus;
+        } 
+        return $curlMenus;
     }
 
     private function crawlUrls($urls, $output = true) {
@@ -1655,7 +1649,7 @@ class plgSystemLSCache extends CMSPlugin {
         $begin = microtime();
         $success = 0;
         $current = 0;
-        $router =  CMSApplication::getInstance('site')->getRouter('site'); //$appInstance->getRouter();
+        //$router =  CMSApplication::getInstance('site')->getRouter('site'); //$appInstance->getRouter();
         $root = JUri::getInstance()->toString(array('scheme', 'host', 'port'));
         $recacheDuration = $this->settings->get('recacheDuration', 30) * 1000000;
         $break = false;
@@ -1667,24 +1661,25 @@ class plgSystemLSCache extends CMSPlugin {
             }
             flush();
         }
-
+        
         foreach ($urls as $url) {
-            $start = microtime();
             $ch = curl_init();
             if ($this->isAdmin()) {
                 try {
-                    $url = @$router->build($url);
+                    $curlurl = JRoute::link("site",$url);
                 } catch (Error $ex) {
                     $this->log($ex->getMessage());
                     continue;
                 }
-                
-                $url = str_replace("/administrator", "", $url);
             } else {
-                $url = JRoute::_($url, FALSE);
+                $curlurl = JRoute::link("site",$url);
             }
-
-            curl_setopt($ch, CURLOPT_URL, $root . $url);
+            
+            if((strpos($curlurl,'[')!==false) && (strpos($curlurl,']')!==false)){
+                $curlurl = substr($curlurl, 0, strpos($curlurl,'?'));
+            }
+            
+            curl_setopt($ch, CURLOPT_URL, $root.$curlurl);
             curl_setopt($ch, CURLOPT_HEADER, false);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
@@ -1694,11 +1689,12 @@ class plgSystemLSCache extends CMSPlugin {
             curl_setopt($ch, CURLOPT_USERAGENT, 'lscache_runner');
             curl_setopt($ch, CURLOPT_ENCODING, "gzip");
             curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+            $start = microtime();
             
             $buffer = curl_exec($ch);
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
-            $this->log($root . $url);
+            $this->log( $root.$url);
 
             if (in_array($httpcode, $acceptCode)) {
                 $success++;
@@ -1714,10 +1710,13 @@ class plgSystemLSCache extends CMSPlugin {
             $current++;
 
             if ($output) {
+            
+                echo 'curl url: ' . $root . '/' . $url . '<br/>' .  PHP_EOL;
+                
                 if ($cli) {
-                    echo $current . '/' . $count . ' ' . $root . $url . ' : ' . $httpcode . PHP_EOL;
+                    echo $current . '/' . $count . ' ' . $root.$curlurl . ' : ' . $httpcode . PHP_EOL;
                 } else {
-                    echo $current . '/' . $count . ' ' . $root . $url . ' : ' . $httpcode . '<br/>' . PHP_EOL;
+                    echo $current . '/' . $count . ' ' . $root.$curlurl . ' : ' . $httpcode . '<br/>' . PHP_EOL;
                 }
                 
                 if (ob_get_contents()){
