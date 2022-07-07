@@ -141,7 +141,7 @@ class plgSystemLSCache extends CMSPlugin {
             }
             $this->cacheTags[] = "com_menus:" . $this->menuItem->id;
             if ($this->menuItem->type == 'alias') {
-                $menuParams = $this->menuItem->params;
+                $menuParams = $this->menuItem->getParams();
                 $menuid = $menuParams->get('aliasoptions');
                 $this->cacheTags[] = "com_menus:" . $menuid;
             }
