@@ -1675,6 +1675,10 @@ class plgSystemLSCache extends CMSPlugin {
                 $curlurl = JRoute::link("site",$url);
             }
             
+            if(strpos($curlurl, '/component')===0){
+                $curlurl ='/'.$url;
+            }
+            
             if((strpos($curlurl,'[')!==false) && (strpos($curlurl,']')!==false)){
                 $curlurl = substr($curlurl, 0, strpos($curlurl,'?'));
             }
@@ -1818,7 +1822,7 @@ class plgSystemLSCache extends CMSPlugin {
             $recacheComponent = $this->settings->get('recacheComponent', false);
             if ($recacheComponent) {
                 $compUrls = $this->componentHelper->getComMap($recacheComponent);
-                $urls = array_merge($urls, $compUrls);
+                $urls = array_merge($compUrls,$urls);
             }
         } else if ($this->purgeObject->autoRecache > 0) {
             $urls = $this->purgeObject->urls;

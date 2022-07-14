@@ -107,6 +107,7 @@
         <field name="recacheComponent" type="list" default="" label="COM_LSCACHE_FIELD_RECACHE_COMPONENT_LABEL"  description="COM_LSCACHE_FIELD_RECACHE_COMPONENT_DESC" >
             <option value="">Please Select</option>
             <option value="com_virtuemart">com_virtuemart: VirtueMart Component</option>
+            <option value="com_content">com_content: Articles Component</option>
         </field>
                 
     </fieldset>
