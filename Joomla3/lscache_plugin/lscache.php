@@ -193,7 +193,7 @@ class plgSystemLSCache extends JPlugin {
         //if post back, purge current page, disabled in case purge search post back
         if ($this->pageCachable && ($app->input->getMethod() != 'GET')) {
             $this->pageCachable = false;
-            if ($this->menuItem && ($this->settings->get('purgePostBack', 0) == 1) ) {
+            if ($this->menuItem && isset($this->menuItem->id) && ($this->settings->get('purgePostBack', 0) == 1) ) {
                 $purgeTags = "com_menus:" . $this->menuItem->id;
                 $this->lscInstance->purgePublic($purgeTags);
                 $session->set('lastPostBack', $this->menuItem->id);
