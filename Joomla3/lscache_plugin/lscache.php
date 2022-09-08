@@ -1081,6 +1081,7 @@ class plgSystemLSCache extends JPlugin {
             $module->lscache_type = $rows[0]->lscache_type;
             $module->lscache_ttl = $rows[0]->lscache_ttl;
             $module->module_type = $rows[0]->module_type;
+            $module->vary_language = $rows[0]->vary_language;
         } else if (($this->settings->get('loginESI', 1) == 1) && ((stripos($module->module, 'login') !== FALSE) || (stripos($module->title, 'login') !== FALSE))) {
             $module->original_cache_type = $module->cache_type;
             $module->cache_type = self::MODULE_ESI;
@@ -1088,6 +1089,7 @@ class plgSystemLSCache extends JPlugin {
             $module->lscache_ttl = 14;
             $module->lscache_tag = 'joomla.login';
             $module->module_type = 0;
+            $module->vary_language = 0;
         }
 
         return $module->cache_type;
