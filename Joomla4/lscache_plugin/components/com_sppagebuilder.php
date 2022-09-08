@@ -14,7 +14,7 @@ class LSCacheComponentSPPageBuilder extends LSCacheComponentBase{
     {
         $app = JFactory::getApplication();
         if(!$app->isClient('administrator')){
-            if($this->plugin->pageElements['view']!='page'){
+            if(isset ($this->plugin->pageElements['view'])  && ( $this->plugin->pageElements['view']!='page')){
                 $this->plugin->pageCachable = false;
             }
             else{
