@@ -146,6 +146,9 @@ class plgSystemLSCache extends CMSPlugin {
                 $this->cacheTags[] = "com_menus:" . $menuid;
             }
             $this->pageElements = $this->menuItem->query;
+            if (!empty($app->input->get('option'))) {
+                $this->pageElements["option"] = $app->input->get('option');
+            }
         } else {
             $link = JUri::getInstance()->getQuery();
             if (!empty($link)) {
@@ -170,7 +173,7 @@ class plgSystemLSCache extends CMSPlugin {
             $this->purgeAdmin($option);
         } else {
             $this->checkVary();
-            if((!$this->esiEnabled) && ($app->input->get("lscache_formtoken")=="1")){
+            if($app->input->get("lscache_formtoken")=="1"){
                 $token = JSession::getFormToken();
                 $app->input->post->set($token,'1');
             }
@@ -454,19 +457,11 @@ class plgSystemLSCache extends CMSPlugin {
         }
 
         $content = $this->app->getBody();
-        if($this->esiEnabled){
-            $search = JHtml::_( 'form.token' );
-            $replace = $this->esiTokenBlock();
-            $data = str_replace($search, $replace, $content,  $count);
-            if($count>0){
-                $this->esion = true;
-            }            
-        } else {
-            $token = JSession::getFormToken();
-            $search = '#<input.*?name="'. $token . '".*?>#';
-            $replace = '<input type="hidden" name="lscache_formtoken" value="1">';
-            $data = preg_replace($search, $replace, $content, -1, $count);
-        }        
+        $token = JSession::getFormToken();
+        $search = '#<input.*?name="'. $token . '".*?>#';
+        $replace = '<input type="hidden" name="lscache_formtoken" value="1">';
+        $data = preg_replace($search, $replace, $content, -1, $count);
+        $this->app->setBody($data);
         
         if ($cacheTimeout == 0) {
             return;
