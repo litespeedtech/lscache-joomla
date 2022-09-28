@@ -579,7 +579,17 @@ class plgSystemLSCache extends CMSPlugin {
         if ($this->purgeObject->purgeAll) {
             return;
         }
-
+        
+        if(is_array($row)){
+            foreach ($row as $rowitem){
+                $this->purgeContent($context, $rowitem);
+            }
+        }
+                
+        if(empty($row) || empty($row->id)){
+            return;
+        }
+        
         $option = $this->getOption($context);
 
         $menu_contexts = array('com_menus.item', 'com_menus.menu');
