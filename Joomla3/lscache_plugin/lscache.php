@@ -578,7 +578,7 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
 
-        if(is_array($row)){
+        if(is_array($row) && ($context != "com_users.user")){
             foreach ($row as $rowitem){
                 $this->purgeContent($context, $rowitem);
             }
@@ -685,6 +685,7 @@ class plgSystemLSCache extends JPlugin {
                 $this->purgeContent($context, $row);
             }
         } else {
+            $row = (object)array('id'=>0);
             foreach ($pks as $pk) {
                 $row->id = $pk;
                 $this->purgeContent($context, $row);
