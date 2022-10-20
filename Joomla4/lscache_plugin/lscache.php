@@ -228,7 +228,7 @@ class plgSystemLSCache extends CMSPlugin {
             $this->pageCachable = false;
         }
 
-        if (!$this->pageCachable) {
+        if (!$this->pageCachable && isset($_SERVER['HTTP_USER_AGENT'])) {
             $info = $_SERVER['HTTP_USER_AGENT'];
             if ($info == 'lscache_runner') {
                 $app->close();
