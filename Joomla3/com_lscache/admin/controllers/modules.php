@@ -112,7 +112,7 @@ class LSCacheControllerModules extends JControllerAdmin
     public function rebuild(){
         $dispatcher = JEventDispatcher::getInstance();
         $dispatcher->trigger("onLSCacheRebuildAll");
-        //$this->setRedirect('index.php?option=com_lscache');        
+        $this->setRedirect('index.php?option=com_lscache');        
     }
     
     public function purgeModule(){

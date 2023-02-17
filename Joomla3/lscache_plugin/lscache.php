@@ -1611,8 +1611,7 @@ class plgSystemLSCache extends JPlugin {
             reutrn;
         }
 
-        $this->purgeObject->recacheAll = true;
-        return;
+        $this->recacheAction(true,true);        
     }
 
     private function getSiteMap($option = "") {
