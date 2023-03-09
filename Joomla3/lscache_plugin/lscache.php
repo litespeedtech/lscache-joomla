@@ -1697,7 +1697,11 @@ class plgSystemLSCache extends JPlugin {
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
             curl_setopt($ch, CURLOPT_MAXREDIRS, 1);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'lscache_runner');
+            if($cli){
+                curl_setopt($ch, CURLOPT_USERAGENT, 'lscache_worker');
+            } else {
+                curl_setopt($ch, CURLOPT_USERAGENT, 'lscache_runner');                
+            }
             curl_setopt($ch, CURLOPT_ENCODING, "");
             curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
             
