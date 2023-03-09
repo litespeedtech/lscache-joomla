@@ -11,9 +11,9 @@ class LSCacheComponentK2 extends LSCacheComponentBase{
 
     public function onRegisterEvents()
     {
-        $this->dispatcher->register("onFinderAfterSave",$this);
-        $this->dispatcher->register("onFinderAfterDelete", $this);
-        $this->dispatcher->register("onFinderChangeState", $this);
+        $this->dispatcher->addListener("onFinderAfterSave",[$this,'onFinderAfterSave']);
+        $this->dispatcher->addListener("onFinderAfterDelete", [$this,'onFinderAfterDelete']);
+        $this->dispatcher->addListener("onFinderChangeState", [$this,'onFinderChangeState']);
     }
 
     public function onFinderAfterSave($context, $row, $isNew)

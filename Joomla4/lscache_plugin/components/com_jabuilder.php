@@ -12,8 +12,8 @@ class LSCacheComponentJabuilder extends LSCacheComponentBase{
     
     public function onRegisterEvents()
     {
-        $this->dispatcher->register("onJubSaveItem",$this);
-        $this->dispatcher->register("onJubLoadItem", $this);
+        $this->dispatcher->addListener("onJubSaveItem",[$this,'onJubSaveItem']);
+        $this->dispatcher->addListener("onJubLoadItem", [$this, 'onJubLoadItem']);
 
         $app = JFactory::getApplication();
         $option = $app->input->get('jub', null);

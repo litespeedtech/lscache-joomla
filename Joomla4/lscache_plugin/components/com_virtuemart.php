@@ -12,14 +12,14 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
 
     public function onRegisterEvents()
     {
-        $this->dispatcher->register("plgVmOnAddToCart", $this);
-        $this->dispatcher->register("plgVmOnRemoveFromCart", $this);
-        $this->dispatcher->register("plgVmOnUpdateCart", $this);
-        $this->dispatcher->register("plgVmAfterStoreProduct", $this);
-        $this->dispatcher->register("plgVmOnDeleteProduct", $this);
-        $this->dispatcher->register("plgVmAfterVendorStore", $this);
-        $this->dispatcher->register("plgVmConfirmedOrder", $this);
-        $this->dispatcher->register("onContentPrepare", $this);
+        $this->dispatcher->addListener("plgVmOnAddToCart", [$this,'plgVmOnAddToCart']);
+        $this->dispatcher->addListener("plgVmOnRemoveFromCart", [$this,'plgVmOnRemoveFromCart']);
+        $this->dispatcher->addListener("plgVmOnUpdateCart", [$this,'plgVmOnUpdateCart']);
+        $this->dispatcher->addListener("plgVmAfterStoreProduct", [$this,'plgVmAfterStoreProduct']);
+        $this->dispatcher->addListener("plgVmOnDeleteProduct", [$this,'plgVmOnDeleteProduct']);
+        $this->dispatcher->addListener("plgVmAfterVendorStore", [$this,'plgVmAfterVendorStore']);
+        $this->dispatcher->addListener("plgVmConfirmedOrder", [$this,'plgVmConfirmedOrder']);
+        $this->dispatcher->addListener("onContentPrepare", [$this,'onContentPrepare']);
 
         $db = JFactory::getDbo();
         $query = $db->getQuery(true)
