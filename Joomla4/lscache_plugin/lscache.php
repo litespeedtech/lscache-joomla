@@ -600,14 +600,14 @@ class plgSystemLSCache extends CMSPlugin {
         }
 
         if (in_array($context, self::CONTENT_CONTEXTS)) {
-            $purgeTags = $option . ',' . $option . ':' . $row->id;
+            $purgeTags =  $option . ':' . $row->id;
             $this->purgeObject->ids[] = $row->id;
             if (($this->settings->get("autoPurgeArticleCategory", 0) == 1) && $row->catid) {
                 $purgeTags .= ',com_categories:' . $row->catid;
                 $this->purgeObject->ids[] = $row->catid;
                 $category = JTable::getInstance('Category');
                 $category->load($row->catid);
-                if ($category->parent_id) {
+                if($category->parent_id) {
                     $purgeTags .= ',com_categories:' . $category->parent_id;
                     $this->purgeObject->ids[] = $category->parent_id;
                 }
