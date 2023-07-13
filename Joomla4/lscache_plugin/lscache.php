@@ -1243,7 +1243,7 @@ class plgSystemLSCache extends CMSPlugin {
         $excludeMenuItems = $this->settings->get('excludeMenus', array());
         if ($excludeMenuItems) {
             $menuItem = $this->menuItem;
-            if ($menuItem && $menuItem->id && $excludeMenuItems && in_array($menuItem->id, (array) $excludeMenuItems, true)) {
+            if ($menuItem && $menuItem->id && $excludeMenuItems && in_array($menuItem->id, (array) $excludeMenuItems)) {
                 return true;
             }
         }
