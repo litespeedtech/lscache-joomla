@@ -586,8 +586,14 @@ class plgSystemLSCache extends CMSPlugin {
             }
         }
                 
-        if(empty($row) || empty($row->id)){
+        if(empty($row)){
             return;
+        }
+
+        if(is_array($row)) {
+            if(empty($row['id'])) { return; }
+        } else {
+            if(empty($row->id)){ return; }
         }
         
         $option = $this->getOption($context);
