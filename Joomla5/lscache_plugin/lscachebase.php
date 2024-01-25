@@ -34,6 +34,7 @@ class LiteSpeedCacheBase
         $this->private_cache_timeout = $config['private_cache_timeout'];
     }
 
+    
     /**
      *
      * put tag into Array in the format for this site only.
@@ -49,9 +50,13 @@ class LiteSpeedCacheBase
         if ($rawTags == "") {
             return;
         }
-
-        $tags = explode(",", $rawTags);
         
+        if(is_array($rawTags)){
+            $tags = $rawTags;
+        } else {
+            $tags = explode(",", $rawTags);
+        }
+
         foreach ($tags as $tag) {
             if(trim($tag)==""){
                 continue;
@@ -207,7 +212,7 @@ class LiteSpeedCacheBase
      */
     protected function liteSpeedHeader($LSheader)
     {
-        $this->logbuffer .= $LSheader . "\t";
+        $this->logbuffer .= $LSheader . "   ";
         header($LSheader);
     }
 
@@ -215,7 +220,7 @@ class LiteSpeedCacheBase
      *
      *  set or delete private cookie.
      *
-     * @since   1.0.0
+     * @since   1.0.s0
      */
     public function checkPrivateCookie($path = '/')
     {
@@ -266,4 +271,4 @@ class LiteSpeedCacheBase
         return $retVal;
     }
     
-}
+}s
