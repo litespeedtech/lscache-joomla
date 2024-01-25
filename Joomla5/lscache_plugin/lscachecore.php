@@ -179,7 +179,7 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
         }
 
         $siteTags = Array();
-        $this->tagsForSite($siteTags, $privateTags, $this->site_only_tag));
+        $this->tagsForSite($siteTags, $privateTags, $this->site_only_tag);
         $LSheader = $this->tagCommand( self::CACHE_PURGE . 'private,' ,  $siteTags);
         $this->liteSpeedHeader($LSheader);
     }    
