@@ -1816,8 +1816,9 @@ class plgSystemLSCache extends CMSPlugin {
             }
             
         } else if (count($this->purgeObject->tags) > 0) {
+            $serveStale = $this->settings->get('serveStale', 1);
             $purgeTags = implode(',', $this->purgeObject->tags);
-            $this->lscInstance->purgePublic($purgeTags);
+            $this->lscInstance->purgePublic($purgeTags,$serveStale);
             $this->log();
         }
 

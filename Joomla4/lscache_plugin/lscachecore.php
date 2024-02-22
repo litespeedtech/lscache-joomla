@@ -104,7 +104,7 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
 
         $siteTags = Array();
         array_push($siteTags, $this->site_only_tag);
-        $this->tagsForSite($siteTags, $publicTags);
+        $this->tagsForSite($siteTags, $publicTags, $this->site_only_tag);
 
         $LSheader = $this->tagCommand( self::CACHE_TAG ,  $siteTags);
         $this->liteSpeedHeader($LSheader);
@@ -131,12 +131,12 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
         $this->liteSpeedHeader($LSheader);
 
         $siteTags = Array();
-        $this->tagsForSite($siteTags, $publicTags, "public:");
+        $this->tagsForSite($siteTags, $publicTags, "public:".$this->site_only_tag);
         if($publicTags!=""){
             array_push($siteTags, "public:" . $this->site_only_tag);
         }
         
-        $this->tagsForSite($siteTags, $privateTags);
+        $this->tagsForSite($siteTags, $privateTags, $this->site_only_tag);
         array_push($siteTags,  $this->site_only_tag);
         
         $LSheader = $this->tagCommand( self::CACHE_TAG ,  $siteTags);
@@ -146,5 +146,46 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
     public function getSiteOnlyTag(){
         return $this->site_only_tag;
     }
+
+    /**
+     *
+     *  purge public cache with specified tags for this site.
+     *
+     * @since   1.0.0
+     */
+    public function purgePublic($publicTags, $serveStale=FALSE)
+    {
+        if ((!isset($publicTags)) || ($publicTags == "")) {
+            return;
+        }
+        
+        $siteTags = Array();
+        $this->tagsForSite($siteTags, $publicTags, $this->site_only_tag);
+        if(serveStale){
+            $LSheader = $this->tagCommand(self::CACHE_PURGE . 'public,' ,  $siteTags) ;
+        } else {
+            $LSheader = $this->tagCommand(self::CACHE_PURGE . 'public,stale' ,  $siteTags) ;            
+        }
+        $this->liteSpeedHeader($LSheader);
+    }
+
+
+    /**
+     *
+     *  purge private cache with specified tags for this site.
+     *
+     * @since   1.0.0
+     */
+    public function purgePrivate($privateTags)
+    {
+        if ((!isset($privateTags)) || ($privateTags == "")) {
+            return;
+        }
+
+        $siteTags = Array();
+        $this->tagsForSite($siteTags, $privateTags, $this->site_only_tag);
+        $LSheader = $this->tagCommand( self::CACHE_PURGE . 'private,' ,  $siteTags);
+        $this->liteSpeedHeader($LSheader);
+    }    
     
 }
