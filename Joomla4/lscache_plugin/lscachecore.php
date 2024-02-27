@@ -162,9 +162,9 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
         $siteTags = Array();
         $this->tagsForSite($siteTags, $publicTags, $this->site_only_tag);
         if($serveStale){
-            $LSheader = $this->tagCommand(self::CACHE_PURGE . 'public,' ,  $siteTags) ;
-        } else {
             $LSheader = $this->tagCommand(self::CACHE_PURGE . 'public,stale' ,  $siteTags) ;            
+        } else {
+            $LSheader = $this->tagCommand(self::CACHE_PURGE . 'public,' ,  $siteTags) ;
         }
         $this->liteSpeedHeader($LSheader);
     }
