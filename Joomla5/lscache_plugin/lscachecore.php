@@ -46,7 +46,11 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
             return;
         }
 
-        $tags = explode(",", $rawTags);
+        if(is_array($rawTags)){
+            $tags = $rawTags;
+        } else {
+            $tags = explode(",", $rawTags);
+        }
         
         foreach ($tags as $tag) {
             if(trim($tag)==""){
@@ -104,7 +108,7 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
 
         $siteTags = Array();
         array_push($siteTags, $this->site_only_tag);
-        $this->tagsForSite($siteTags, $publicTags, $this->site_only_tag);
+        $this->tagsForSite($siteTags, $publicTags);
 
         $LSheader = $this->tagCommand( self::CACHE_TAG ,  $siteTags);
         $this->liteSpeedHeader($LSheader);
@@ -136,8 +140,8 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
             array_push($siteTags, "public:" . $this->site_only_tag);
         }
         
-        $this->tagsForSite($siteTags, $privateTags, $this->site_only_tag);
-        array_push($siteTags,  $this->site_only_tag);
+        $this->tagsForSite($siteTags, $privateTags);
+        array_push($siteTags, $this->site_only_tag);
         
         $LSheader = $this->tagCommand( self::CACHE_TAG ,  $siteTags);
         $this->liteSpeedHeader($LSheader);
@@ -153,15 +157,19 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
      *
      * @since   1.0.0
      */
-    public function purgePublic($publicTags)
+    public function purgePublic($publicTags, $serveStale=FALSE)
     {
         if ((!isset($publicTags)) || ($publicTags == "")) {
             return;
         }
         
         $siteTags = Array();
-        $this->tagsForSite($siteTags, $publicTags, $this->site_only_tag);
-        $LSheader = $this->tagCommand(self::CACHE_PURGE . 'public,' ,  $siteTags) ;
+        $this->tagsForSite($siteTags, $publicTags);
+        if($serveStale){
+            $LSheader = $this->tagCommand(self::CACHE_PURGE . 'public,stale,' ,  $siteTags) ;            
+        } else {
+            $LSheader = $this->tagCommand(self::CACHE_PURGE . 'public,' ,  $siteTags) ;
+        }
         $this->liteSpeedHeader($LSheader);
     }
 
@@ -179,7 +187,7 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
         }
 
         $siteTags = Array();
-        $this->tagsForSite($siteTags, $privateTags, $this->site_only_tag);
+        $this->tagsForSite($siteTags, $privateTags);
         $LSheader = $this->tagCommand( self::CACHE_PURGE . 'private,' ,  $siteTags);
         $this->liteSpeedHeader($LSheader);
     }    
