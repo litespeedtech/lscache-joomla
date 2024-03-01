@@ -60,3 +60,10 @@ Configuration
 --------------
 
 Using the Joomla administrator menu, navigate to **Components > LiteSpeed Cache**, and click the **Options** button to change LiteSpeed Cache settings.
+
+<details>
+  <summary>Click to show details</summary>
+
+![Plugin Installation picture](\/images\/joomlaPluginInstall.gif)
+</details>
+
