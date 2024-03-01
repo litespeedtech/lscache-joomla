@@ -27,6 +27,16 @@ This version of LiteSpeed Cache requires Joomla 3.x or later and LiteSpeed Web S
 
 Installing
 -------------
+Using Admin Panel -> System -> Install -> Extension  Menu to install Joomla Cache Plugin,  If choose "Install from URL", you may choose the correct plugin download url such as:  https://github.com/litespeedtech/lscache-joomla/raw/master/Joomla4/package/lscache-latest.zip
+
+
+<details>
+  <summary>Click to show details</summary>
+
+![Plugin Installation picture](\/images\/joomlaPluginInstall.gif)
+</details>
+
+
 Modify the .htaccess file in the Joomla site directory, adding the following directives:
 
     <IfModule LiteSpeed>
