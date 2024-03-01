@@ -67,3 +67,16 @@ Using the Joomla administrator menu, navigate to **Components > LiteSpeed Cache*
 ![Plugin Installation picture](\/images\/joomlaPluginConfig.gif)
 </details>
 
+
+Logging
+--------------
+
+Using Admin Panel to set LiteSpeed Cache Component Logging Levels, and enable Global Configuration -> Logging -> Log Almost Everything, then LiteSpeed Cache Plugin Logging will output to system logging file.
+
+
+<details>
+  <summary>Click to show details</summary>
+
+![Plugin Installation picture](\/images\/joomlaPluginDebug.gif)
+</details>
+
