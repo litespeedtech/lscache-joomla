@@ -64,6 +64,6 @@ Using the Joomla administrator menu, navigate to **Components > LiteSpeed Cache*
 <details>
   <summary>Click to show details</summary>
 
-![Plugin Installation picture](\/images\/joomlaPluginInstall.gif)
+![Plugin Installation picture](\/images\/joomlaPluginConfig.gif)
 </details>
 
