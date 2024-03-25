@@ -7,6 +7,8 @@
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
 
+use Joomla\Event\Event;
+
 class LSCacheComponentVirtueMart extends LSCacheComponentBase
 {
 
@@ -61,7 +63,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         $this->plugin->log();
     }
 
-    public function plgVmOnRemoveFromCart($cart, $prodid)
+    public function plgVmOnRemoveFromCart($cart, $prodid=null)
     {
         if (!$this->plugin->lscInstance) {
             return;
@@ -70,7 +72,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         $this->plugin->log();
     }
 
-    public function plgVmOnUpdateCart($cart, $force, $html)
+    public function plgVmOnUpdateCart($cart, $force=null, $html=null)
     {
         if (!$this->plugin->lscInstance) {
             return;
@@ -79,8 +81,12 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         $this->plugin->log();
     }
 
-    public function plgVmAfterStoreProduct($data, $product_data)
+    public function plgVmAfterStoreProduct($data, $product_data=null)
     {
+        if($data instanceof Event) {
+            return $this->plgVmOnDeleteProduct($data->getArgument('0'), $data->getArgument('1'));
+        }
+
         $category_tag = $this->getProductCategoryTags($product_data->virtuemart_product_id);
         $tag = "com_virtuemart, com_virtuemart.product:" . $product_data->virtuemart_product_id . $category_tag;
         $this->plugin->purgeObject->tags[] = $tag;
@@ -94,8 +100,12 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         
     }
 
-    public function plgVmOnDeleteProduct($id, $ok)
+    public function plgVmOnDeleteProduct($id, $ok=true)
     {
+        if($id instanceof Event) {
+            return $this->plgVmOnDeleteProduct($id->getArgument('0'),$id->getArgument('1'));
+        }
+
         if (!$ok) {
             return;
         }
@@ -118,8 +128,12 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         $this->plugin->purgeAction();
     }
 
-    public function plgVmConfirmedOrder($cart, $orderDetails)
+    public function plgVmConfirmedOrder($cart, $orderDetails = null)
     {
+        if($cart instanceof Event) {
+            $cart = $cart->getArgument('0');
+        }
+
         $tag = "com_virtuemart";
         $productids = array();
         $productUrls = array();
@@ -281,7 +295,11 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
     }
     
     
-    public function onContentPrepare($context, &$row, &$params, $page = 0) {
+    public function onContentPrepare($context, $row=null, $params=null, $page = 0) {
+        if($context instanceof Event) {
+            return $this->onContentPrepare($context->getArgument(0),$context->getArgument(1),$context->getArgument(2),$context->getArgument(3));
+        }
+
         $productModel = VmModel::getModel('Product');
         $total = $productModel->getTotal();
         $limitstart = $productModel->_limitStart;
