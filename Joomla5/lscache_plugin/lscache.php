@@ -381,12 +381,10 @@ class plgSystemLSCache extends CMSPlugin {
             return;
         }
 
-        if (function_exists('http_response_code')) {
-            $httpcode = http_response_code();
-            if ($httpcode > 201) {
-                $this->log("Http Response Code Not Cachable:" . $httpcode);
-                return;
-            }
+        $httpcode = $this->app->getResponse()->getStatusCode();
+        if ($httpcode > 201) {
+            $this->log("Http Response Code Not Cachable:" . $httpcode);
+            return;
         }
 
         $headers = $this->app->getHeaders();
