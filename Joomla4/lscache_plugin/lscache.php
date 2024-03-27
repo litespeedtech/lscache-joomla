@@ -199,7 +199,11 @@ class plgSystemLSCache extends CMSPlugin {
         if (($option=='com_content') && ($app->input->get('view')=='form' )){
             $this->pageCachable = false;
         }
-        
+
+        if ( isset($this->pageElements["view"]) && ($this->pageElements["view"]=='featured')){
+            $this->cacheTags[] = $option . ":featured";
+        }
+                
      //if post back, purge current page, disabled in case purge search post back
         if ($this->pageCachable && ($app->input->getMethod() != 'GET')) {
             $this->pageCachable = false;
@@ -385,12 +389,10 @@ class plgSystemLSCache extends CMSPlugin {
             return;
         }
 
-        if (function_exists('http_response_code')) {
-            $httpcode = http_response_code();
-            if ($httpcode > 201) {
-                $this->log("Http Response Code Not Cachable:" . $httpcode);
-                return;
-            }
+        $httpcode = $this->app->getResponse()->getStatusCode();
+        if ($httpcode > 201) {
+            $this->log("Http Response Code Not Cachable:" . $httpcode);
+            return;
         }
 
         $headers = $this->app->getHeaders();
@@ -618,6 +620,11 @@ class plgSystemLSCache extends CMSPlugin {
                     $this->purgeObject->ids[] = $category->parent_id;
                 }
             }
+
+            if($row->featured){
+                $purgeTags .= ','. $option . ':featured';
+            }
+
             $this->purgeObject->tags[] = $purgeTags;
             $this->purgeObject->option = $option;
             $this->purgeObject->idField = 'id';

@@ -195,6 +195,10 @@ class plgSystemLSCache extends CMSPlugin {
         if (($option=='com_content') && ($app->input->get('view')=='form' )){
             $this->pageCachable = false;
         }
+
+        if ( isset($this->pageElements["view"]) && ($this->pageElements["view"]=='featured')){
+            $this->cacheTags[] = $option . ":featured";
+        }        
         
      //if post back, purge current page, disabled in case purge search post back
         if ($this->pageCachable && ($app->input->getMethod() != 'GET')) {
@@ -616,6 +620,10 @@ class plgSystemLSCache extends CMSPlugin {
             $this->purgeObject->option = $option;
             $this->purgeObject->idField = 'id';
             return;
+        }
+
+        if($row->featured){
+            $purgeTags .= ','. $option . ':featured';
         }
 
         if ($context == "com_users.user") {
