@@ -16,7 +16,6 @@ use Joomla\CMS\Application\CMSApplication;
 use Joomla\CMS\Application\SiteApplication;
 use Joomla\CMS\Application\CMSApplicationInterface;
 /**
-/**
  * LiteSpeed Cache Plugin for Joomla running on LiteSpeed Webserver (LSWS).
  *
  * @since  1.0
@@ -326,8 +325,9 @@ class plgSystemLSCache extends CMSPlugin {
         if (!$this->pageCachable) {
             return;
         }
-
         //$this->debug(__FUNCTION__ . $context . var_export($row,true) );
+
+        $this->pageElements["content"] = $row;
 
         if (strpos($context, "mod_") === 0) {
             return;
@@ -350,13 +350,11 @@ class plgSystemLSCache extends CMSPlugin {
         // if it has category context, override it with no-category context                
         if(!in_array($context, self::CATEGORY_CONTEXTS) && isset($this->pageElements["context"]) &&  in_array($this->pageElements["context"], self::CATEGORY_CONTEXTS)){
             $this->pageElements["context"] = $context;
-            $this->pageElements["content"] = $row;
             return;
         }
 
         if(!isset($this->pageElements["context"])){
             $this->pageElements["context"] = $context;
-            $this->pageElements["content"] = $row;
             return;
         }
     }
