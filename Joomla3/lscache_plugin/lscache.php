@@ -710,7 +710,7 @@ class plgSystemLSCache extends JPlugin {
             return;
         }
         
-        if($row->element=='com_lscache'){
+        if(isset($row->element) && ($row->element=='com_lscache')){
             $newSetting = json_decode($row->params);
             if($this->settings->get('mobileCacheVary') != $newSetting->mobileCacheVary){
                 $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_CHECKHTACCESS'), "warning");            
@@ -852,8 +852,10 @@ class plgSystemLSCache extends JPlugin {
                 $this->purgeObject->purgeAll = true;
                 $this->purgeAction();
             } else if(in_array($task, array("delete"))){
-                $cid = $app->input->get('cid');
-                $this->purgeObject->tags[] = 'cmp:' . $cid;
+                $cids = $app->input->get('cid');
+                foreach($cids as $cid){
+                    $this->purgeObject->tags[] = 'cmp:' . $cid;
+                }
                 $this->purgeAction();
                 $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_PURGEINFORMED'), "message");            
             }
