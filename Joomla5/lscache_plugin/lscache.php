@@ -142,7 +142,7 @@ class plgSystemLSCache extends CMSPlugin {
                 $this->cacheTags[] = "com_menus:" . $menuid;
             }
             $this->pageElements = $this->menuItem->query;
-            if (!empty($app->input->get('option'))) {
+            if (empty($this->pageElements["option"]) && (!empty($app->input->get('option')))) {
                 $this->pageElements["option"] = $app->input->get('option');
             }
         } else {
@@ -334,6 +334,7 @@ class plgSystemLSCache extends CMSPlugin {
         }
         
         if($context == "com_content.featured"){
+            $this->pageElements["context"] = $context;
             return;
         }
 
