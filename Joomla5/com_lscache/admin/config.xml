@@ -72,7 +72,10 @@
         </field>
         <field name="note_cleancache" type="notepurge" class="alert alert-success" description="COM_LSCACHE_FIELD_CLEAN_CACHE_NOTE" />
         <field name="note_recache" type="notepurge" class="alert alert-success" description="COM_LSCACHE_FIELD_RECACHE_NOTE" />
-
+        <field name="serveStale" type="radio" default="1" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_SERVE_STALE_LABEL" description="COM_LSCACHE_FIELD_SERVE_STALE_DESC">
+            <option value="0">JDISABLED</option>
+            <option value="1">JENABLED</option>
+        </field>
                 
     </fieldset>
 
