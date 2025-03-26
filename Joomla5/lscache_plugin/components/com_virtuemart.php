@@ -100,15 +100,18 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         
     }
 
-    public function plgVmOnDeleteProduct($id, $ok=true)
+    public function plgVmOnDeleteProduct($data, $ok=true)
     {
-        if($id instanceof Event) {
-            return $this->plgVmOnDeleteProduct($id->getArgument('0'),$id->getArgument('1'));
+        if($data instanceof Event) {
+            return $this->plgVmOnDeleteProduct($data->getArgument('0'),$data->getArgument('1'));
         }
 
         if (!$ok) {
             return;
         }
+        
+        $id = $data['virtuemart_product_id'];
+        
         $category_tag = $this->getProductCategoryTags($id);
         $tag = "com_virtuemart, com_virtuemart.product:" . $id . $category_tag;
         $this->plugin->purgeObject->tags[] = $tag;
