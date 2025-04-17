@@ -1610,7 +1610,7 @@ class plgSystemLSCache extends JPlugin {
 
         if (!function_exists('curl_version')) {
             $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_CURLNOTSUPPORT'));
-            reutrn;
+            return;
         }
 
         $this->recacheAction(true,true);        
