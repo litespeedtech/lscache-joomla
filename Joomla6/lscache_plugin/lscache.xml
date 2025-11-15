@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension version="3.1" type="plugin" group="system" method="upgrade">
+	<name>LiteSpeed Cache Plugin</name>
+	<author>LiteSpeedTech</author>
+	<creationDate>Dec 2017</creationDate>
+	<copyright>Copyright (C) 2005 - 2018 Open Source Matters. All rights reserved.</copyright>
+	<license>GNU General Public License version 3 or later</license>
+	<authorEmail>info@litespeedtech.com</authorEmail>
+	<authorUrl>www.litespeedtech.org</authorUrl>
+	<version>1.5.2</version>
+	<description>PLG_SYSTEM_LSCACHE_XML_DESCRIPTION</description>
+	<files>
+		<filename plugin="lscache">lscache.php</filename>
+		<filename plugin="lscache">lscachecore.php</filename>
+		<filename plugin="lscache">lscachebase.php</filename>
+                <folder plugin="lscache">components</folder>
+                <folder plugin="lscache">modules</folder>
+                
+	</files>
+</extension>
