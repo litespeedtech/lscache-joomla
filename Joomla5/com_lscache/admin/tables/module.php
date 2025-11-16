@@ -8,13 +8,14 @@
  */
 // No direct access
 defined('_JEXEC') or die;
+use Joomla\CMS\Table\Table;
 
 /**
  * Hello Table class
  *
  * @since  0.0.1
  */
-class LSCacheTableModule extends JTable
+class LSCacheTableModule extends Table
 {
 	/**
 	 * Constructor

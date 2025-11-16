@@ -7,7 +7,12 @@
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
 
-class LSCacheViewModule extends JViewLegacy
+use Joomla\CMS\MVC\View\HtmlView;
+use Joomla\CMS\Factory;
+use Joomla\CMS\Language\Text;
+use Joomla\CMS\Toolbar\ToolbarHelper;
+
+class LSCacheViewModule extends HtmlView
 {
 	/**
 	 * View form
@@ -32,7 +37,7 @@ class LSCacheViewModule extends JViewLegacy
 		// Check for errors.
 		if (count($errors = $this->get('Errors')))
 		{
-			JError::raiseError(500, implode('<br />', $errors));
+			throw new Exception(implode('\n', $errors),500);
 
 			return false;
 		}
@@ -57,7 +62,7 @@ class LSCacheViewModule extends JViewLegacy
 	 */
 	protected function addToolBar()
 	{
-		$input = JFactory::getApplication()->input;
+		$input = Factory::getApplication()->input;
 
 		// Hide Joomla Administrator Main menu
 		$input->set('hidemainmenu', true);
@@ -66,17 +71,17 @@ class LSCacheViewModule extends JViewLegacy
 
 		if ($isNew)
 		{
-			$title = JText::_('COM_LSCACHE_MANAGER_LSCACHE_NEW');
+			$title = Text::_('COM_LSCACHE_MANAGER_LSCACHE_NEW');
 		}
 		else
 		{
-			$title = JText::_('COM_LSCACHE_MANAGER_LSCACHE_EDIT');
+			$title = Text::_('COM_LSCACHE_MANAGER_LSCACHE_EDIT');
 		}
 
-		JToolBarHelper::title($title, 'module');
-		JToolBarHelper::apply('module.apply');
-		JToolBarHelper::save('module.save');
-		JToolBarHelper::cancel(
+		ToolBarHelper::title($title, 'module');
+		ToolBarHelper::apply('module.apply');
+		ToolBarHelper::save('module.save');
+		ToolBarHelper::cancel(
 			'module.cancel',
 			$isNew ? 'JTOOLBAR_CANCEL' : 'JTOOLBAR_CLOSE'
 		);

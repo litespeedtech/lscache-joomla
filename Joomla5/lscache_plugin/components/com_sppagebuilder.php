@@ -6,19 +6,21 @@
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
+use Joomla\CMS\Factory;
+use Joomla\Uri\Uri;
 
 class LSCacheComponentSPPageBuilder extends LSCacheComponentBase{
     
     
     public function onRegisterEvents()
     {
-        $app = JFactory::getApplication();
+        $app = Factory::getApplication();
         if(!$app->isClient('administrator')){
             if(isset ($this->plugin->pageElements['view'])  && ( $this->plugin->pageElements['view']!='page')){
                 $this->plugin->pageCachable = false;
             }
             else{
-                $link = JUri::getInstance()->getQuery();
+                $link = Uri::getInstance()->getQuery();
                 if(!empty($link)){
                     $this->plugin->pageCachable = false;
                 }

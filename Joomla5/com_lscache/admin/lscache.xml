@@ -56,7 +56,7 @@
             <folder>tables</folder>
             <folder>views</folder>
         </files>
-	<languages folder="admin/language">
+	    <languages folder="admin/language">
             <language tag="en-GB">en-GB/en-GB.com_lscache.ini</language>
             <language tag="en-GB">en-GB/en-GB.com_lscache.sys.ini</language>
             <language tag="en-GB">en-GB/en-GB.plg_system_lscache.ini</language>

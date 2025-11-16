@@ -8,14 +8,17 @@
 
 defined('_JEXEC') or die;
 
+use Joomla\CMS\Component\ComponentHelper;
 use Joomla\Utilities\ArrayHelper;
+use Joomla\CMS\Factory;
+use Joomla\CMS\Language\Text;
 
 /**
  * LSCache Component Module Model
  *
  * @since  1.5
  */
-class LSCacheModelModules extends JModelList
+class LSCacheModelModules extends Joomla\CMS\MVC\Model\ListModel
 {
 	/**
 	 * Constructor.
@@ -79,7 +82,7 @@ class LSCacheModelModules extends JModelList
 	 */
 	protected function populateState($ordering = 'a.position', $direction = 'asc')
 	{
-		$app = JFactory::getApplication();
+		$app = Factory::getApplication();
 
 		$layout = $app->input->get('layout', '', 'cmd');
 
@@ -100,7 +103,7 @@ class LSCacheModelModules extends JModelList
         $this->setState('filter.language', $this->getUserStateFromRequest($this->context . '.filter.language', 'filter_language', '', 'string'));
 
 		// Load the parameters.
-		$params = JComponentHelper::getParams('com_lscache');
+		$params = ComponentHelper::getParams('com_lscache');
 		$this->setState('params', $params);
 
 		// List state information.
@@ -207,7 +210,7 @@ class LSCacheModelModules extends JModelList
 	 */
 	protected function translate(&$items)
 	{
-		$lang = JFactory::getLanguage();
+		$lang = Factory::getLanguage();
 		$clientPath = $this->getState('client_id') ? JPATH_ADMINISTRATOR : JPATH_SITE;
 
 		foreach ($items as $item)
@@ -216,23 +219,23 @@ class LSCacheModelModules extends JModelList
 			$source = $clientPath . "/modules/$extension";
 			$lang->load("$extension.sys", $clientPath, null, false, true)
 				|| $lang->load("$extension.sys", $source, null, false, true);
-			$item->name = JText::_($item->name);
+			$item->name = Text::_($item->name);
 
 			if (is_null($item->pages))
 			{
-				$item->pages = JText::_('JNONE');
+				$item->pages = Text::_('JNONE');
 			}
 			elseif ($item->pages < 0)
 			{
-				$item->pages = JText::_('COM_MODULES_ASSIGNED_VARIES_EXCEPT');
+				$item->pages = Text::_('COM_MODULES_ASSIGNED_VARIES_EXCEPT');
 			}
 			elseif ($item->pages > 0)
 			{
-				$item->pages = JText::_('COM_MODULES_ASSIGNED_VARIES_ONLY');
+				$item->pages = Text::_('COM_MODULES_ASSIGNED_VARIES_ONLY');
 			}
 			else
 			{
-				$item->pages = JText::_('JALL');
+				$item->pages = Text::_('JALL');
 			}
 		}
 	}
@@ -244,11 +247,11 @@ class LSCacheModelModules extends JModelList
 	 */
 	protected function getListQuery()
 	{
-		$app = JFactory::getApplication();
+		$app = Factory::getApplication();
 
 		// Create a new query object.
 		$db = $this->getDbo();
-		$query = $db->getQuery(true);
+		$query = $db->createQuery();
 
 		// Select the required fields.
 		$query->select($db->quoteName(array('a.id' , 'a.title', 'a.note', 'a.position', 'a.module', 'a.language', 'a.access', 'a.published', 'a.publish_up', 'a.publish_down', 'a.checked_out', 'a.checked_out_time')));
@@ -300,7 +303,7 @@ class LSCacheModelModules extends JModelList
         }
         
 		// Filter by current user access level.
-		$user = JFactory::getUser();
+		$user = Factory::getUser();
 
 		// Get the current user for authorisation checks
 		if ($user->authorise('core.admin') !== true)
@@ -351,19 +354,19 @@ class LSCacheModelModules extends JModelList
 			else
 			{
 				// Modules in "All" pages.
-				$subQuery1 = $db->getQuery(true);
+				$subQuery1 = $db->createQuery();
 				$subQuery1->select('MIN(' . $db->quoteName('menuid') . ')')
 					->from($db->quoteName('#__modules_menu'))
 					->where($db->quoteName('moduleid') . ' = ' . $db->quoteName('a.id'));
 
 				// Modules in "Selected" pages that have the chosen menu item id.
-				$subQuery2 = $db->getQuery(true);
+				$subQuery2 = $db->createQuery();
 				$subQuery2->select($db->quoteName('moduleid'))
 					->from($db->quoteName('#__modules_menu'))
 					->where($db->quoteName('menuid') . ' = ' . (int) $menuItemId);
 
 				// Modules in "All except selected" pages that doesn't have the chosen menu item id.
-				$subQuery3 = $db->getQuery(true);
+				$subQuery3 = $db->createQuery();
 				$subQuery3->select($db->quoteName('moduleid'))
 					->from($db->quoteName('#__modules_menu'))
 					->where($db->quoteName('menuid') . ' = -' . (int) $menuItemId);
@@ -399,7 +402,7 @@ class LSCacheModelModules extends JModelList
 		{
 			if ($language === 'current')
 			{
-				$query->where($db->quoteName('a.language') . ' IN (' . $db->quote(JFactory::getLanguage()->getTag()) . ',' . $db->quote('*') . ')');
+				$query->where($db->quoteName('a.language') . ' IN (' . $db->quote(Factory::getLanguage()->getTag()) . ',' . $db->quote('*') . ')');
 			}
 			else
 			{

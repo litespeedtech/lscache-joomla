@@ -1,8 +1,10 @@
 <?php
+use Joomla\CMS\Factory;
+use Joomla\CMS\MVC\Controller\BaseController;
 
 defined( '_JEXEC' ) or die( 'Restricted access' );
 
-$app = JFactory::getApplication();
+$app = Factory::getApplication();
 $admin = $app->isClient('administrator');
 if($admin==1)
 	{
@@ -16,14 +18,11 @@ if($admin==1)
 	}
 else
 	{
-
-	jimport('joomla.application.component.controller');
-
 	// Create the controller
-	$controller = JControllerLegacy::getInstance('LSCache');
+	$controller = BaseController::getInstance('LSCache');
 
 	// Perform the Request task
-	$controller->execute(JFactory::getApplication()->input->getCmd('task'));
+	$controller->execute(Factory::getApplication()->input->getCmd('task'));
 
 	// Redirect if set by the controller
 	$controller->redirect();

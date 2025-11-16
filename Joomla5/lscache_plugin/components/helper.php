@@ -6,6 +6,7 @@
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
+use Joomla\CMS\Factory;
 
 class LSCacheComponentsHelper
 {
@@ -23,7 +24,7 @@ class LSCacheComponentsHelper
         require_once (__DIR__ . '/list.php');
         
         $this->plugin = $plugin;
-        $this->dispatcher =  JFactory::getApplication();
+        $this->dispatcher =  Factory::getApplication();
         $this->activeComponents = $lscacheComponents;
         
         if(count($filter)>0){
@@ -35,7 +36,7 @@ class LSCacheComponentsHelper
     
     public function supportComponent($com_name){
         if(isset($this->activeComponents[$com_name])){
-            $app = JFactory::getApplication();
+            $app = Factory::getApplication();
             if($app->isClient('administrator')){
                 $component = $this->activeComponents[$com_name];
                 if(!$component[self::COM_RUNADMIN]){

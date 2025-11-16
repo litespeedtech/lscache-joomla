@@ -8,13 +8,16 @@
  */
 // No direct access to this file
 defined('_JEXEC') or die;
+use Joomla\CMS\Factory;
+use Joomla\CMS\Language\Text;
+use Joomla\CMS\Table\Table;
 
 /**
  * LSCache Module Model
  *
  * @since  0.0.1
  */
-class LSCacheModelModule extends JModelAdmin {
+class LSCacheModelModule extends Joomla\CMS\MVC\Model\AdminModel {
 
     public function __construct($config = array()) {
         $config = array_merge(
@@ -33,21 +36,21 @@ class LSCacheModelModule extends JModelAdmin {
     }
 
     public function getTable($type = 'Module', $prefix = 'LSCacheTable', $config = array()) {
-        return JTable::getInstance($type, $prefix, $config);
+        return Table::getInstance($type, $prefix, $config);
     }
 
     public function renderESI(array $pks) {
-        $app = JFactory::getApplication();
-        $user = JFactory::getUser();
+        $app = Factory::getApplication();
+        $user = Factory::getUser();
 
         if (!$user->authorise('core.admin', 'com_lscache')) {
-            $app->enqueueMessage(JText::_('COM_LSCACHE_TASK_NOT_ALLOWED'), 'error');
+            $app->enqueueMessage(Text::_('COM_LSCACHE_TASK_NOT_ALLOWED'), 'error');
             return;
         }
 
         foreach ($pks as $pk) {
             $db = $this->getDbo();
-            $query = $db->getQuery(true)
+            $query = $db->createQuery()
                     ->insert($db->quoteName('#__modules_lscache'))
                     ->columns($db->quoteName(array('moduleid', 'lscache_type', 'lscache_ttl')))
                     ->values($pk . ', 1, 500');
@@ -60,24 +63,24 @@ class LSCacheModelModule extends JModelAdmin {
             $app->triggerEvent("onExtensionAfterSave", array("com_lscache.module", $table, false));
         }
 
-        $app = JFactory::getApplication();
+        $app = Factory::getApplication();
         $app->setUserState("com_lscache.modules.lscache_type", '1');
 
         return true;
     }
 
     public function renderNormal($pks) {
-        $app = JFactory::getApplication();
-        $user = JFactory::getUser();
+        $app = Factory::getApplication();
+        $user = Factory::getUser();
 
         if (!$user->authorise('core.admin', 'com_lscache')) {
-            $app->enqueueMessage(JText::_('COM_LSCACHE_TASK_NOT_ALLOWED'), 'error');
+            $app->enqueueMessage(Text::_('COM_LSCACHE_TASK_NOT_ALLOWED'), 'error');
             return;
         }
 
         foreach ($pks as $pk) {
             $db = $this->getDbo();
-            $query = $db->getQuery(true)
+            $query = $db->createQuery()
                     ->delete('#__modules_lscache')
                     ->where('moduleid=' . (int) $pk);
 
@@ -121,7 +124,7 @@ class LSCacheModelModule extends JModelAdmin {
      */
     protected function loadFormData() {
         // Check the session for previously entered form data.
-        $data = JFactory::getApplication()->getUserState(
+        $data = Factory::getApplication()->getUserState(
                 'com_lscache.default.module.data',
                 array()
         );
@@ -131,7 +134,7 @@ class LSCacheModelModule extends JModelAdmin {
         }
 
         $db = $this->getDbo();
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select('title')
                 ->from('#__modules')
                 ->where($db->quoteName('id') . '=' . (int) $data->moduleid);

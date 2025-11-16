@@ -6,25 +6,93 @@
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
+// phpcs:disable PSR1.Files.SideEffects
+\defined('_JEXEC') or die;
+// phpcs:enable PSR1.Files.SideEffects
 
 use Joomla\Registry\Registry;
 use Joomla\Utilities\ArrayHelper;
+use Joomla\CMS\Factory;
+use Joomla\CMS\Application\AdministratorApplication;
+use Joomla\CMS\Installer\InstallerAdapter;
+use Joomla\CMS\Installer\InstallerScriptInterface;
+use Joomla\CMS\Installer\Installer;
+use Joomla\CMS\Language\Text;
+use Joomla\Database\DatabaseInterface;
+use Joomla\DI\Container;
+use Joomla\DI\ServiceProviderInterface;
+use Joomla\Filesystem\File;
+use Joomla\Filesystem\Folder;
+use Joomla\Filesystem\Path;
+use Joomla\Filesystem\Exception\FilesystemException;
 
-class Pkg_LSCacheInstallerScript
-{
 
-    public function preflight($type, $parent)
+class Pkg_LSCacheInstallerScript implements InstallerScriptInterface {
+
+    private AdministratorApplication $app;
+    private DatabaseInterface $db;
+    private bool $uninstalling = false;
+
+    public function __construct(AdministratorApplication $app, DatabaseInterface $db)
     {
+        $this->app = $app;
+        $this->db  = $db;
+    }
 
-        $app = JFactory::getApplication();
-        
-        $minimum_version = '3.0.0';
+    public function install(InstallerAdapter $parent): bool
+    {
+        $this->lscacheEnable();
+
+        $this->app->enqueueMessage('Successful installed.');
+
+        return true;
+    }
+
+    public function update(InstallerAdapter $parent): bool
+    {
+        $this->lscacheEnable();
+
+        $this->app->enqueueMessage('Successful updated.');
+
+        return true;
+    }
+
+    public function uninstall(InstallerAdapter $parent): bool
+    {
+        $db = $this->db;
+        $this->clearHtaccess();
+
+        $this->uninstalling = true;
+
+        $query = $db->createQuery();
+        $query->delete($db->quoteName('#__extensions'))
+                ->where($db->quoteName('element') . ' = ' . $db->quote('lscache'))
+                ->where($db->quoteName('type') . ' = ' . $db->quote('package'));
+        try {
+            $db->setQuery($query)->execute();
+        } catch (RuntimeException $ex) {
+            $app->enqueueMessage($ex->getMessage(), 'error');
+        }        
+
+        $this->app->enqueueMessage('Successful uninstalled.');
+
+        return true;
+    }
+
+    public function preflight(string $type, InstallerAdapter $parent): bool
+    {
+        $app = $this->app;
+        $minimum_version = '5.0.0';
+
+        $package_path = JPATH_ROOT . '/administrator/manifests/packages' ;       
+        if (!Folder::exists( $package_path )){
+            Folder::create($package_path);
+        }
 
         if (version_compare(JVERSION, $minimum_version, '<'))
         {
-                $app->enqueueMessage('This plugin requires Joomla version v'. $minimum_version . ' or greater to work. Your installed version is ' . JVERSION, 'error');
-
-                return FALSE;
+            $app->enqueueMessage('This plugin requires Joomla version v'. $minimum_version . ' or greater to work. Your installed version is ' . JVERSION, 'error');
+            return FALSE;
         }
 
         // Server type
@@ -49,120 +117,137 @@ class Pkg_LSCacheInstallerScript
         }
         else{
             $app->enqueueMessage('This plugin requires running on a LiteSpeed Web Server, or it will not work properly');
-
             return true;
         }
 
         if ( LITESPEED_SERVER_TYPE == 'LITESPEED_SERVER_OLS') {
-
             $app->enqueueMessage('This version of LiteSpeed Web Server does not support ESI feature, ESI feature will not work');
-
             return true;
         }
+
+        return true;
     }
 
-    public function postflight( $type, $parent ) {
-        
+    public function postflight(string $type, InstallerAdapter $parent): bool
+    {
+        $db = $this->db;
+        $app = $this->app;
+
+        if($this->uninstalling){
+            $query = $db->createQuery();
+            $query->select($db->quoteName('extension_id'));
+            $query->from($db->quoteName('#__extensions'));
+            $query->where($db->quoteName('type') . ' = ' . $db->Quote('module'));
+            $query->where($db->quoteName('element') . ' = ' . $db->Quote('mod_lscache_purge'));
+            $db->setQuery($query, 0, 1);
+            $id = $db->loadResult();
+            if ($id)
+            {
+                Installer::getInstance()->uninstall('module',$id);    
+            }
+            return true;   
+        }
+
         $package = $parent->getParent()->getPath('source');
-        $this->installEsiTemplate($package);
+        $template_path = JPATH_ROOT . '/templates/esitemplate' ;       
+        if (Folder::exists( $template_path )){
+            $app->enqueueMessage('esi template already exists, esi template installing ignored', 'warning');
+            return true;
+        }
+
+        $template_package = $package.'/esiTemplate';
+        if (!Folder::exists( $template_package )){
+            $app->enqueueMessage('esi template package not exists, esi template installing ignored', 'warning');
+            return true;
+        }
+
+        $query = $db->createQuery();
+        $query->delete($db->quoteName('#__extensions'))
+                ->where($db->quoteName('type') . ' = '  . $db->quote('template'))
+                ->where($db->quoteName('element') . ' = ' . $db->quote('esitemplate'));
+        try {
+            $db->setQuery($query)->execute();
+        } catch (Exception $ex) {
+
+        }
+        
+        $query = $db->createQuery();
+        $query->delete($db->quoteName('#__template_styles'))
+                ->where($db->quoteName('template') . ' = ' . $db->quote('esitemplate'));
+        try {
+            $db->setQuery($query)->execute();
+        } catch (Exception $ex) {
+
+        }
+
+        $result = Installer::getInstance()->install($template_package);
         
         if (function_exists('opcache_reset')){
             opcache_reset();
         } else if (function_exists('phpopcache_reset')){
             phpopcache_reset();
-        }       
-    }
-    
-    public function install()
-    {
-        $this->lscacheEnable();
-    }
-    
-    public function uninstall()
-    {
-        $this->clearHtaccess();
-
-        $db = JFactory::getDbo();        
-        $query = $db->getQuery(true);
-        $query->select($db->quoteName('extension_id'));
-        $query->from($db->quoteName('#__extensions'));
-        $query->where($db->quoteName('type') . ' = ' . $db->Quote('module'));
-        $query->where($db->quoteName('element') . ' = ' . $db->Quote('mod_lscache_purge'));
-        $db->setQuery($query, 0, 1);
-        $id = $db->loadResult();
-
-        if ( ! $id)
-        {
-            return;
         }
-        
-        $installer = new JInstaller();
-        $installer->uninstall('module', $id);        
+        return true;
     }
 
-    public function update()
-    {
-        $this->lscacheEnable();
-    }
-    
     protected function lscacheEnable()
     {
-        $db = JFactory::getDbo();
-        $app = JFactory::getApplication();
+        $db = $this->db;
+        $app = $this->app;
 
-        $query = $db->getQuery(true);
+        $query = $db->createQuery();
         $query->update($db->quoteName('#__extensions'))
                 ->set('enabled=1')
                 ->where($db->quoteName('element') . ' = ' . $db->quote('lscache'))
-    			->where($db->quoteName('folder') . ' = ' . $db->quote('system'))
-        		->where($db->quoteName('type') . ' = ' . $db->quote('plugin'));
+                ->where($db->quoteName('folder') . ' = ' . $db->quote('system'))
+                ->where($db->quoteName('type') . ' = ' . $db->quote('plugin'));
         try {
             $db->setQuery($query)->execute();
         } catch (RuntimeException $ex) {
             $app->enqueueMessage($ex->getMessage(), 'error');
         }
 
-        $query = $db->getQuery(true);
+        $query = $db->createQuery();
         $query->update($db->quoteName('#__extensions'))
                 ->set('enabled=1')
                 ->where($db->quoteName('element') . ' = ' . $db->quote('com_lscache'))
-        		->where($db->quoteName('type') . ' = ' . $db->quote('component'));
+                ->where($db->quoteName('type') . ' = ' . $db->quote('component'));
         try {
             $db->setQuery($query)->execute();
         } catch (RuntimeException $ex) {
             $app->enqueueMessage($ex->getMessage(), 'error');
         }
 
-        $query = $db->getQuery(true);
+        $query = $db->createQuery();
         $query->update($db->quoteName('#__extensions'))
                 ->set('enabled=0')
                 ->where($db->quoteName('element') . ' = ' . $db->quote('cache'))
-    			->where($db->quoteName('folder') . ' = ' . $db->quote('system'))
-        		->where($db->quoteName('type') . ' = ' . $db->quote('plugin'));
+                ->where($db->quoteName('folder') . ' = ' . $db->quote('system'))
+                ->where($db->quoteName('type') . ' = ' . $db->quote('plugin'));
         try {
             $db->setQuery($query)->execute();
         } catch (RuntimeException $ex) {
             $app->enqueueMessage($ex->getMessage(), 'error');
         }
 
-        $query = $db->getQuery(true);
+        $query = $db->createQuery();
         $query->update($db->quoteName('#__extensions'))
                 ->set('enabled=0')
                 ->where($db->quoteName('element') . ' = ' . $db->quote('jotcache'))
-    			->where($db->quoteName('folder') . ' = ' . $db->quote('system'))
-        		->where($db->quoteName('type') . ' = ' . $db->quote('plugin'));
+                ->where($db->quoteName('folder') . ' = ' . $db->quote('system'))
+                ->where($db->quoteName('type') . ' = ' . $db->quote('plugin'));
         try {
             $db->setQuery($query)->execute();
         } catch (RuntimeException $ex) {
             $app->enqueueMessage($ex->getMessage(), 'error');
         }
-        
-        $query = $db->getQuery(true);
+
+        $query = $db->createQuery();
         $query->update($db->quoteName('#__extensions'))
                 ->set('enabled=0')
                 ->where($db->quoteName('element') . ' = ' . $db->quote('jotmarker'))
-    			->where($db->quoteName('folder') . ' = ' . $db->quote('system'))
-        		->where($db->quoteName('type') . ' = ' . $db->quote('plugin'));
+                ->where($db->quoteName('folder') . ' = ' . $db->quote('system'))
+                ->where($db->quoteName('type') . ' = ' . $db->quote('plugin'));
         try {
             $db->setQuery($query)->execute();
         } catch (RuntimeException $ex) {
@@ -170,40 +255,41 @@ class Pkg_LSCacheInstallerScript
         }
 
         // disable gzip
-	$data = ArrayHelper::fromObject(new JConfig);
+        $data = Factory::getConfig();
         if($data["gzip"]!='0'){
             $data["gzip"] = '0';
             $config = new Registry($data);
             // Attempt to write the configuration file as a PHP class named JConfig.
             $configuration = $config->toString('PHP', array('class' => 'JConfig', 'closingtag' => false));
             $file = JPATH_CONFIGURATION . '/configuration.php';
-
-            if (!JPath::setPermissions($file, '0644') || !JFile::write($file, $configuration))
-            {
-                $app->enqueueMessage('Fail to write configuration file to disable gzip', 'error');
-            } else {
-                JPath::setPermissions($file, '0444');
-            }             
+            try {
+                if (!Path::setPermissions($file, '0644') || !File::write($file, $configuration))
+                {
+                    $app->enqueueMessage('Fail to write configuration file to disable gzip', 'error');
+                } else {
+                    Path::setPermissions($file, '0444');
+                }   
+            } catch (\FilesystemException $e) {
+                echo Text::sprintf('FILES_JOOMLA_ERROR_FILE_FOLDER', $file) . '<br>';
+            }
         }
 
-
-        $query = $db->getQuery(true);
+        $query = $db->createQuery();
         try {
             $query->update($db->quoteName('#__virtuemart_configs'))
                 ->set("config = replace ( config, 'enable_content_plugin=" . '"0"' . "', 'enable_content_plugin=". '"1"' ."')")
-        		->where($db->quoteName('virtuemart_config_id') . ' = 1' );
+                ->where($db->quoteName('virtuemart_config_id') . ' = 1' );
             $db->setQuery($query)->execute();
         } catch (Exception $ex) {
             error_log($ex->getMessage());
         }
-           
-
+            
         //Add module
-        $query = $db->getQuery(true);
-		$query->select($db->quoteName('id'))
-			->from('#__modules')
-			->where($db->quoteName('module') . ' = ' . $db->quote('mod_lscache_purge'))
-			->where($db->quoteName('client_id') . ' = 1');                        
+        $query = $db->createQuery();
+        $query->select($db->quoteName('id'))
+            ->from('#__modules')
+            ->where($db->quoteName('module') . ' = ' . $db->quote('mod_lscache_purge'))
+            ->where($db->quoteName('client_id') . ' = 1');                        
         $db->setQuery($query, 0, 1);
         $id = $db->loadResult();
 
@@ -212,34 +298,34 @@ class Pkg_LSCacheInstallerScript
             return;
         }
 
-        $query = $db->getQuery(true);
+        $query = $db->createQuery();
         $query->update($db->quoteName('#__modules'))
-			->set($db->quoteName('published') . ' = 1')
-			->set($db->quoteName('ordering') . ' = 1' )
-			->set($db->quoteName('access') . ' = 3' )
-			->set($db->quoteName('position') . ' = ' . $db->quote('status'))
-			->where($db->quoteName('id') . ' = ' . (int)$id);
+            ->set($db->quoteName('published') . ' = 1')
+            ->set($db->quoteName('ordering') . ' = 1' )
+            ->set($db->quoteName('access') . ' = 3' )
+            ->set($db->quoteName('position') . ' = ' . $db->quote('status'))
+            ->where($db->quoteName('id') . ' = ' . (int)$id);
         try {
             $db->setQuery($query)->execute();
         } catch (Exception $ex) {
             $app->enqueueMessage($ex->getMessage(), 'error');
         }
 
-        $query = $db->getQuery(true);
+        $query = $db->createQuery();
         $query->select($db->quoteName('moduleid'))
-			->from('#__modules_menu')
-			->where($db->quoteName('moduleid') . ' = ' . (int) $id);
+            ->from('#__modules_menu')
+            ->where($db->quoteName('moduleid') . ' = ' . (int) $id);
         $db->setQuery($query, 0, 1)->execute();
         $exists = $db->loadResult();
         if ($exists)
         {
-                return;
+            return;
         }
-        
-        $query = $db->getQuery(true);
-		$query->insert('#__modules_menu')
-			->columns([$db->quoteName('moduleid'), $db->quoteName('menuid')])
-			->values((int) $id . ', 0');
+
+        $query = $db->createQuery();
+        $query->insert('#__modules_menu')
+            ->columns([$db->quoteName('moduleid'), $db->quoteName('menuid')])
+            ->values((int) $id . ', 0');
         try {
             $db->setQuery($query)->execute();
         } catch (Exception $ex) {
@@ -247,9 +333,9 @@ class Pkg_LSCacheInstallerScript
         }
 
     }
-    
-	private function clearHtaccess()
-	{
+
+    private function clearHtaccess()
+    {
         $htaccess = JPATH_ROOT  . '/.htaccess';
 
         if (file_exists($htaccess))
@@ -264,47 +350,19 @@ class Pkg_LSCacheInstallerScript
                 file_put_contents($htaccess, $clean_contents);
             }
         }
-	}
-
-	protected function installEsiTemplate($package)
-	{
-        $app = JFactory::getApplication();
-
-        $template_path = JPATH_ROOT . '/templates/esitemplate' ;       
-        if (JFolder::exists( $template_path )){
-            $app->enqueueMessage('esi template already exists, esi template installing ignored', 'warning');
-            return;
-        }
-
-        $template_package = $package.'/esiTemplate';
-        if (!JFolder::exists( $template_package )){
-            $app->enqueueMessage('esi template package not exists, esi template installing ignored', 'warning');
-            return;
-        }
-
-        $db = JFactory::getDbo();
-        $query = $db->getQuery(true);
-        $query->delete($db->quoteName('#__extensions'))
-        		->where($db->quoteName('type') . ' = '  . $db->quote('template'))
-        		->where($db->quoteName('element') . ' = ' . $db->quote('esitemplate'));
-        try {
-            $db->setQuery($query)->execute();
-        } catch (Exception $ex) {
-
-        }
-        
-        $query = $db->getQuery(true);
-        $query->delete($db->quoteName('#__template_styles'))
-        		->where($db->quoteName('template') . ' = ' . $db->quote('esitemplate'));
-        try {
-            $db->setQuery($query)->execute();
-        } catch (Exception $ex) {
-
-        }
-
-        $installer = new JInstaller;
-        $result = $installer->install($template_package);
-        
     }
-    
+
 }
+
+
+return new class () implements ServiceProviderInterface {
+  public function register(Container $container)
+  {
+    $container->set(
+      InstallerScriptInterface::class,
+      new Pkg_LSCacheInstallerScript (
+      $container->get(AdministratorApplication::class),
+      $container->get(DatabaseInterface::class)
+      ));
+  }
+};

@@ -6,6 +6,7 @@
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
+use Joomla\CMS\Factory;
 
 class LSCacheComponentK2 extends LSCacheComponentBase{
 
@@ -42,7 +43,7 @@ class LSCacheComponentK2 extends LSCacheComponentBase{
         $this->plugin->purgeObject->idField = "id";
         if($context == "com_k2.item"){
             $purgeTags =  'com_k2,com_k2.item:' . $row->id . ",com_k2.category:" . $row->catid . ",com_k2.user:" . $row->created_by;
-            $tags = JFactory::getApplication()->input->get('tags', NULL, 'POST', 'array');
+            $tags = Factory::getApplication()->input->get('tags', NULL, 'POST', 'array');
 			if (count($tags))
 			{
 				$tags = array_unique($tags);

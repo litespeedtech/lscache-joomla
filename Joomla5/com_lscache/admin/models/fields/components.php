@@ -10,15 +10,20 @@
 defined('JPATH_BASE') or die;
 
 use Joomla\Utilities\ArrayHelper;
+use Joomla\CMS\Form\Field\ListField;
+use Joomla\CMS\Form\FormHelper;
+use Joomla\CMS\Language\Text;
+use Joomla\Uri\Uri;
+use Joomla\CMS\Factory;
 
-JFormHelper::loadFieldClass('list');
+FormHelper::loadFieldClass('list');
 
 /**
  * Components Category field.
  *
  * @since  1.6
  */
-class JFormFieldComponents extends JFormFieldList
+class JFormFieldComponents extends ListField
 {
 	/**
 	 * The form field type.
@@ -38,8 +43,8 @@ class JFormFieldComponents extends JFormFieldList
 	protected function getOptions()
 	{
 		// Initialise variable.
-		$db = JFactory::getDbo();
-		$query = $db->getQuery(true)
+		$db = Factory::getDbo();
+		$query = $db->createQuery()
 			->select('DISTINCT a.name AS text, a.element AS value')
 			->from('#__extensions as a')
 			->where('a.enabled >= 1')
@@ -51,7 +56,7 @@ class JFormFieldComponents extends JFormFieldList
 
 		if (count($items))
 		{
-			$lang = JFactory::getLanguage();
+			$lang = Factory::getLanguage();
 
 			foreach ($items as &$item)
 			{
@@ -62,7 +67,7 @@ class JFormFieldComponents extends JFormFieldList
 					|| $lang->load("$extension.sys", $source, null, false, true);
 
 				// Translate component name
-				$item->text = JText::_($item->text);
+				$item->text = Text::_($item->text);
 			}
 
 			// Sort by component name

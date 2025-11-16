@@ -8,9 +8,10 @@
  */
 
 defined('_JEXEC') or die;
+use Joomla\CMS\Language\Text;
 
-$text = JText::_('COM_LSCACHE_BTN_PURGE_URL');
-$title = JText::_('COM_LSCACHE_BTN_PURGE_URL_TIP');
+$text = Text::_('COM_LSCACHE_BTN_PURGE_URL');
+$title = Text::_('COM_LSCACHE_BTN_PURGE_URL_TIP');
 ?>
 
 <button data-toggle="modal" onclick="jQuery( '#collapseModal' ).modal('show')" class="btn btn-small btn-success" title="<?php echo $title; ?>">

@@ -7,13 +7,22 @@
  */
 
 defined('_JEXEC') or die;
-
+use Joomla\CMS\MVC\View\HtmlView;
+use Joomla\CMS\Factory;
+use Joomla\CMS\Language\Text;
+use Joomla\CMS\Helper\ContentHelper;
+use Joomla\CMS\Toolbar\Toolbar;
+use Joomla\CMS\Toolbar\ToolbarHelper;
+use Joomla\CMS\Layout\FileLayout;
+use Joomla\CMS\HTML\Helpers\Sidebar;
+use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Helper\ModuleHelper;
 /**
  * View class for a list of modules.
  *
  * @since  1.6
  */
-class LSCacheViewModules extends JViewLegacy
+class LSCacheViewModules extends HtmlView
 {
 	protected $items;
 
@@ -47,21 +56,23 @@ class LSCacheViewModules extends JViewLegacy
 		}
 
 		// We do not need the Language filter when modules are not filtered
-		if ($this->clientId == 1 && !JModuleHelper::isAdminMultilang())
+		if ($this->clientId == 1 && !ModuleHelper::isAdminMultilang())
 		{
 			unset($this->activeFilters['language']);
 			$this->filterForm->removeField('language', 'filter');
 		}
 
         if(isset( $_SERVER['LSWS_EDITION'] ) && strpos( $_SERVER['LSWS_EDITION'], 'Openlitespeed' ) === 0){
-            $app = JFactory::getApplication();  
-            $app->enqueueMessage(JText::_('COM_LSCACHE_MODULES_UPGRADE'));
+            $app = Factory::getApplication();  
+            $app->enqueueMessage(Text::_('COM_LSCACHE_MODULES_UPGRADE'));
         }
         
 		$this->addToolbar();
+		HTMLHelper::_('jquery.framework');
+
 
 		// Include the component HTML helpers.
-		JHtml::addIncludePath(JPATH_COMPONENT . '/helpers/html');
+		HTMLHelper::addIncludePath(JPATH_COMPONENT . '/helpers/html');
 
 		return parent::display($tpl);
 	}
@@ -78,41 +89,39 @@ class LSCacheViewModules extends JViewLegacy
 	{
 		$state = $this->get('State');
         $cacheType = $state->get('lscache_type');
-		$canDo = JHelperContent::getActions('com_lscache');
-		$user  = JFactory::getUser();
+		$canDo = ContentHelper::getActions('com_lscache');
+		$user  = Factory::getUser();
 
-		$bar = JToolbar::getInstance('toolbar');
+	    $bar    = Toolbar::getInstance('toolbar');
 
-		JToolbarHelper::title(JText::_('COM_LSCACHE_TOOLBAR_TITLE'), 'lsc-jml-icon-b');
+		ToolbarHelper::title(Text::_('COM_LSCACHE_TOOLBAR_TITLE'), 'lsc-jml-icon-b');
 
 		if ($canDo->get('core.admin'))
 		{
             if($cacheType=="1"){
-                JToolbarHelper::custom('modules.normal', 'unfeatured', 'loop', 'COM_LSCACHE_RENDER_NORMAL', true);
+                ToolbarHelper::custom('modules.normal', 'unfeatured', 'loop', 'COM_LSCACHE_RENDER_NORMAL', true);
             }
             else{
-                JToolbarHelper::custom('modules.esi', 'featured', 'loop', 'COM_LSCACHE_RENDER_ESI', true);
+                ToolbarHelper::custom('modules.esi', 'featured', 'loop', 'COM_LSCACHE_RENDER_ESI', true);
             }
             
-    		$bar = JToolbar::getInstance('toolbar');
-
-            $layout = new JLayoutFile('toolbar.purgeall');
+            $layout = new FileLayout('toolbar.purgeall');
 			$bar->appendButton('Custom', $layout->render(array()));
 
-            JToolbarHelper::custom('modules.rebuild', 'flash', 'refresh','COM_LSCACHE_BTN_REBUILD',false);
+            ToolbarHelper::custom('modules.rebuild', 'flash', 'refresh','COM_LSCACHE_BTN_REBUILD',false);
 
-            $layout = new JLayoutFile('toolbar.purgeurl');
+            $layout = new FileLayout('toolbar.purgeurl');
 			$dhtml = $layout->render(array());
 			$bar->appendButton('Custom', $dhtml);
 
-            JToolbarHelper::custom('modules.purgeModule', 'folder-minus', 'folder-remove','COM_LSCACHE_BTN_PURGE_MODULE',false);
+            ToolbarHelper::custom('modules.purgeModule', 'folder-minus', 'folder-remove','COM_LSCACHE_BTN_PURGE_MODULE',false);
             
-			JToolbarHelper::preferences('com_lscache');
+			ToolbarHelper::preferences('com_lscache');
 		}
 
-		if (JHtmlSidebar::getEntries())
+		if (Sidebar::getEntries())
 		{
-			$this->sidebar = JHtmlSidebar::render();
+			$this->sidebar = Sidebar::render();
 		}
 	}
 
@@ -132,26 +141,26 @@ class LSCacheViewModules extends JViewLegacy
 			if ($this->getLayout() == 'default')
 			{
 				return array(
-					'ordering'       => JText::_('JGRID_HEADING_ORDERING'),
-					'a.published'    => JText::_('JSTATUS'),
-					'a.title'        => JText::_('JGLOBAL_TITLE'),
-					'position'       => JText::_('COM_MODULES_HEADING_POSITION'),
-					'name'           => JText::_('COM_MODULES_HEADING_MODULE'),
-					'pages'          => JText::_('COM_MODULES_HEADING_PAGES'),
-					'a.access'       => JText::_('JGRID_HEADING_ACCESS'),
-					'language_title' => JText::_('JGRID_HEADING_LANGUAGE'),
-					'a.id'           => JText::_('JGRID_HEADING_ID')
+					'ordering'       => Text::_('JGRID_HEADING_ORDERING'),
+					'a.published'    => Text::_('JSTATUS'),
+					'a.title'        => Text::_('JGLOBAL_TITLE'),
+					'position'       => Text::_('COM_MODULES_HEADING_POSITION'),
+					'name'           => Text::_('COM_MODULES_HEADING_MODULE'),
+					'pages'          => Text::_('COM_MODULES_HEADING_PAGES'),
+					'a.access'       => Text::_('JGRID_HEADING_ACCESS'),
+					'language_title' => Text::_('JGRID_HEADING_LANGUAGE'),
+					'a.id'           => Text::_('JGRID_HEADING_ID')
 				);
 			}
 
 			return array(
-				'a.title'        => JText::_('JGLOBAL_TITLE'),
-				'position'       => JText::_('COM_MODULES_HEADING_POSITION'),
-				'name'           => JText::_('COM_MODULES_HEADING_MODULE'),
-				'pages'          => JText::_('COM_MODULES_HEADING_PAGES'),
-				'a.access'       => JText::_('JGRID_HEADING_ACCESS'),
-				'language_title' => JText::_('JGRID_HEADING_LANGUAGE'),
-				'a.id'           => JText::_('JGRID_HEADING_ID')
+				'a.title'        => Text::_('JGLOBAL_TITLE'),
+				'position'       => Text::_('COM_MODULES_HEADING_POSITION'),
+				'name'           => Text::_('COM_MODULES_HEADING_MODULE'),
+				'pages'          => Text::_('COM_MODULES_HEADING_PAGES'),
+				'a.access'       => Text::_('JGRID_HEADING_ACCESS'),
+				'language_title' => Text::_('JGRID_HEADING_LANGUAGE'),
+				'a.id'           => Text::_('JGRID_HEADING_ID')
 			);
 		}
 		else
@@ -159,24 +168,24 @@ class LSCacheViewModules extends JViewLegacy
 			if ($this->getLayout() == 'default')
 			{
 				return array(
-					'ordering'       => JText::_('JGRID_HEADING_ORDERING'),
-					'a.published'    => JText::_('JSTATUS'),
-					'a.title'        => JText::_('JGLOBAL_TITLE'),
-					'position'       => JText::_('COM_MODULES_HEADING_POSITION'),
-					'name'           => JText::_('COM_MODULES_HEADING_MODULE'),
-					'a.access'       => JText::_('JGRID_HEADING_ACCESS'),
-					'a.language'     => JText::_('JGRID_HEADING_LANGUAGE'),
-					'a.id'           => JText::_('JGRID_HEADING_ID')
+					'ordering'       => Text::_('JGRID_HEADING_ORDERING'),
+					'a.published'    => Text::_('JSTATUS'),
+					'a.title'        => Text::_('JGLOBAL_TITLE'),
+					'position'       => Text::_('COM_MODULES_HEADING_POSITION'),
+					'name'           => Text::_('COM_MODULES_HEADING_MODULE'),
+					'a.access'       => Text::_('JGRID_HEADING_ACCESS'),
+					'a.language'     => Text::_('JGRID_HEADING_LANGUAGE'),
+					'a.id'           => Text::_('JGRID_HEADING_ID')
 				);
 			}
 
 			return array(
-					'a.title'        => JText::_('JGLOBAL_TITLE'),
-					'position'       => JText::_('COM_MODULES_HEADING_POSITION'),
-					'name'           => JText::_('COM_MODULES_HEADING_MODULE'),
-					'a.access'       => JText::_('JGRID_HEADING_ACCESS'),
-					'a.language'     => JText::_('JGRID_HEADING_LANGUAGE'),
-					'a.id'           => JText::_('JGRID_HEADING_ID')
+					'a.title'        => Text::_('JGLOBAL_TITLE'),
+					'position'       => Text::_('COM_MODULES_HEADING_POSITION'),
+					'name'           => Text::_('COM_MODULES_HEADING_MODULE'),
+					'a.access'       => Text::_('JGRID_HEADING_ACCESS'),
+					'a.language'     => Text::_('JGRID_HEADING_LANGUAGE'),
+					'a.id'           => Text::_('JGRID_HEADING_ID')
 			);
 		}
 	}

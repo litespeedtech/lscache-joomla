@@ -1,18 +1,18 @@
 <?php
+use Joomla\CMS\Factory;
+use Joomla\CMS\Language\Text;
+use Joomla\CMS\MVC\View\HtmlView;
 
 // No direct access
 defined('_JEXEC') or die;
 
-jimport('joomla.application.component.view');
-
-class lscacheViewDefault extends JViewLegacy
+class lscacheViewDefault extends HtmlView
 {
-
 	protected $params;
 
 	public function display($tpl = null)
 	{
-		$app	= JFactory::getApplication();
+		$app	= Factory::getApplication();
 		$params = $app->getParams();
 		$menus	= $app->getMenu();
 		$menu	= $menus->getActive();
@@ -23,12 +23,12 @@ class lscacheViewDefault extends JViewLegacy
 		}
 		else
 		{
-			$params->set('page_title',	JText::_('LSCache Component'));
+			$params->set('page_title',	Text::_('LSCache Component'));
 		}
 
 		$title = $params->get('page_title');
 		if ($app->getCfg('sitename_pagetitles', 0)) {
-			$title = JText::sprintf('JPAGETITLE', $app->getCfg('sitename'), $title);
+			$title = Text::sprintf('JPAGETITLE', $app->getCfg('sitename'), $title);
 		}
 		$this->document->setTitle($title);
 

@@ -16,12 +16,12 @@ use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Session\Session;
 
-JHtml::_('bootstrap.tooltip');
-JHtml::_('behavior.multiselect');
-JHtml::_('formbehavior.chosen', 'select');
+HTMLHelper::_('bootstrap.tooltip');
+HTMLHelper::_('behavior.multiselect');
+//HTMLHelper::_('formbehavior.chosen', 'select');
 
 $clientId   = (int) $this->state->get('client_id', 0);
-$user		= JFactory::getUser();
+$user		= Factory::getUser();
 $listOrder	= $this->escape($this->state->get('list.ordering'));
 $listDirn	= $this->escape($this->state->get('list.direction'));
 $esiRender	= $this->escape($this->state->get('lscache_type'));
@@ -30,7 +30,7 @@ $saveOrder	= ($listOrder == 'a.ordering');
 if ($saveOrder)
 {
 	$saveOrderingUrl = 'index.php?option=com_lscache&task=modules.saveOrderAjax&tmpl=component';
-	JHtml::_('sortablelist.sortable', 'moduleList', 'adminForm', strtolower($listDirn), $saveOrderingUrl);
+	HTMLHelper::_('sortablelist.sortable', 'moduleList', 'adminForm', strtolower($listDirn), $saveOrderingUrl);
 }
 $colSpan = $clientId === 1 ? 8 : 10;
 ?>
@@ -43,7 +43,7 @@ $colSpan = $clientId === 1 ? 8 : 10;
     margin-right: 0 px;    
 }
 </style>
-<form action="<?php echo JRoute::_('index.php?option=com_lscache'); ?>" method="post" name="adminForm" id="adminForm">
+<form action="<?php echo Route::_('index.php?option=com_lscache'); ?>" method="post" name="adminForm" id="adminForm">
 <?php if (!empty( $this->sidebar)) : ?>
 	<div id="j-sidebar-container" class="span2">
 		<?php echo $this->sidebar; ?>
@@ -59,50 +59,50 @@ $colSpan = $clientId === 1 ? 8 : 10;
 				<thead>
 					<tr>
 						<th width="1%" class="nowrap center hidden-phone">
-							<?php echo JHtml::_('searchtools.sort', '', 'a.ordering', $listDirn, $listOrder, null, 'asc', 'JGRID_HEADING_ORDERING', 'icon-menu-2'); ?>
+							<?php echo HTMLHelper::_('searchtools.sort', '', 'a.ordering', $listDirn, $listOrder, null, 'asc', 'JGRID_HEADING_ORDERING', 'icon-menu-2'); ?>
 						</th>
 						<th width="1%" class="nowrap center">
-							<?php echo JHtml::_('grid.checkall'); ?>
+							<?php echo HTMLHelper::_('grid.checkall'); ?>
 						</th>
 						<th width="1%" class="nowrap center" style="min-width:55px">
-							<?php echo JHtml::_('searchtools.sort', 'JSTATUS', 'a.published', $listDirn, $listOrder); ?>
+							<?php echo HTMLHelper::_('searchtools.sort', 'JSTATUS', 'a.published', $listDirn, $listOrder); ?>
 						</th>
 						<th class="title">
-							<?php echo JHtml::_('searchtools.sort', 'JGLOBAL_TITLE', 'a.title', $listDirn, $listOrder); ?>
+							<?php echo HTMLHelper::_('searchtools.sort', 'JGLOBAL_TITLE', 'a.title', $listDirn, $listOrder); ?>
 						</th>
                         <?php if($esiRender == "1") : ?>
 						<th width="10%" class="nowrap hidden-phone hidden-tablet">
-							<?php echo JHtml::_('searchtools.sort', 'COM_LSCACHE_HEADING_CACHE_TYPE', 'm.lscache_type', $listDirn, $listOrder); ?>
+							<?php echo HTMLHelper::_('searchtools.sort', 'COM_LSCACHE_HEADING_CACHE_TYPE', 'm.lscache_type', $listDirn, $listOrder); ?>
 						</th>
 						<th width="10%" class="nowrap hidden-phone hidden-tablet">
-							<?php echo JHtml::_('searchtools.sort', 'COM_LSCACHE_HEADING_CACHE_TTL', 'm.lscache_ttl', $listDirn, $listOrder); ?>
+							<?php echo HTMLHelper::_('searchtools.sort', 'COM_LSCACHE_HEADING_CACHE_TTL', 'm.lscache_ttl', $listDirn, $listOrder); ?>
 						</th>
                         <?php endif;?>
 						<th width="15%" class="nowrap hidden-phone">
-							<?php echo JHtml::_('searchtools.sort', 'COM_MODULES_HEADING_POSITION', 'a.position', $listDirn, $listOrder); ?>
+							<?php echo HTMLHelper::_('searchtools.sort', 'COM_MODULES_HEADING_POSITION', 'a.position', $listDirn, $listOrder); ?>
 						</th>
 						<th width="10%" class="nowrap hidden-phone hidden-tablet">
-							<?php echo JHtml::_('searchtools.sort', 'COM_MODULES_HEADING_MODULE', 'name', $listDirn, $listOrder); ?>
+							<?php echo HTMLHelper::_('searchtools.sort', 'COM_MODULES_HEADING_MODULE', 'name', $listDirn, $listOrder); ?>
 						</th>
 						<?php if ($clientId === 0) : ?>
 						<th width="10%" class="nowrap hidden-phone hidden-tablet">
-							<?php echo JHtml::_('searchtools.sort', 'COM_MODULES_HEADING_PAGES', 'pages', $listDirn, $listOrder); ?>
+							<?php echo HTMLHelper::_('searchtools.sort', 'COM_MODULES_HEADING_PAGES', 'pages', $listDirn, $listOrder); ?>
 						</th>
 						<?php endif; ?>
 						<th width="10%" class="nowrap hidden-phone">
-							<?php echo JHtml::_('searchtools.sort', 'JGRID_HEADING_ACCESS', 'ag.title', $listDirn, $listOrder); ?>
+							<?php echo HTMLHelper::_('searchtools.sort', 'JGRID_HEADING_ACCESS', 'ag.title', $listDirn, $listOrder); ?>
 						</th>
 						<?php if ($clientId === 0) : ?>
 						<th width="10%" class="nowrap hidden-phone">
-							<?php echo JHtml::_('searchtools.sort', 'JGRID_HEADING_LANGUAGE', 'l.title', $listDirn, $listOrder); ?>
+							<?php echo HTMLHelper::_('searchtools.sort', 'JGRID_HEADING_LANGUAGE', 'l.title', $listDirn, $listOrder); ?>
 						</th>
 						<?php elseif ($clientId === 1 && JModuleHelper::isAdminMultilang()) : ?>
 						<th width="10%" class="nowrap hidden-phone">
-							<?php echo JHtml::_('searchtools.sort', 'JGRID_HEADING_LANGUAGE', 'a.language', $listDirn, $listOrder); ?>
+							<?php echo HTMLHelper::_('searchtools.sort', 'JGRID_HEADING_LANGUAGE', 'a.language', $listDirn, $listOrder); ?>
 						</th>
 						<?php endif; ?>
 						<th width="1%" class="nowrap center hidden-phone">
-							<?php echo JHtml::_('searchtools.sort', 'JGRID_HEADING_ID', 'a.id', $listDirn, $listOrder); ?>
+							<?php echo HTMLHelper::_('searchtools.sort', 'JGRID_HEADING_ID', 'a.id', $listDirn, $listOrder); ?>
 						</th>
 					</tr>
 				</thead>
@@ -130,7 +130,7 @@ $colSpan = $clientId === 1 ? 8 : 10;
 							}
 							elseif (!$saveOrder)
 							{
-								$iconClass = ' inactive tip-top hasTooltip" title="' . JHtml::_('tooltipText', 'JORDERINGDISABLED');
+								$iconClass = ' inactive tip-top hasTooltip" title="' . HTMLHelper::_('tooltipText', 'JORDERINGDISABLED');
 							}
 							?>
 							<span class="sortable-handler<?php echo $iconClass; ?>">
@@ -142,17 +142,17 @@ $colSpan = $clientId === 1 ? 8 : 10;
 						</td>
 						<td class="center">
 							<?php if ($item->enabled > 0) : ?>
-								<?php echo JHtml::_('grid.id', $i, $item->id); ?>
+								<?php echo HTMLHelper::_('grid.id', $i, $item->id); ?>
 							<?php endif; ?>
 						</td>
 						<td class="center">
 							<div class="btn-group">
 							<?php // Check if extension is enabled ?>
 							<?php if ($item->enabled > 0) : ?>
-								<?php echo JHtml::_('jgrid.published', $item->published, $i, 'modules.', $canChange, 'cb', $item->publish_up, $item->publish_down); ?>
+								<?php echo HTMLHelper::_('jgrid.published', $item->published, $i, 'modules.', $canChange, 'cb', $item->publish_up, $item->publish_down); ?>
 							<?php else : ?>
 								<?php // Extension is not enabled, show a message that indicates this. ?>
-								<button class="btn btn-micro hasTooltip" title="<?php echo JText::_('COM_MODULES_MSG_MANAGE_EXTENSION_DISABLED'); ?>">
+								<button class="btn btn-micro hasTooltip" title="<?php echo Text::_('COM_MODULES_MSG_MANAGE_EXTENSION_DISABLED'); ?>">
 									<span class="icon-ban-circle" aria-hidden="true"></span>
 								</button>
 							<?php endif; ?>
@@ -161,10 +161,10 @@ $colSpan = $clientId === 1 ? 8 : 10;
 						<td class="has-context">
 							<div class="pull-left">
 								<?php if ($item->checked_out) : ?>
-									<?php echo JHtml::_('jgrid.checkedout', $i, $item->editor, $item->checked_out_time, 'modules.', $canCheckin); ?>
+									<?php echo HTMLHelper::_('jgrid.checkedout', $i, $item->editor, $item->checked_out_time, 'modules.', $canCheckin); ?>
 								<?php endif; ?>
 								<?php if ($canEditESI) : ?>
-									<a class="hasTooltip" href="<?php echo JRoute::_('index.php?option=com_lscache&view=module&moduleid=' . (int) $item->id); ?>" title="<?php echo JText::_('COM_LSCACHE_MODULES_ESI_TIPS'); ?>">
+									<a class="hasTooltip" href="<?php echo Route::_('index.php?option=com_lscache&view=module&moduleid=' . (int) $item->id); ?>" title="<?php echo Text::_('COM_LSCACHE_MODULES_ESI_TIPS'); ?>">
 									<?php echo $this->escape($item->title); ?></a>
 								<?php else : ?>
 									<?php echo $this->escape($item->title); ?>
@@ -172,7 +172,7 @@ $colSpan = $clientId === 1 ? 8 : 10;
 
 								<?php if (!empty($item->note)) : ?>
 									<div class="small">
-										<?php echo JText::sprintf('JGLOBAL_LIST_NOTE', $this->escape($item->note)); ?>
+										<?php echo Text::sprintf('JGLOBAL_LIST_NOTE', $this->escape($item->note)); ?>
 									</div>
 								<?php endif; ?>
 							</div>
@@ -192,7 +192,7 @@ $colSpan = $clientId === 1 ? 8 : 10;
 								</span>
 							<?php else : ?>
 								<span class="label">
-									<?php echo JText::_('JNONE'); ?>
+									<?php echo Text::_('JNONE'); ?>
 								</span>
 							<?php endif; ?>
 						</td>
@@ -209,14 +209,14 @@ $colSpan = $clientId === 1 ? 8 : 10;
 						</td>
 						<?php if ($clientId === 0) : ?>
 						<td class="small hidden-phone">
-							<?php echo JLayoutHelper::render('joomla.content.language', $item); ?>
+							<?php echo LayoutHelper::render('joomla.content.language', $item); ?>
 						</td>
 						<?php elseif ($clientId === 1 && JModuleHelper::isAdminMultilang()) : ?>
 							<td class="small hidden-phone">
 								<?php if ($item->language == ''):?>
-									<?php echo JText::_('JUNDEFINED'); ?>
+									<?php echo Text::_('JUNDEFINED'); ?>
 								<?php elseif ($item->language == '*'):?>
-									<?php echo JText::alt('JALL', 'language'); ?>
+									<?php echo Text::alt('JALL', 'language'); ?>
 								<?php else:?>
 									<?php echo $this->escape($item->language); ?>
 								<?php endif; ?>
@@ -233,11 +233,11 @@ $colSpan = $clientId === 1 ? 8 : 10;
 <style type="text/css">
     #collapseModal {width:45%;}
 </style>
-        <?php echo JHtml::_(
+        <?php echo HTMLHelper::_(
             'bootstrap.renderModal',
             'collapseModal',
             array(
-                'title'  => JText::_('COM_LSCACHE_BTN_PURGE_URL'),
+                'title'  => Text::_('COM_LSCACHE_BTN_PURGE_URL'),
                 'footer' => $this->loadTemplate('purge_url_footer'),
             ),
             $this->loadTemplate('purge_url_body')
@@ -245,6 +245,6 @@ $colSpan = $clientId === 1 ? 8 : 10;
 
 		<input type="hidden" name="task" value="" />
 		<input type="hidden" name="boxchecked" value="0" />
-		<?php echo JHtml::_('form.token'); ?>
+		<?php echo HTMLHelper::_('form.token'); ?>
 	</div>
 </form>

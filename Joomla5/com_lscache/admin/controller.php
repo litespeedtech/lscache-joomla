@@ -16,7 +16,7 @@ defined('_JEXEC') or die;
  * @subpackage  com_helloworld
  * @since       0.0.7
  */
-class LSCacheController extends JControllerLegacy
+class LSCacheController extends Joomla\CMS\MVC\Controller\BaseController
 {
 	/**
 	 * The default view for the display method.

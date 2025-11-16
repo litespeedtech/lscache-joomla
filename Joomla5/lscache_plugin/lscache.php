@@ -15,6 +15,15 @@ use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\Application\CMSApplication;
 use Joomla\CMS\Application\SiteApplication;
 use Joomla\CMS\Application\CMSApplicationInterface;
+use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Session\Session;
+use Joomla\CMS\Language\Text;
+use Joomla\CMS\Table\Table;
+use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Router\Route;
+use Joomla\CMS\Log\Log;
+use Joomla\CMS\Helper\ModuleHelper;
+
 /**
  * LiteSpeed Cache Plugin for Joomla running on LiteSpeed Webserver (LSWS).
  *
@@ -57,14 +66,11 @@ class plgSystemLSCache extends CMSPlugin {
     public function __construct(&$subject, $config) {
         parent::__construct($subject, $config);
 
-        $this->settings = JComponentHelper::getParams('com_lscache');
+        $this->settings = ComponentHelper::getParams('com_lscache');
         if ($this->settings->get('cacheEnabled', 3) == 3) {
             $this->saveComponent(true);
             $this->saveHtaccess();
         }
-
-        $lang = JFactory::getLanguage();
-        $lang->load('plg_system_lscache', JPATH_ADMINISTRATOR, null, false, true);
 
         $this->cacheEnabled = $this->settings->get('cacheEnabled', 1) == 1 ? true : false;
         if (!$this->cacheEnabled) {
@@ -104,7 +110,7 @@ class plgSystemLSCache extends CMSPlugin {
         $this->moduleHelper = new LSCacheModulesHelper($this);
 
         if (!$this->app) {
-            $this->app = JFactory::getApplication();
+            $this->app = Factory::getApplication();
         }
 
         JLoader::register('LSCacheComponentBase', __DIR__ . '/components/base.php', true);
@@ -126,6 +132,8 @@ class plgSystemLSCache extends CMSPlugin {
         }
 
         $this->pageCachable = true;
+        $lang = Factory::getLanguage();
+        $lang->load('plg_system_lscache', JPATH_ADMINISTRATOR, null, false, true);
 
         $app = $this->app;
 
@@ -146,7 +154,7 @@ class plgSystemLSCache extends CMSPlugin {
                 $this->pageElements["option"] = $app->input->get('option');
             }
         } else {
-            $link = JUri::getInstance()->getQuery();
+            $link = Uri::getInstance()->getQuery();
             if (!empty($link)) {
                 $this->pageElements = $this->explode2($link, '&', '=');
             } else if (!empty($app->input->get('option'))) {
@@ -170,15 +178,15 @@ class plgSystemLSCache extends CMSPlugin {
         } else {
             $this->checkVary();
             if($app->input->get("lscache_formtoken")=="1"){
-                $token = JSession::getFormToken();
+                $token = Session::getFormToken();
                 $app->input->post->set($token,'1');
             }
         }
 
         
         //avoid some application have expired login session serve 
-        $session = JFactory::getSession();
-        $user = JFactory::getUser();
+        $session = Factory::getSession();
+        $user = Factory::getUser();
         if(($session->get('lscacheLogin')!='1') && !$user->get('guest')){
             $this->pageCachable = false;
         }
@@ -286,14 +294,14 @@ class plgSystemLSCache extends CMSPlugin {
 
                 $language = '';
                 if ($module->vary_language) {
-                    $language = '&language=' . JFactory::getLanguage()->getTag();
+                    $language = '&language=' . Factory::getLanguage()->getTag();
                 }
                 
                 if ($module->lscache_type == 1) {
                     $module->content = '<esi:include src="index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . $language . $this->getModuleAttribs($attribs) . '" cache-control="public,no-vary" cache-tag="' . $tag . '" />';
                 } else if ($module->lscache_type == -1) {
                     $tag = 'public:' . $tag . ',' . $tag;
-                    $module->content = '<esi:include src="index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . $language  . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="private,no-vary" cache-tag="' . $tag . '" />';
+                    $module->content = '<esi:include src="index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . $language  . Factory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) . '" cache-control="private,no-vary" cache-tag="' . $tag . '" />';
                 } else if ($module->lscache_type == 0) {
                     $module->content = '<esi:include src="' . 'index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . $language . $this->getModuleAttribs($attribs) . '" cache-control="no-cache"/>';
                 }
@@ -301,7 +309,7 @@ class plgSystemLSCache extends CMSPlugin {
                 $this->esion = true;
                 return;
             } else if (!LITESPEED_ESI_SUPPORT) {
-                $url = 'index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . '&language=' . JFactory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) ;
+                $url = 'index.php?option=com_lscache&moduleid=' . $module->id . '&device=' . $device . '&language=' . Factory::getLanguage()->getTag() . $this->getModuleAttribs($attribs) ;
                 $js = '$.ajax({url: "' . $url .'", success: function(result){' . PHP_EOL ;
                 $js .= '    $("#lscache_mod' . $module->id . '").replaceWith(result);' . PHP_EOL ;
                 $js .= '}});' .PHP_EOL ;
@@ -430,7 +438,7 @@ class plgSystemLSCache extends CMSPlugin {
             $this->cacheTags[] = $option . ':' . $id;
         } else if ($this->componentHelper->supportComponent($option)) {
             $this->cacheTags[] = $this->componentHelper->getTags($option, $this->pageElements);
-        } else if (isset($content) && $content instanceof JTable) {
+        } else if (isset($content) && $content instanceof Table) {
             $tableName = str_replace('#__', "DB", $content->getTableName());
             $tag = $tableName . ':' . implode('-', $content->getPrimaryKey());
             $this->cacheTags[] = $tag;
@@ -454,7 +462,7 @@ class plgSystemLSCache extends CMSPlugin {
         }
 
         $content = $this->app->getBody();
-        $token = JSession::getFormToken();
+        $token = Session::getFormToken();
         $search = '#<input.*?name="'. $token . '".*?>#';
         $replace = '<input type="hidden" name="lscache_formtoken" value="1">';
         $data = preg_replace($search, $replace, $content, -1, $count);
@@ -513,7 +521,7 @@ class plgSystemLSCache extends CMSPlugin {
         if (!$this->cacheEnabled) {
             return;
         }
-        $session = JFactory::getSession();
+        $session = Factory::getSession();
         $session->set('lscacheLogin', '1');
         
         if (!$this->cacheEnabled) {
@@ -535,7 +543,7 @@ class plgSystemLSCache extends CMSPlugin {
         if (!$this->cacheEnabled) {
             return;
         }
-        $session = JFactory::getSession();
+        $session = Factory::getSession();
         $session->set('lscacheLogin', '0');
 
         if (!$this->cacheEnabled) {
@@ -608,7 +616,7 @@ class plgSystemLSCache extends CMSPlugin {
             if (($this->settings->get("autoPurgeArticleCategory", 0) == 1) && $row->catid) {
                 $purgeTags .= ',com_categories:' . $row->catid;
                 $this->purgeObject->ids[] = $row->catid;
-                $category = JTable::getInstance('Category');
+                $category = Table::getInstance('Category');
                 $category->load($row->catid);
                 if($category->parent_id) {
                     $purgeTags .= ',com_categories:' . $category->parent_id;
@@ -645,7 +653,7 @@ class plgSystemLSCache extends CMSPlugin {
             return;
         }
 
-        if ($row && $row instanceof JTable) {
+        if ($row && $row instanceof Table) {
             $tableName = str_replace('#__', "DB", $row->getTableName());
             $purgeTags = $tableName . ':' . implode('-', $row->getPrimaryKey());
             $this->purgeObject->tags[] = $purgeTags;
@@ -665,14 +673,14 @@ class plgSystemLSCache extends CMSPlugin {
 
         if ($option == "com_plugins") {
             foreach ($pks as $pk) {
-                $row = JTable::getInstance('extension');
+                $row = Table::getInstance('extension');
                 $row->load($pk);
                 $row->enabled = $value;
                 $this->purgeExtension($context, $row);
             }
         } else if ($option == "com_modules") {
             foreach ($pks as $pk) {
-                $row = JTable::getInstance('module');
+                $row = Table::getInstance('module');
                 $row->load($pk);
                 $row->published = $value;
                 $this->purgeExtension($context, $row);
@@ -681,14 +689,14 @@ class plgSystemLSCache extends CMSPlugin {
             return;
         } else if ($option == "com_content") {
             foreach ($pks as $pk) {
-                $row = JTable::getInstance('content');
+                $row = Table::getInstance('content');
                 $row->load($pk);
                 $row->state = $value;
                 $this->purgeContent($context, $row);
             }
         } else if ($option == "com_categories") {
             foreach ($pks as $pk) {
-                $row = JTable::getInstance('Category');
+                $row = Table::getInstance('Category');
                 $row->load($pk);
                 $row->state = $value;
                 $this->purgeContent($context, $row);
@@ -722,7 +730,7 @@ class plgSystemLSCache extends CMSPlugin {
         if(isset($row->element) && ($row->element=='com_lscache')){
             $newSetting = json_decode($row->params);
             if($this->settings->get('mobileCacheVary') != $newSetting->mobileCacheVary){
-                $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_CHECKHTACCESS'), "warning");            
+                $this->app->enqueueMessage(Text::_('COM_LSCACHE_PLUGIN_CHECKHTACCESS'), "warning");            
             }
         }
 
@@ -775,9 +783,9 @@ class plgSystemLSCache extends CMSPlugin {
 
             $purgeTags = array();
 
-            $db = JFactory::getDbo();
+            $db = Factory::getDbo();
 
-            $query = $db->getQuery(true)
+            $query = $db->createQuery()
                     ->select('id')
                     ->from('#__menu')
                     ->where($db->quoteName('template_style_id') . '=' . (int) $row->id);
@@ -866,7 +874,7 @@ class plgSystemLSCache extends CMSPlugin {
                     $this->purgeObject->tags[] = 'cmp:' . $cid;
                 }
                 $this->purgeAction();
-                $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_PURGEINFORMED'), "message");            
+                $this->app->enqueueMessage(Text::_('COM_LSCACHE_PLUGIN_PURGEINFORMED'), "message");            
             }
         }   else if(($option == "com_content") && (!empty($task=$app->input->get('task')))){
             if(in_array($task, array("articles.featured", "articles.unfeatured")) ){
@@ -881,8 +889,8 @@ class plgSystemLSCache extends CMSPlugin {
     }
     
     public function getModuleMenuItems($moduleid) {
-        $db = JFactory::getDbo();
-        $query = $db->getQuery(true)
+        $db = Factory::getDbo();
+        $query = $db->createQuery()
                 ->select('menuid')
                 ->from('#__modules_menu')
                 ->where($db->quoteName('moduleid') . '=' . (int) $moduleid)
@@ -1046,14 +1054,14 @@ class plgSystemLSCache extends CMSPlugin {
         }
 
         if (!$purge) {
-            $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_TEMPLATEPURGEALL'), "message");
+            $this->app->enqueueMessage(Text::_('COM_LSCACHE_PLUGIN_TEMPLATEPURGEALL'), "message");
         }
     }
 
     private function getModule($moduleid) {
 
-        $db = \JFactory::getDbo();
-        $query = $db->getQuery(true)
+        $db = Factory::getDbo();
+        $query = $db->createQuery()
                 ->select('*')
                 ->from('#__modules')
                 ->where('id=' . $moduleid);
@@ -1068,13 +1076,13 @@ class plgSystemLSCache extends CMSPlugin {
 
     public function getModuleCacheType($module) {
 
-        $db = JFactory::getDbo();
+        $db = Factory::getDbo();
 
         if (!empty($module->cache_type)) {
             return $module->cache_type;
         }
 
-        $query1 = $db->getQuery(true)
+        $query1 = $db->createQuery()
                 ->select('MIN(menuid)')
                 ->from('#__modules_menu')
                 ->where($db->quoteName('moduleid') . '=' . (int) $module->id);
@@ -1091,7 +1099,7 @@ class plgSystemLSCache extends CMSPlugin {
             $module->cache_type = self::MODULE_PURGETAG;
         }
 
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select('*')
                 ->from('#__modules_lscache')
                 ->where($db->quoteName('moduleid') . '=' . (int) $module->id);
@@ -1119,9 +1127,9 @@ class plgSystemLSCache extends CMSPlugin {
 
     protected function getModules($element) {
 
-        $db = JFactory::getDbo();
+        $db = Factory::getDbo();
 
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select('*')
                 ->from('#__modules')
                 ->where($db->quoteName('module') . '="' . $element . '"')
@@ -1134,9 +1142,9 @@ class plgSystemLSCache extends CMSPlugin {
     }
 
     protected function getTemplate($element) {
-        $db = JFactory::getDbo();
+        $db = Factory::getDbo();
 
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select('*')
                 ->from('#__template_styles')
                 ->where($db->quoteName('template') . '="' . $element . '"');
@@ -1148,8 +1156,8 @@ class plgSystemLSCache extends CMSPlugin {
     }
     
     protected function getUserContactTag($uid){
-        $db = JFactory::getDbo();
-        $query = $db->getQuery(true)
+        $db = Factory::getDbo();
+        $query = $db->createQuery()
             ->select('c.id')
             ->from($db->quoteName('#__contact_details', 'c'))
             ->where('c.published = 1')
@@ -1161,9 +1169,9 @@ class plgSystemLSCache extends CMSPlugin {
     }
 
     protected function getExtension($eid) {
-        $db = JFactory::getDbo();
+        $db = Factory::getDbo();
 
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select('*')
                 ->from('#__extensions')
                 ->where($db->quoteName('extension_id') . '=' . (int) $eid);
@@ -1201,7 +1209,7 @@ class plgSystemLSCache extends CMSPlugin {
      *
      * @since    1.1.0
      */
-    public function log($content = null, $logLevel = JLog::INFO) {
+    public function log($content = null, $logLevel = Log::INFO) {
         if ($content == null) {
             if (!$this->lscInstance) {
                 return;
@@ -1215,16 +1223,16 @@ class plgSystemLSCache extends CMSPlugin {
         $logLevelSetting = $this->settings->get('logLevel', -1);
         if ($logLevelSetting < 0) {
             return;
-        } else if(($logLevelSetting==JLog::DEBUG) && ($this->app->getUserState('lscacheOption',"")=="debug")){
+        } else if(($logLevelSetting==Log::DEBUG) && ($this->app->getUserState('lscacheOption',"")=="debug")){
             
         } else if ($logLevel > $logLevelSetting) {
             return;
         }
 
-        $link = JUri::getInstance();
+        $link = Uri::getInstance();
         if($link) { $content .= '   ' . $link; }
 
-        JLog::add($content, $logLevel, 'LiteSpeedCache');
+        Log::add($content, $logLevel, 'LiteSpeedCache');
     }
 
     protected function isOptionExcluded($option) {
@@ -1268,7 +1276,7 @@ class plgSystemLSCache extends CMSPlugin {
             return false;
         }
 
-        $path = JUri::getInstance()->toString(array('path', 'query', 'fragment'));
+        $path = Uri::getInstance()->toString(array('path', 'query', 'fragment'));
         foreach ($exclusions as $exclusion) {
             if ($exclusion == '') {
                 continue;
@@ -1305,7 +1313,7 @@ class plgSystemLSCache extends CMSPlugin {
             return false;
         }
 
-        $path = JUri::getInstance()->toString(array('path', 'query', 'fragment'));
+        $path = Uri::getInstance()->toString(array('path', 'query', 'fragment'));
         foreach ($exclusions as $exclusion) {
             if ($exclusion == '') {
                 continue;
@@ -1423,13 +1431,13 @@ class plgSystemLSCache extends CMSPlugin {
         $menuid = $app->getMenu()->getDefault()->id;
 
         if (($module->pages > 0) && (isset($_SERVER['HTTP_REFERER']))) {
-            $uri = JURI::getinstance();
+            $uri = Uri::getinstance();
             $uri->setPath("");
             $uri->setQuery("");
             $uri->setFragment(""); 
             $uri->parse($_SERVER['HTTP_REFERER']);
 
-            $appInstance = JApplication::getInstance('site');
+            $appInstance = Factory::getContainer()->get(SiteApplication::class);
             $router = $appInstance->getRouter();
             $uri1 = clone $uri;
             $result = $router->parse($uri1);
@@ -1438,21 +1446,21 @@ class plgSystemLSCache extends CMSPlugin {
             }
         } else if (($module->pages > 0) && ($menuItems = $this->getModuleMenuItems($moduleid)) && (!in_array($menuid, $menuItems))) {
             $menuid = $menuItems[0];
-            $uri = JURI::getinstance();
+            $uri = Uri::getinstance();
             $uri->setPath("");
             $uri->setQuery("");
             $uri->setFragment("");
-            $url = JRoute::_('index.php?Itemid=' . $menuid, FALSE);
+            $url = Route::_('index.php?Itemid=' . $menuid, FALSE);
             $uri->parse($url);
         } else {
-            $root = JURI::root();
-            $config = JFactory::getConfig();
+            $root = Uri::root();
+            $config = Factory::getConfig();
             $sef_rewrite = $config->get('sef_rewrite');
             if ($sef_rewrite != 1) {
                 $root .= 'index.php';
             }
 
-            $uri = JURI::getinstance();
+            $uri = Uri::getinstance();
             $uri->setPath("");
             $uri->setQuery("");
             $uri->setFragment("");
@@ -1461,10 +1469,10 @@ class plgSystemLSCache extends CMSPlugin {
 
         $app->getMenu()->setActive($menuid);
 
-        $lang = JFactory::getLanguage();
+        $lang = Factory::getLanguage();
         $language = $app->input->get('language');
         if ($language && ($language!=$lang->getTag())) {
-            $lang->setLanguage( $language );
+            $lang->setDefault( $language );
             $lang->load();
         }
         $moduleLanguage = strtolower($module->module);
@@ -1472,7 +1480,7 @@ class plgSystemLSCache extends CMSPlugin {
 
         $oldContent = $module->content;
         $module->esiRending = true;
-        $content = JModuleHelper::renderModule($module, $attribs);
+        $content = ModuleHelper::renderModule($module, $attribs);
         if ($content) {
             $tag = "com_modules:" . $module->id;
             if ($tag1 !== "") {
@@ -1520,7 +1528,7 @@ class plgSystemLSCache extends CMSPlugin {
     }
 
     private function getVaryKey() {
-        //$lang = JFactory::getLanguage();
+        //$lang = Factory::getLanguage();
         //. $lang->getDefault();
         // . $lang->getTag();
 
@@ -1530,7 +1538,7 @@ class plgSystemLSCache extends CMSPlugin {
             unset($this->vary['device']);
         }
 
-        $user = JFactory::getUser();
+        $user = Factory::getUser();
         if (!$user->get('guest')) {
             $this->lscInstance->checkPrivateCookie();
             $loginCachable = $this->settings->get('loginCachable', 0) == 1 ? true : false;
@@ -1614,12 +1622,12 @@ class plgSystemLSCache extends CMSPlugin {
         }
 
         if (!$this->cacheEnabled) {
-            $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_TURNONFIRST'));
+            $this->app->enqueueMessage(Text::_('COM_LSCACHE_PLUGIN_TURNONFIRST'));
             return;
         }
 
         if (!function_exists('curl_version')) {
-            $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_CURLNOTSUPPORT'));
+            $this->app->enqueueMessage(Text::_('COM_LSCACHE_PLUGIN_CURLNOTSUPPORT'));
             return;
         }
 
@@ -1667,7 +1675,7 @@ class plgSystemLSCache extends CMSPlugin {
         $success = 0;
         $current = 0;
         //$router =  CMSApplication::getInstance('site')->getRouter('site'); //$appInstance->getRouter();
-        $root = JUri::getInstance()->toString(array('scheme', 'host', 'port'));
+        $root = Uri::getInstance()->toString(array('scheme', 'host', 'port'));
         $recacheDuration = $this->settings->get('recacheDuration', 30) * 1000000;
         $break = false;
         if ($output) {
@@ -1683,13 +1691,13 @@ class plgSystemLSCache extends CMSPlugin {
             $ch = curl_init();
             if ($this->isAdmin()) {
                 try {
-                    $curlurl = JRoute::link("site",$url);
+                    $curlurl = Route::link("site",$url);
                 } catch (Error $ex) {
                     $this->log($ex->getMessage());
                     continue;
                 }
             } else {
-                $curlurl = JRoute::link("site",$url);
+                $curlurl = Route::link("site",$url);
             }
             
             if(strpos($curlurl, '/component')===0){
@@ -1764,9 +1772,9 @@ class plgSystemLSCache extends CMSPlugin {
             
         $totalTime = round($this->microtimeMinus($begin, microtime()) / 1000000);
         if ($count == $current) {
-            $msg = str_replace('%d', $totalTime, JText::_('COM_LSCACHE_PLUGIN_PAGERECACHED'));
+            $msg = str_replace('%d', $totalTime, Text::_('COM_LSCACHE_PLUGIN_PAGERECACHED'));
         } else {
-            $msg = str_replace('%d', $totalTime, JText::_('COM_LSCACHE_PLUGIN_PAGERECACHOVERTIME'));
+            $msg = str_replace('%d', $totalTime, Text::_('COM_LSCACHE_PLUGIN_PAGERECACHOVERTIME'));
         }
         return $msg;
     }
@@ -1784,7 +1792,7 @@ class plgSystemLSCache extends CMSPlugin {
         }
 
         if ((!$this->purgeObject->purgeAll) && ($this->purgeObject->autoRecache > 0)) {
-            $root = JUri::root();
+            $root = Uri::root();
             $cleanWords = $this->settings->get('cleanCache', 'purgeAllCache');
             $url = $root . "index.php?option=com_lscache&cleanCache=" . $cleanWords;
             if ($this->purgeObject->purgeAll) {
@@ -1815,7 +1823,7 @@ class plgSystemLSCache extends CMSPlugin {
             $this->lscInstance->purgeAllPublic();
             $this->log();
             if ($this->isAdmin()) {
-                $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_NEEDMANUALRECACHE'), "message");
+                $this->app->enqueueMessage(Text::_('COM_LSCACHE_PLUGIN_NEEDMANUALRECACHE'), "message");
             }
             
         } else if (count($this->purgeObject->tags) > 0) {
@@ -1826,7 +1834,7 @@ class plgSystemLSCache extends CMSPlugin {
         }
 
         if ($this->isAdmin()) {
-            $this->app->enqueueMessage(JText::_('COM_LSCACHE_PLUGIN_PURGEINFORMED'), "message");
+            $this->app->enqueueMessage(Text::_('COM_LSCACHE_PLUGIN_PURGEINFORMED'), "message");
         }
         
     }
@@ -1883,8 +1891,8 @@ class plgSystemLSCache extends CMSPlugin {
             $this->settings->set('cleanCache', md5((String) rand()));
         }
         
-        $componentid = JComponentHelper::getComponent('com_lscache')->id;
-        $table = JTable::getInstance('extension');
+        $componentid = ComponentHelper::getComponent('com_lscache')->id;
+        $table = Table::getInstance('extension');
         $table->load($componentid);
         $table->bind(array('params' => $this->settings->toString()));
         $table->store();
@@ -1928,7 +1936,7 @@ class plgSystemLSCache extends CMSPlugin {
    
     protected function getVisitorIP() {
         $ip = '';
-        $jinput = JFactory::getApplication()->input;
+        $jinput = Factory::getApplication()->input;
         $ip = $jinput->server->get('REMOTE_ADDR');
         
         if ($jinput->server->get('HTTP_CLIENT_IP')) {
@@ -1952,7 +1960,7 @@ class plgSystemLSCache extends CMSPlugin {
     protected function esiTokenForm(){
         $this->lscInstance->checkPrivateCookie();
         $this->lscInstance->cachePrivate('token','token');
-        echo JHtml::_( 'form.token' );
+        echo HTMLHelper::_( 'form.token' );
     }
 
     protected function esiTokenBlock(){

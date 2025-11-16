@@ -6,8 +6,9 @@
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
+use Joomla\CMS\Plugin\CMSPlugin;
 
-abstract class LSCacheComponentBase  extends JPlugin
+abstract class LSCacheComponentBase  extends CMSPlugin
 {
     protected $plugin;
     protected $dispatcher;

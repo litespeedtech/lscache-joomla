@@ -6,13 +6,14 @@
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
+use Joomla\CMS\Factory;
 
 class LSCacheComponentKomento extends LSCacheComponentBase{
     
     
     public function onRegisterEvents()
     {
-        $app = JFactory::getApplication();
+        $app = Factory::getApplication();
         
         if(empty($namespace=$app->input->get('namespace','')) && empty($task=$app->input->get('task',''))){
             return;
@@ -43,8 +44,8 @@ class LSCacheComponentKomento extends LSCacheComponentBase{
     }
     
     protected function purgeComment($ids){
-            $db = JFactory::getDbo();
-            $query = $db->getQuery(true)
+            $db = Factory::getDbo();
+            $query = $db->createQuery()
                     ->select("distinct component, cid")
                     ->from('#__komento_comments')
                     ->where($db->quoteName('id') . ' in (' . implode(',', $ids) . ')');

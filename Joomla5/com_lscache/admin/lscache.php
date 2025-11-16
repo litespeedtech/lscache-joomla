@@ -5,15 +5,18 @@
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
-
 defined('_JEXEC') or die;
 
-if (!JFactory::getUser()->authorise('core.manage', 'com_lscache'))
+use Joomla\CMS\Factory;
+use Joomla\CMS\MVC\Controller\BaseController;
+use Joomla\CMS\Language\Text;
+
+if (!Factory::getUser()->authorise('core.manage', 'com_lscache'))
 {
-	throw new JAccessExceptionNotallowed(JText::_('JERROR_ALERTNOAUTHOR'), 403);
+	throw new JAccessExceptionNotallowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
 }
 
-$controller = JControllerLegacy::getInstance('LSCache');
-$input = JFactory::getApplication()->input;
+$controller = BaseController::getInstance('LSCache');
+$input = Factory::getApplication()->input;
 $controller->execute($input->getCmd('task'));
 $controller->redirect();

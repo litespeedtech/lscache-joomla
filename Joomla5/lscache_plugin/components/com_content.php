@@ -7,6 +7,7 @@
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
 use Joomla\Component\Content\Site\Helper\RouteHelper;
+use Joomla\CMS\Factory;
 
 class LSCacheComponentContent extends LSCacheComponentBase
 {
@@ -15,10 +16,10 @@ class LSCacheComponentContent extends LSCacheComponentBase
     public function getComMap()
     {
         $comUrls =  array();
-        $db = JFactory::getDbo();
+        $db = Factory::getDbo();
 
 //  get category urls
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select($db->quoteName(array('id','language')))
                 ->from('#__categories');
         $query->where($db->quoteName('published') . ' =1');
@@ -36,7 +37,7 @@ class LSCacheComponentContent extends LSCacheComponentBase
         }
 
 //  get article urls;
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select($db->quoteName(array('id','language','catid','alias')))
                 ->from('#__content');
         $query->where($db->quoteName('state') . ' =1');

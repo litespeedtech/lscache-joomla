@@ -6,6 +6,7 @@
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
+use Joomla\CMS\Factory;
 
 class LSCacheComponentJabuilder extends LSCacheComponentBase{
     
@@ -15,7 +16,7 @@ class LSCacheComponentJabuilder extends LSCacheComponentBase{
         $this->dispatcher->addListener("onJubSaveItem",[$this,'onJubSaveItem']);
         $this->dispatcher->addListener("onJubLoadItem", [$this, 'onJubLoadItem']);
 
-        $app = JFactory::getApplication();
+        $app = Factory::getApplication();
         $option = $app->input->get('jub', null);
         if($option!=null){
             $this->plugin->pageCachable = false;

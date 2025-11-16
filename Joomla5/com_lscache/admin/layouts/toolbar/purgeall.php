@@ -8,9 +8,10 @@
  */
 
 defined('_JEXEC') or die;
+use Joomla\CMS\Language\Text;
 
-$text = JText::_('COM_LSCACHE_BTN_PURGE_ALL');
-$title = JText::_('COM_LSCACHE_BTN_PURGE_ALL_TIP');
+$text = Text::_('COM_LSCACHE_BTN_PURGE_ALL');
+$title = Text::_('COM_LSCACHE_BTN_PURGE_ALL_TIP');
 ?>
 <button onclick="Joomla.submitbutton('modules.purgeall')" class="btn btn-small btn-success" title="<?php echo $title; ?>">
 	<span class="icon-purge icon-white" aria-hidden="true"></span>

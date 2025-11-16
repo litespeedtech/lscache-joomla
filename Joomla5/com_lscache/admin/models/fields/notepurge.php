@@ -10,25 +10,30 @@
 defined('JPATH_BASE') or die;
 
 use Joomla\Utilities\ArrayHelper;
+use Joomla\CMS\Form\Field\NoteField;
+use Joomla\CMS\Form\FormHelper;
+use Joomla\CMS\Language\Text;
+use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Uri\Uri;
 
-JFormHelper::loadFieldClass('note');
+FormHelper::loadFieldClass('note');
 
 /**
  * Display Purge Url field
  *
  * @since  1.2.1
  */
-class JFormFieldNotePurge extends JFormFieldNote
+class JFormFieldNotePurge extends NoteField
 {
 	protected $type = 'NotePurge';
     
 	protected function getLabel()
 	{
 		$description = (string) $this->element['description'];
-        $description = JText::_($description);
-        $settings = JComponentHelper::getParams('com_lscache');
+        $description = Text::_($description);
+        $settings = ComponentHelper::getParams('com_lscache');
         $secureWords = $settings->get('cleanCache');
-        $root = JURI::root();
+        $root = Uri::root();
         $description = str_replace('{webroot}', $root, $description);
         $description = str_replace('{secureword}', $secureWords, $description);
         

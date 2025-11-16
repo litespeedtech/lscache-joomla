@@ -9,13 +9,18 @@
 defined('_JEXEC') or die;
 
 use Joomla\Utilities\ArrayHelper;
+use Joomla\CMS\MVC\Controller\AdminController;
+use Joomla\CMS\Session\Session;
+use Joomla\CMS\Uri\Uri;
+use Joomla\CMS\Factory;
+use Joomla\CMS\Language\Text;
 
 /**
  * Modules list controller class.
  *
  * @since  0.1
  */
-class LSCacheControllerModules extends JControllerAdmin {
+class LSCacheControllerModules extends AdminController {
 
     /**
      * Method to get a model object, loading it if required.
@@ -34,21 +39,21 @@ class LSCacheControllerModules extends JControllerAdmin {
 
     public function esi() {
 
-        JSession::checkToken() or jexit(JText::_('JINVALID_TOKEN'));
+        Session::checkToken() or jexit(Text::_('JINVALID_TOKEN'));
 
         $pks = $this->input->post->get('cid', array(), 'array');
         $pks = ArrayHelper::toInteger($pks);
 
         try {
             if (empty($pks)) {
-                throw new Exception(JText::_('COM_LSCACHE_ERROR_NO_MODULES_SELECTED'));
+                throw new Exception(Text::_('COM_LSCACHE_ERROR_NO_MODULES_SELECTED'));
             }
 
             $model = $this->getModel();
             $model->renderESI($pks);
-            $this->setMessage(count($pks) . JText::_('COM_LSCACHE_MODULES_RENDER_ESI'));
+            $this->setMessage(count($pks) . Text::_('COM_LSCACHE_MODULES_RENDER_ESI'));
         } catch (Exception $e) {
-            $application = JFactory::getApplication();
+            $application = Factory::getApplication();
             $application->enqueueMessage($e->getMessage(), 'error');
         }
 
@@ -56,21 +61,21 @@ class LSCacheControllerModules extends JControllerAdmin {
     }
 
     public function normal() {
-        JSession::checkToken() or jexit(JText::_('JINVALID_TOKEN'));
+        Session::checkToken() or jexit(Text::_('JINVALID_TOKEN'));
 
         $pks = $this->input->post->get('cid', array(), 'array');
         $pks = ArrayHelper::toInteger($pks);
 
         try {
             if (empty($pks)) {
-                throw new Exception(JText::_('COM_LSCACHE_ERROR_NO_MODULES_SELECTED'));
+                throw new Exception(Text::_('COM_LSCACHE_ERROR_NO_MODULES_SELECTED'));
             }
 
             $model = $this->getModel();
             $model->renderNormal($pks);
-            $this->setMessage(count($pks) . JText::_('COM_LSCACHE_MODULES_RENDER_NORMAL'));
+            $this->setMessage(count($pks) . Text::_('COM_LSCACHE_MODULES_RENDER_NORMAL'));
         } catch (Exception $e) {
-            $application = JFactory::getApplication();
+            $application = Factory::getApplication();
             $application->enqueueMessage($e->getMessage(), 'error');
         }
 
@@ -81,8 +86,8 @@ class LSCacheControllerModules extends JControllerAdmin {
         JLoader::register('LiteSpeedCacheBase', JPATH_SITE . '/plugins/system/lscache/lscachebase.php', true);
         JLoader::register('LiteSpeedCacheCore', JPATH_SITE . '/plugins/system/lscache/lscachecore.php', true);
         $lscInstance = new LiteSpeedCacheCore();
-        $app = JFactory::getApplication();
-        $app->enqueueMessage(JText::_('COM_LSCACHE_PURGED_ALL'), "");
+        $app = Factory::getApplication();
+        $app->enqueueMessage(Text::_('COM_LSCACHE_PURGED_ALL'), "");
         $lscInstance->purgeAllPublic();
         $this->setRedirect('index.php?option=com_lscache');
     }
@@ -94,32 +99,32 @@ class LSCacheControllerModules extends JControllerAdmin {
         JLoader::register('LiteSpeedCacheBase', JPATH_SITE . '/plugins/system/lscache/lscachebase.php', true);
         JLoader::register('LiteSpeedCacheCore', JPATH_SITE . '/plugins/system/lscache/lscachecore.php', true);
         $lscInstance = new LiteSpeedCacheCore();
-        $app = JFactory::getApplication();
-        $app->enqueueMessage(JText::_('COM_LSCACHE_PURGED_ALL'), "");
+        $app = Factory::getApplication();
+        $app->enqueueMessage(Text::_('COM_LSCACHE_PURGED_ALL'), "");
         $lscInstance->purgeAllPublic();
         $this->setRedirect($_SERVER['HTTP_REFERER']);
     }
 
     public function rebuild() {
-        $app = JFactory::getApplication();
+        $app = Factory::getApplication();
         $app->triggerEvent("onLSCacheRebuildAll");
     }
 
     public function purgeModule() {
 
-        $app = JFactory::getApplication();
-        JSession::checkToken() or jexit(JText::_('JINVALID_TOKEN'));
+        $app = Factory::getApplication();
+        Session::checkToken() or jexit(Text::_('JINVALID_TOKEN'));
 
         $pks = $this->input->post->get('cid', array(), 'array');
         $pks = ArrayHelper::toInteger($pks);
 
         try {
             if (empty($pks)) {
-                throw new Exception(JText::_('COM_LSCACHE_ERROR_NO_MODULES_SELECTED'));
+                throw new Exception(Text::_('COM_LSCACHE_ERROR_NO_MODULES_SELECTED'));
             }
             $app->triggerEvent("onContentChangeState", array('com_modules.module', $pks, true));
         } catch (Exception $e) {
-            $application = JFactory::getApplication();
+            $application = Factory::getApplication();
             $application->enqueueMessage($e->getMessage(), 'error');
         }
 
@@ -128,18 +133,18 @@ class LSCacheControllerModules extends JControllerAdmin {
 
     public function purgeURL() {
 
-        JSession::checkToken() or jexit(JText::_('JINVALID_TOKEN'));
+        Session::checkToken() or jexit(Text::_('JINVALID_TOKEN'));
         if (!isset($_POST['purgeURLs'])) {
-            $app = JFactory::getApplication();
-            $app->enqueueMessage(JText::_('COM_LSCACHE_ERROR_NO_URLS_INPUT'));
+            $app = Factory::getApplication();
+            $app->enqueueMessage(Text::_('COM_LSCACHE_ERROR_NO_URLS_INPUT'));
             $this->setRedirect('index.php?option=com_lscache');
             return;
         }
 
         $url = $_POST['purgeURLs'];
         if (empty($url)) {
-            $app = JFactory::getApplication();
-            $app->enqueueMessage(JText::_('COM_LSCACHE_ERROR_NO_URLS_INPUT'));
+            $app = Factory::getApplication();
+            $app->enqueueMessage(Text::_('COM_LSCACHE_ERROR_NO_URLS_INPUT'));
             $this->setRedirect('index.php?option=com_lscache');
             return;
         }
@@ -152,9 +157,9 @@ class LSCacheControllerModules extends JControllerAdmin {
         $success = 0;
         $acceptCode = array(200, 201);
 
-        $domain = JURI::getinstance()->toString(['host']);
+        $domain = Uri::getinstance()->toString(['host']);
         $host = $_SERVER['SERVER_ADDR'];
-        $server = JURI::getinstance()->toString(['host', 'port']);
+        $server = Uri::getinstance()->toString(['host', 'port']);
         $header = ['Host: ' . $server];
         $msg = [];
 
@@ -162,7 +167,7 @@ class LSCacheControllerModules extends JControllerAdmin {
 
             // Check that URL is in this domain
             if (strpos($path, $domain) === FALSE) {
-                $msg[] = $path . ' - ' . JText::_('COM_LSCACHE_URL_WRONG_DOMAIN');
+                $msg[] = $path . ' - ' . Text::_('COM_LSCACHE_URL_WRONG_DOMAIN');
                 continue;
             }
 
@@ -186,14 +191,14 @@ class LSCacheControllerModules extends JControllerAdmin {
             if (in_array($httpcode, $acceptCode)) {
                 $success++;
             } else {
-                $msg[] = $path . ' - ' . JText::_('COM_LSCACHE_URL_PURGE_FAIL') . $httpcode . curl_error($ch);
+                $msg[] = $path . ' - ' . Text::_('COM_LSCACHE_URL_PURGE_FAIL') . $httpcode . curl_error($ch);
             }
 
             curl_close($ch);
         }
 
-        $msg[] = str_replace('%d', $success, JText::_('COM_LSCACHE_URL_PURGED'));
-        $app = JFactory::getApplication();
+        $msg[] = str_replace('%d', $success, Text::_('COM_LSCACHE_URL_PURGED'));
+        $app = Factory::getApplication();
         $app->enqueueMessage(implode("<br>", $msg));
 
         return true;
