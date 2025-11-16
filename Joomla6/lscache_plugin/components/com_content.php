@@ -19,7 +19,7 @@ class LSCacheComponentContent extends LSCacheComponentBase
         $db = Factory::getDbo();
 
 //  get category urls
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select($db->quoteName(array('id','language')))
                 ->from('#__categories');
         $query->where($db->quoteName('published') . ' =1');
@@ -37,7 +37,7 @@ class LSCacheComponentContent extends LSCacheComponentBase
         }
 
 //  get article urls;
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select($db->quoteName(array('id','language','catid','alias')))
                 ->from('#__content');
         $query->where($db->quoteName('state') . ' =1');

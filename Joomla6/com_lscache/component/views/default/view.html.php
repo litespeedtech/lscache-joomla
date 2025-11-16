@@ -6,11 +6,8 @@ use Joomla\CMS\MVC\View\HtmlView;
 // No direct access
 defined('_JEXEC') or die;
 
-jimport('joomla.application.component.view');
-
 class lscacheViewDefault extends HtmlView
 {
-
 	protected $params;
 
 	public function display($tpl = null)

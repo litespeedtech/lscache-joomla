@@ -14,8 +14,6 @@ use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 
-
-
 ?>
 <form action="<?php echo Route::_('index.php?option=com_lscache&view=module&moduleid=' . (int) $this->item->moduleid); ?>"
     method="post" name="adminForm" id="adminForm">

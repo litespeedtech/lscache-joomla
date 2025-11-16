@@ -130,7 +130,7 @@ $colSpan = $clientId === 1 ? 8 : 10;
 							}
 							elseif (!$saveOrder)
 							{
-								$iconClass = ' inactive tip-top hasTooltip" title="' . JHtml::_('tooltipText', 'JORDERINGDISABLED');
+								$iconClass = ' inactive tip-top hasTooltip" title="' . HTMLHelper::_('tooltipText', 'JORDERINGDISABLED');
 							}
 							?>
 							<span class="sortable-handler<?php echo $iconClass; ?>">
@@ -152,7 +152,7 @@ $colSpan = $clientId === 1 ? 8 : 10;
 								<?php echo HTMLHelper::_('jgrid.published', $item->published, $i, 'modules.', $canChange, 'cb', $item->publish_up, $item->publish_down); ?>
 							<?php else : ?>
 								<?php // Extension is not enabled, show a message that indicates this. ?>
-								<button class="btn btn-micro hasTooltip" title="<?php echo JText::_('COM_MODULES_MSG_MANAGE_EXTENSION_DISABLED'); ?>">
+								<button class="btn btn-micro hasTooltip" title="<?php echo Text::_('COM_MODULES_MSG_MANAGE_EXTENSION_DISABLED'); ?>">
 									<span class="icon-ban-circle" aria-hidden="true"></span>
 								</button>
 							<?php endif; ?>
@@ -214,9 +214,9 @@ $colSpan = $clientId === 1 ? 8 : 10;
 						<?php elseif ($clientId === 1 && JModuleHelper::isAdminMultilang()) : ?>
 							<td class="small hidden-phone">
 								<?php if ($item->language == ''):?>
-									<?php echo JText::_('JUNDEFINED'); ?>
+									<?php echo Text::_('JUNDEFINED'); ?>
 								<?php elseif ($item->language == '*'):?>
-									<?php echo JText::alt('JALL', 'language'); ?>
+									<?php echo Text::alt('JALL', 'language'); ?>
 								<?php else:?>
 									<?php echo $this->escape($item->language); ?>
 								<?php endif; ?>

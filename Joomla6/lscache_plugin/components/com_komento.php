@@ -45,7 +45,7 @@ class LSCacheComponentKomento extends LSCacheComponentBase{
     
     protected function purgeComment($ids){
             $db = Factory::getDbo();
-            $query = $db->getQuery(true)
+            $query = $db->createQuery()
                     ->select("distinct component, cid")
                     ->from('#__komento_comments')
                     ->where($db->quoteName('id') . ' in (' . implode(',', $ids) . ')');

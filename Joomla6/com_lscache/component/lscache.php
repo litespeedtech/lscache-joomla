@@ -18,9 +18,6 @@ if($admin==1)
 	}
 else
 	{
-
-	jimport('joomla.application.component.controller');
-
 	// Create the controller
 	$controller = BaseController::getInstance('LSCache');
 

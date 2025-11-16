@@ -25,14 +25,14 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         $this->dispatcher->addListener("onContentPrepare", [$this,'onContentPrepare']);
 
         $db = Factory::getDbo();
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select('vendor_currency')
                 ->from('#__virtuemart_vendors')
                 ->where($db->quoteName('virtuemart_vendor_id') . '=1');
         $db->setQuery($query);
         $vendor_currency = (int) $db->loadResult();
 
-        $app = JFactory::getApplication();
+        $app = Factory::getApplication();
         $currency = $app->getUserStateFromRequest("virtuemart_currency_id", 'virtuemart_currency_id', $vendor_currency);
 
         if ($currency != $vendor_currency) {
@@ -199,7 +199,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
     private function getProductCategories($productid)
     {
         $db = Factory::getDbo();
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select($db->quoteName(array('virtuemart_category_id', 'virtuemart_product_id')))
                 ->from('#__virtuemart_product_categories');
         if (is_array($productid)) {
@@ -248,7 +248,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         $comUrls[] = 'index.php?option=com_virtuemart';
 
         $db = Factory::getDbo();
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select('virtuemart_category_id')
                 ->from('#__virtuemart_categories');
         try {
@@ -261,7 +261,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
             return array();
         }
 
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select($db->quoteName(array('virtuemart_category_id', 'virtuemart_product_id')))
                 ->from('#__virtuemart_product_categories');
         try {
@@ -277,7 +277,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
             return array();
         }
 
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select($db->quoteName('virtuemart_product_id'))
                 ->from('#__virtuemart_products');
         try {
@@ -305,7 +305,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         $total = $productModel->getTotal();
         $limitstart = $productModel->_limitStart;
         $limit = $productModel->_limit;
-        $app = JFactory::getApplication();
+        $app = Factory::getApplication();
         $start = $app->input->get('start', $limitstart);
         $pagination = $productModel->_pagination;
         

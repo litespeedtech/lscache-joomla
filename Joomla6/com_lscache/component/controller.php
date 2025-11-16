@@ -5,8 +5,6 @@ use Joomla\CMS\MVC\Controller\BaseController;
 // No direct access
 defined('_JEXEC') or die;
 
-jimport('joomla.application.component.controller');
-
 class LSCacheController extends BaseController
 {
 

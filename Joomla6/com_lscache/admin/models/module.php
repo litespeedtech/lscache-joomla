@@ -50,7 +50,7 @@ class LSCacheModelModule extends Joomla\CMS\MVC\Model\AdminModel {
 
         foreach ($pks as $pk) {
             $db = $this->getDbo();
-            $query = $db->getQuery(true)
+            $query = $db->createQuery()
                     ->insert($db->quoteName('#__modules_lscache'))
                     ->columns($db->quoteName(array('moduleid', 'lscache_type', 'lscache_ttl')))
                     ->values($pk . ', 1, 500');
@@ -80,7 +80,7 @@ class LSCacheModelModule extends Joomla\CMS\MVC\Model\AdminModel {
 
         foreach ($pks as $pk) {
             $db = $this->getDbo();
-            $query = $db->getQuery(true)
+            $query = $db->createQuery()
                     ->delete('#__modules_lscache')
                     ->where('moduleid=' . (int) $pk);
 
@@ -134,7 +134,7 @@ class LSCacheModelModule extends Joomla\CMS\MVC\Model\AdminModel {
         }
 
         $db = $this->getDbo();
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select('title')
                 ->from('#__modules')
                 ->where($db->quoteName('id') . '=' . (int) $data->moduleid);

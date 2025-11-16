@@ -251,7 +251,7 @@ class LSCacheModelModules extends Joomla\CMS\MVC\Model\ListModel
 
 		// Create a new query object.
 		$db = $this->getDbo();
-		$query = $db->getQuery(true);
+		$query = $db->createQuery();
 
 		// Select the required fields.
 		$query->select($db->quoteName(array('a.id' , 'a.title', 'a.note', 'a.position', 'a.module', 'a.language', 'a.access', 'a.published', 'a.publish_up', 'a.publish_down', 'a.checked_out', 'a.checked_out_time')));
@@ -354,19 +354,19 @@ class LSCacheModelModules extends Joomla\CMS\MVC\Model\ListModel
 			else
 			{
 				// Modules in "All" pages.
-				$subQuery1 = $db->getQuery(true);
+				$subQuery1 = $db->createQuery();
 				$subQuery1->select('MIN(' . $db->quoteName('menuid') . ')')
 					->from($db->quoteName('#__modules_menu'))
 					->where($db->quoteName('moduleid') . ' = ' . $db->quoteName('a.id'));
 
 				// Modules in "Selected" pages that have the chosen menu item id.
-				$subQuery2 = $db->getQuery(true);
+				$subQuery2 = $db->createQuery();
 				$subQuery2->select($db->quoteName('moduleid'))
 					->from($db->quoteName('#__modules_menu'))
 					->where($db->quoteName('menuid') . ' = ' . (int) $menuItemId);
 
 				// Modules in "All except selected" pages that doesn't have the chosen menu item id.
-				$subQuery3 = $db->getQuery(true);
+				$subQuery3 = $db->createQuery();
 				$subQuery3->select($db->quoteName('moduleid'))
 					->from($db->quoteName('#__modules_menu'))
 					->where($db->quoteName('menuid') . ' = -' . (int) $menuItemId);
@@ -402,7 +402,7 @@ class LSCacheModelModules extends Joomla\CMS\MVC\Model\ListModel
 		{
 			if ($language === 'current')
 			{
-				$query->where($db->quoteName('a.language') . ' IN (' . $db->quote(JFactory::getLanguage()->getTag()) . ',' . $db->quote('*') . ')');
+				$query->where($db->quoteName('a.language') . ' IN (' . $db->quote(Factory::getLanguage()->getTag()) . ',' . $db->quote('*') . ')');
 			}
 			else
 			{

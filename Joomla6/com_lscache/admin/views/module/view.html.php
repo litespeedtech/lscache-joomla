@@ -37,7 +37,7 @@ class LSCacheViewModule extends HtmlView
 		// Check for errors.
 		if (count($errors = $this->get('Errors')))
 		{
-			JError::raiseError(500, implode('<br />', $errors));
+			throw new Exception(implode('\n', $errors),500);
 
 			return false;
 		}

@@ -785,7 +785,7 @@ class plgSystemLSCache extends CMSPlugin {
 
             $db = Factory::getDbo();
 
-            $query = $db->getQuery(true)
+            $query = $db->createQuery()
                     ->select('id')
                     ->from('#__menu')
                     ->where($db->quoteName('template_style_id') . '=' . (int) $row->id);
@@ -890,7 +890,7 @@ class plgSystemLSCache extends CMSPlugin {
     
     public function getModuleMenuItems($moduleid) {
         $db = Factory::getDbo();
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select('menuid')
                 ->from('#__modules_menu')
                 ->where($db->quoteName('moduleid') . '=' . (int) $moduleid)
@@ -1061,7 +1061,7 @@ class plgSystemLSCache extends CMSPlugin {
     private function getModule($moduleid) {
 
         $db = Factory::getDbo();
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select('*')
                 ->from('#__modules')
                 ->where('id=' . $moduleid);
@@ -1082,7 +1082,7 @@ class plgSystemLSCache extends CMSPlugin {
             return $module->cache_type;
         }
 
-        $query1 = $db->getQuery(true)
+        $query1 = $db->createQuery()
                 ->select('MIN(menuid)')
                 ->from('#__modules_menu')
                 ->where($db->quoteName('moduleid') . '=' . (int) $module->id);
@@ -1099,7 +1099,7 @@ class plgSystemLSCache extends CMSPlugin {
             $module->cache_type = self::MODULE_PURGETAG;
         }
 
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select('*')
                 ->from('#__modules_lscache')
                 ->where($db->quoteName('moduleid') . '=' . (int) $module->id);
@@ -1129,7 +1129,7 @@ class plgSystemLSCache extends CMSPlugin {
 
         $db = Factory::getDbo();
 
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select('*')
                 ->from('#__modules')
                 ->where($db->quoteName('module') . '="' . $element . '"')
@@ -1144,7 +1144,7 @@ class plgSystemLSCache extends CMSPlugin {
     protected function getTemplate($element) {
         $db = Factory::getDbo();
 
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select('*')
                 ->from('#__template_styles')
                 ->where($db->quoteName('template') . '="' . $element . '"');
@@ -1157,7 +1157,7 @@ class plgSystemLSCache extends CMSPlugin {
     
     protected function getUserContactTag($uid){
         $db = Factory::getDbo();
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
             ->select('c.id')
             ->from($db->quoteName('#__contact_details', 'c'))
             ->where('c.published = 1')
@@ -1171,7 +1171,7 @@ class plgSystemLSCache extends CMSPlugin {
     protected function getExtension($eid) {
         $db = Factory::getDbo();
 
-        $query = $db->getQuery(true)
+        $query = $db->createQuery()
                 ->select('*')
                 ->from('#__extensions')
                 ->where($db->quoteName('extension_id') . '=' . (int) $eid);
@@ -1960,7 +1960,7 @@ class plgSystemLSCache extends CMSPlugin {
     protected function esiTokenForm(){
         $this->lscInstance->checkPrivateCookie();
         $this->lscInstance->cachePrivate('token','token');
-        echo JHtml::_( 'form.token' );
+        echo HTMLHelper::_( 'form.token' );
     }
 
     protected function esiTokenBlock(){

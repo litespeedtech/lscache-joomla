@@ -39,14 +39,14 @@ class LSCacheControllerModules extends AdminController {
 
     public function esi() {
 
-        Session::checkToken() or jexit(JText::_('JINVALID_TOKEN'));
+        Session::checkToken() or jexit(Text::_('JINVALID_TOKEN'));
 
         $pks = $this->input->post->get('cid', array(), 'array');
         $pks = ArrayHelper::toInteger($pks);
 
         try {
             if (empty($pks)) {
-                throw new Exception(JText::_('COM_LSCACHE_ERROR_NO_MODULES_SELECTED'));
+                throw new Exception(Text::_('COM_LSCACHE_ERROR_NO_MODULES_SELECTED'));
             }
 
             $model = $this->getModel();
@@ -120,7 +120,7 @@ class LSCacheControllerModules extends AdminController {
 
         try {
             if (empty($pks)) {
-                throw new Exception(JText::_('COM_LSCACHE_ERROR_NO_MODULES_SELECTED'));
+                throw new Exception(Text::_('COM_LSCACHE_ERROR_NO_MODULES_SELECTED'));
             }
             $app->triggerEvent("onContentChangeState", array('com_modules.module', $pks, true));
         } catch (Exception $e) {

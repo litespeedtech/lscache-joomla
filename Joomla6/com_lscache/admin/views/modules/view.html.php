@@ -16,6 +16,7 @@ use Joomla\CMS\Toolbar\ToolbarHelper;
 use Joomla\CMS\Layout\FileLayout;
 use Joomla\CMS\HTML\Helpers\Sidebar;
 use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Helper\ModuleHelper;
 /**
  * View class for a list of modules.
  *
@@ -55,14 +56,14 @@ class LSCacheViewModules extends HtmlView
 		}
 
 		// We do not need the Language filter when modules are not filtered
-		if ($this->clientId == 1 && !JModuleHelper::isAdminMultilang())
+		if ($this->clientId == 1 && !ModuleHelper::isAdminMultilang())
 		{
 			unset($this->activeFilters['language']);
 			$this->filterForm->removeField('language', 'filter');
 		}
 
         if(isset( $_SERVER['LSWS_EDITION'] ) && strpos( $_SERVER['LSWS_EDITION'], 'Openlitespeed' ) === 0){
-            $app = JFactory::getApplication();  
+            $app = Factory::getApplication();  
             $app->enqueueMessage(Text::_('COM_LSCACHE_MODULES_UPGRADE'));
         }
         
