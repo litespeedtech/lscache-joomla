@@ -21,10 +21,10 @@ use Joomla\CMS\Language\Text;
 use Joomla\Database\DatabaseInterface;
 use Joomla\DI\Container;
 use Joomla\DI\ServiceProviderInterface;
-use Joomla\Filesystem\File;
-use Joomla\Filesystem\Folder;
-use Joomla\Filesystem\Path;
-use Joomla\Filesystem\Exception\FilesystemException;
+use Joomla\CMS\Filesystem\File;
+use Joomla\CMS\Filesystem\Folder;
+use Joomla\CMS\Filesystem\Path;
+use Joomla\CMS\Filesystem\Exception\FilesystemException;
 
 
 class Pkg_LSCacheInstallerScript implements InstallerScriptInterface {
