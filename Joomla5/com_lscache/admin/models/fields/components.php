@@ -13,7 +13,7 @@ use Joomla\Utilities\ArrayHelper;
 use Joomla\CMS\Form\Field\ListField;
 use Joomla\CMS\Form\FormHelper;
 use Joomla\CMS\Language\Text;
-use Joomla\Uri\Uri;
+use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\Factory;
 
 FormHelper::loadFieldClass('list');
