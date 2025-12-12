@@ -7,7 +7,7 @@
  *  @license    https://opensource.org/licenses/GPL-3.0
  */
 use Joomla\CMS\Factory;
-use Joomla\Uri\Uri;
+use Joomla\CMS\Uri\Uri;
 
 class LSCacheComponentSPPageBuilder extends LSCacheComponentBase{
     
