@@ -387,29 +387,47 @@ class plgSystemLSCache extends CMSPlugin {
             $this->purgeObject->recacheAll = false;
             ignore_user_abort(true);
             set_time_limit(0);
-            // Write initial progress so the admin page can start polling immediately
             $progressFile = JPATH_ROOT . '/cache/lscache_rebuild_progress.json';
+
+            // Collect URLs NOW while Joomla is fully initialised (getSiteMap needs the router)
+            try {
+                $menus     = $this->getSiteMap();
+                $crawlList = array_map(function ($m) { return $m->path; }, $menus);
+                $recacheComponent = $this->settings->get('recacheComponent', false);
+                if ($recacheComponent) {
+                    $compUrls  = $this->componentHelper->getComMap($recacheComponent);
+                    $crawlList = array_merge($compUrls, $crawlList);
+                }
+            } catch (\Throwable $e) {
+                $crawlList = [];
+            }
+
             file_put_contents($progressFile, json_encode([
-                'status'  => 'starting',
-                'total'   => 0,
+                'status'  => empty($crawlList) ? 'error' : 'starting',
+                'total'   => count($crawlList),
                 'current' => 0,
                 'success' => 0,
                 'started' => time(),
+                'error'   => empty($crawlList) ? 'No URLs found. Enable "Recache" in LSCache settings.' : null,
             ]));
-            $progressFileClosure = JPATH_ROOT . '/cache/lscache_rebuild_progress.json';
-            register_shutdown_function(\Closure::bind(function () use ($progressFileClosure) {
-                if (function_exists('fastcgi_finish_request')) {
-                    fastcgi_finish_request();
-                }
-                try {
-                    $this->recacheAction(true, false);
-                } catch (\Throwable $e) {
-                    file_put_contents($progressFileClosure, json_encode([
-                        'status' => 'error',
-                        'error'  => $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine(),
-                    ]));
-                }
-            }, $this, \get_class($this)));
+
+            if (!empty($crawlList)) {
+                $pfClosure = $progressFile;
+                register_shutdown_function(\Closure::bind(function () use ($pfClosure, $crawlList) {
+                    if (function_exists('fastcgi_finish_request')) {
+                        fastcgi_finish_request();
+                    }
+                    try {
+                        $this->crawlUrls($crawlList, false);
+                    } catch (\Throwable $e) {
+                        file_put_contents($pfClosure, json_encode([
+                            'status' => 'error',
+                            'error'  => $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine(),
+                        ]));
+                    }
+                }, $this, \get_class($this)));
+            }
+
             $this->app->redirect('index.php?option=com_lscache');
         }
 

@@ -281,8 +281,9 @@ $colSpan = $clientId === 1 ? 8 : 10;
         fetch(progressUrl, {cache: 'no-store'})
             .then(function (r) { return r.json(); })
             .then(function (resp) {
+                if (!resp || resp.success === false) { clearInterval(timer); return; }
                 var data = (resp && resp.data) ? resp.data : resp;
-                if (!data || data.status === 'idle') {
+                if (!data || !data.status || data.status === 'idle') {
                     wrapper.style.display = 'none';
                     clearInterval(timer);
                     return;
