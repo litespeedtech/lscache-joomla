@@ -265,7 +265,7 @@ $colSpan = $clientId === 1 ? 8 : 10;
 </form>
 <script>
 (function () {
-    var progressUrl = 'index.php?option=com_lscache&task=modules.rebuildProgress&format=raw';
+    var progressUrl = 'index.php?option=com_ajax&plugin=lscache&group=system&format=json';
     var wrapper     = document.getElementById('lscache-rebuild-progress');
     var bar         = document.getElementById('lscache-rebuild-bar');
     var text        = document.getElementById('lscache-rebuild-text');
@@ -280,7 +280,8 @@ $colSpan = $clientId === 1 ? 8 : 10;
     function poll() {
         fetch(progressUrl, {cache: 'no-store'})
             .then(function (r) { return r.json(); })
-            .then(function (data) {
+            .then(function (resp) {
+                var data = (resp && resp.data) ? resp.data : resp;
                 if (!data || data.status === 'idle') {
                     wrapper.style.display = 'none';
                     clearInterval(timer);

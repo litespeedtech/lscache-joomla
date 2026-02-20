@@ -1639,6 +1639,22 @@ class plgSystemLSCache extends CMSPlugin {
         return true;
     }
 
+    public function onAjaxLscache() {
+        $progressFile = JPATH_ROOT . '/cache/lscache_rebuild_progress.json';
+        if (!file_exists($progressFile)) {
+            return ['status' => 'idle'];
+        }
+        $json = @json_decode(@file_get_contents($progressFile), true);
+        if (!is_array($json)) {
+            return ['status' => 'idle'];
+        }
+        if (isset($json['started']) && (time() - $json['started']) > 3600) {
+            @unlink($progressFile);
+            return ['status' => 'idle'];
+        }
+        return $json;
+    }
+
     public function onLSCacheRebuildAll() {
         if (!$this->isAdmin()) {
             return;
