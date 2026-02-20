@@ -303,6 +303,13 @@ $colSpan = $clientId === 1 ? 8 : 10;
                     title.textContent = 'Cache Rebuild Complete';
                     clearInterval(timer);
                     setTimeout(function () { wrapper.style.display = 'none'; }, 8000);
+                } else if (data.status === 'error') {
+                    bar.classList.remove('active');
+                    bar.style.background = '#d9534f';
+                    wrapper.querySelector('.alert').classList.replace('alert-info', 'alert-danger');
+                    title.textContent = 'Rebuild Error';
+                    text.textContent = data.error || 'Unknown error';
+                    clearInterval(timer);
                 }
             })
             .catch(function () { clearInterval(timer); });

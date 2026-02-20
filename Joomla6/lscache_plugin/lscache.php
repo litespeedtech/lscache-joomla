@@ -395,11 +395,19 @@ class plgSystemLSCache extends CMSPlugin {
                 'success' => 0,
                 'started' => time(),
             ]));
-            register_shutdown_function(\Closure::bind(function () {
+            $progressFileClosure = JPATH_ROOT . '/cache/lscache_rebuild_progress.json';
+            register_shutdown_function(\Closure::bind(function () use ($progressFileClosure) {
                 if (function_exists('fastcgi_finish_request')) {
                     fastcgi_finish_request();
                 }
-                $this->recacheAction(true, false);
+                try {
+                    $this->recacheAction(true, false);
+                } catch (\Throwable $e) {
+                    file_put_contents($progressFileClosure, json_encode([
+                        'status' => 'error',
+                        'error'  => $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine(),
+                    ]));
+                }
             }, $this, \get_class($this)));
             $this->app->redirect('index.php?option=com_lscache');
         }
