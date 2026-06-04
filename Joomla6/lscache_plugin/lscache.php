@@ -629,7 +629,7 @@ class plgSystemLSCache extends CMSPlugin {
             return;
         }
 
-        if($row->featured){
+        if(isset($row->featured) && $row->featured){
             $purgeTags .= ','. $option . ':featured';
         }
 
