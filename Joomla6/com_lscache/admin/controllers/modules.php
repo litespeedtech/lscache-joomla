@@ -39,7 +39,10 @@ class LSCacheControllerModules extends AdminController {
 
     public function esi() {
 
-        Session::checkToken() or jexit(Text::_('JINVALID_TOKEN'));
+        if (!Session::checkToken()) {
+            Factory::getApplication()->enqueueMessage(Text::_('JINVALID_TOKEN'), 'error');
+            Factory::getApplication()->close(403);
+        }
 
         $pks = $this->input->post->get('cid', array(), 'array');
         $pks = ArrayHelper::toInteger($pks);
@@ -61,7 +64,10 @@ class LSCacheControllerModules extends AdminController {
     }
 
     public function normal() {
-        Session::checkToken() or jexit(Text::_('JINVALID_TOKEN'));
+        if (!Session::checkToken()) {
+            Factory::getApplication()->enqueueMessage(Text::_('JINVALID_TOKEN'), 'error');
+            Factory::getApplication()->close(403);
+        }
 
         $pks = $this->input->post->get('cid', array(), 'array');
         $pks = ArrayHelper::toInteger($pks);
@@ -83,8 +89,8 @@ class LSCacheControllerModules extends AdminController {
     }
 
     public function purgeall() {
-        JLoader::register('LiteSpeedCacheBase', JPATH_SITE . '/plugins/system/lscache/lscachebase.php', true);
-        JLoader::register('LiteSpeedCacheCore', JPATH_SITE . '/plugins/system/lscache/lscachecore.php', true);
+        require_once JPATH_SITE . '/plugins/system/lscache/lscachebase.php';
+        require_once JPATH_SITE . '/plugins/system/lscache/lscachecore.php';
         $lscInstance = new LiteSpeedCacheCore();
         $app = Factory::getApplication();
         $app->enqueueMessage(Text::_('COM_LSCACHE_PURGED_ALL'), "");
@@ -96,8 +102,8 @@ class LSCacheControllerModules extends AdminController {
         if (!isset($_SERVER['HTTP_REFERER'])) {
             return;
         }
-        JLoader::register('LiteSpeedCacheBase', JPATH_SITE . '/plugins/system/lscache/lscachebase.php', true);
-        JLoader::register('LiteSpeedCacheCore', JPATH_SITE . '/plugins/system/lscache/lscachecore.php', true);
+        require_once JPATH_SITE . '/plugins/system/lscache/lscachebase.php';
+        require_once JPATH_SITE . '/plugins/system/lscache/lscachecore.php';
         $lscInstance = new LiteSpeedCacheCore();
         $app = Factory::getApplication();
         $app->enqueueMessage(Text::_('COM_LSCACHE_PURGED_ALL'), "");
@@ -113,7 +119,10 @@ class LSCacheControllerModules extends AdminController {
     public function purgeModule() {
 
         $app = Factory::getApplication();
-        Session::checkToken() or jexit(Text::_('JINVALID_TOKEN'));
+        if (!Session::checkToken()) {
+            $app->enqueueMessage(Text::_('JINVALID_TOKEN'), 'error');
+            $app->close(403);
+        }
 
         $pks = $this->input->post->get('cid', array(), 'array');
         $pks = ArrayHelper::toInteger($pks);
@@ -133,7 +142,10 @@ class LSCacheControllerModules extends AdminController {
 
     public function purgeURL() {
 
-        Session::checkToken() or jexit(Text::_('JINVALID_TOKEN'));
+        if (!Session::checkToken()) {
+            Factory::getApplication()->enqueueMessage(Text::_('JINVALID_TOKEN'), 'error');
+            Factory::getApplication()->close(403);
+        }
         if (!isset($_POST['purgeURLs'])) {
             $app = Factory::getApplication();
             $app->enqueueMessage(Text::_('COM_LSCACHE_ERROR_NO_URLS_INPUT'));
@@ -157,44 +169,62 @@ class LSCacheControllerModules extends AdminController {
         $success = 0;
         $acceptCode = array(200, 201);
 
-        $domain = Uri::getinstance()->toString(['host']);
+        $domain = Uri::getInstance()->toString(['host']);
         $host = $_SERVER['SERVER_ADDR'];
-        $server = Uri::getinstance()->toString(['host', 'port']);
+        $server = Uri::getInstance()->toString(['host', 'port']);
         $header = ['Host: ' . $server];
         $msg = [];
 
-        foreach ($slugs as $key => $path) {
-
-            // Check that URL is in this domain
-            if (strpos($path, $domain) === FALSE) {
+        // Build list of valid URLs and their original paths for reporting
+        $validPaths = [];
+        foreach ($slugs as $path) {
+            if (strpos($path, $domain) === false) {
                 $msg[] = $path . ' - ' . Text::_('COM_LSCACHE_URL_WRONG_DOMAIN');
                 continue;
             }
+            $validPaths[] = $path;
+        }
 
-            $ch = curl_init();
+        if (!empty($validPaths)) {
+            // Send all PURGE requests in parallel using curl_multi
+            $mh = curl_multi_init();
+            $handles = [];
 
-            // Replace domain with host, and set Header Host, to support Cloudflare or reverse proxies
-            $host_path = str_replace($domain, $host, $path);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
-
-            curl_setopt($ch, CURLOPT_URL, $host_path);
-            curl_setopt($ch, CURLOPT_VERBOSE, true);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 3);
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PURGE");
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-            $buffer = curl_exec($ch);
-            $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-            if (in_array($httpcode, $acceptCode)) {
-                $success++;
-            } else {
-                $msg[] = $path . ' - ' . Text::_('COM_LSCACHE_URL_PURGE_FAIL') . $httpcode . curl_error($ch);
+            foreach ($validPaths as $path) {
+                // Replace domain with host IP to support Cloudflare or reverse proxies
+                $host_path = str_replace($domain, $host, $path);
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+                curl_setopt($ch, CURLOPT_URL, $host_path);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PURGE');
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_multi_add_handle($mh, $ch);
+                $handles[$path] = $ch;
             }
 
-            curl_close($ch);
+            // Execute all handles simultaneously
+            do {
+                $status = curl_multi_exec($mh, $running);
+                if ($running) {
+                    curl_multi_select($mh);
+                }
+            } while ($running && $status === CURLM_OK);
+
+            // Collect results
+            foreach ($handles as $path => $ch) {
+                $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                if (in_array($httpcode, $acceptCode)) {
+                    $success++;
+                } else {
+                    $msg[] = $path . ' - ' . Text::_('COM_LSCACHE_URL_PURGE_FAIL') . $httpcode . curl_error($ch);
+                }
+                curl_multi_remove_handle($mh, $ch);
+            }
+
+            curl_multi_close($mh);
         }
 
         $msg[] = str_replace('%d', $success, Text::_('COM_LSCACHE_URL_PURGED'));

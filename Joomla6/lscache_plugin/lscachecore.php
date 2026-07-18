@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /**
  * Core function of communicating with LSWS Server for LSCache operations
@@ -59,7 +60,7 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
                         
             $tagStr = $prefix . $this->site_only_tag . trim($tag);
             if(!in_array($tagStr, $tagArray, false)){
-                array_push($tagArray, $tagStr);
+                $tagArray[] = $tagStr;
             }
         }
     }
@@ -107,7 +108,7 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
         $this->liteSpeedHeader($LSheader);
 
         $siteTags = Array();
-        array_push($siteTags, $this->site_only_tag);
+        $siteTags[] = $this->site_only_tag;
         $this->tagsForSite($siteTags, $publicTags);
 
         $LSheader = $this->tagCommand( self::CACHE_TAG ,  $siteTags);
@@ -137,11 +138,11 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
         $siteTags = Array();
         $this->tagsForSite($siteTags, $publicTags, "public:".$this->site_only_tag);
         if($publicTags!=""){
-            array_push($siteTags, "public:" . $this->site_only_tag);
+            $siteTags[] = "public:" . $this->site_only_tag;
         }
-        
+
         $this->tagsForSite($siteTags, $privateTags);
-        array_push($siteTags, $this->site_only_tag);
+        $siteTags[] = $this->site_only_tag;
         
         $LSheader = $this->tagCommand( self::CACHE_TAG ,  $siteTags);
         $this->liteSpeedHeader($LSheader);

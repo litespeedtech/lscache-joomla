@@ -85,7 +85,8 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
     public function plgVmAfterStoreProduct($data, $product_data=null)
     {
         if($data instanceof Event) {
-            return $this->plgVmOnDeleteProduct($data->getArgument('0'), $data->getArgument('1'));
+            $product_data = $data->getArgument('1');
+            $data = $data->getArgument('0');
         }
 
         $category_tag = $this->getProductCategoryTags($product_data->virtuemart_product_id);
@@ -155,7 +156,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
             $this->plugin->purgeAction();
             return;
         }
-        $urls = $this->getProductCategoryUrls($id);
+        $urls = $this->getProductCategoryUrls($productids);
         $this->plugin->purgeObject->urls = array_merge($urls, $productUrls);
         $this->plugin->purgeAction();
     }
@@ -187,7 +188,7 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
         if ($context == "com_virtuemart.productdetails") {
             return 'com_virtuemart.product:' . $pageElements['content']->virtuemart_product_id;
         } else if ($context == "com_virtuemart.category") {
-            if (isset($pageElements["content"]) & !empty($pageElements["content"]->virtuemart_category_id)) {
+            if (isset($pageElements["content"]) && !empty($pageElements["content"]->virtuemart_category_id)) {
                 return 'com_virtuemart.category:' . $pageElements["content"]->virtuemart_category_id;
             }
             return $option;
@@ -203,8 +204,8 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
                 ->select($db->quoteName(array('virtuemart_category_id', 'virtuemart_product_id')))
                 ->from('#__virtuemart_product_categories');
         if (is_array($productid)) {
-            $products = implode(',', $productid);
-            $query->where($db->quoteName('virtuemart_product_id') . ' in (' . $products . ')');
+            $products = implode(',', array_map('intval', $productid));
+            $query->where($db->quoteName('virtuemart_product_id') . ' IN (' . $products . ')');
         } else {
             $query->where($db->quoteName('virtuemart_product_id') . '=' . (int) $productid);
         }
@@ -299,6 +300,10 @@ class LSCacheComponentVirtueMart extends LSCacheComponentBase
     public function onContentPrepare($context, $row=null, $params=null, $page = 0) {
         if($context instanceof Event) {
             return $this->onContentPrepare($context->getArgument(0),$context->getArgument(1),$context->getArgument(2),$context->getArgument(3));
+        }
+
+        if (!class_exists('VmModel')) {
+            return;
         }
 
         $productModel = VmModel::getModel('Product');
