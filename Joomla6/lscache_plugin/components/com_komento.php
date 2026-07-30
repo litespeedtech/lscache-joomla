@@ -1,6 +1,7 @@
 <?php
+declare(strict_types=1);
 
-/* 
+/*
  *  @since      1.0.0
  *  @author     LiteSpeed Technologies <info@litespeedtech.com>
  *  @copyright  Copyright (c) 2017-2018 LiteSpeed Technologies, Inc. (https://www.litespeedtech.com)
@@ -44,11 +45,12 @@ class LSCacheComponentKomento extends LSCacheComponentBase{
     }
     
     protected function purgeComment($ids){
+            $ids = array_map('intval', $ids);
             $db = Factory::getDbo();
             $query = $db->createQuery()
                     ->select("distinct component, cid")
                     ->from('#__komento_comments')
-                    ->where($db->quoteName('id') . ' in (' . implode(',', $ids) . ')');
+                    ->where($db->quoteName('id') . ' IN (' . implode(',', $ids) . ')');
             $db->setQuery($query);
             $comments = $db->loadObjectList();
             foreach($comments as $comment){

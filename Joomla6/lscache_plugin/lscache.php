@@ -92,7 +92,7 @@ class plgSystemLSCache extends CMSPlugin {
         }
 
         // Checks if caching is allowed via server variable
-        if (!empty($_SERVER['X-LSCACHE']) || LITESPEED_SERVER_TYPE === 'LITESPEED_SERVER_ADC' || defined('LITESPEED_CLI')) {
+        if (!empty($_SERVER['HTTP_X_LSCACHE']) || LITESPEED_SERVER_TYPE === 'LITESPEED_SERVER_ADC' || defined('LITESPEED_CLI')) {
             !defined('LITESPEED_ALLOWED') && define('LITESPEED_ALLOWED', true);
         }
 
@@ -101,20 +101,20 @@ class plgSystemLSCache extends CMSPlugin {
             define('LITESPEED_ESI_SUPPORT', LITESPEED_SERVER_TYPE !== 'LITESPEED_SERVER_OLS' ? true : false );
         }
 
-        JLoader::register('LiteSpeedCacheBase', __DIR__ . '/lscachebase.php', true);
-        JLoader::register('LiteSpeedCacheCore', __DIR__ . '/lscachecore.php', true);
+        require_once __DIR__ . '/lscachebase.php';
+        require_once __DIR__ . '/lscachecore.php';
         $this->lscInstance = new LiteSpeedCacheCore();
 
-        JLoader::register('LSCacheModuleBase', __DIR__ . '/modules/base.php', true);
-        JLoader::register('LSCacheModulesHelper', __DIR__ . '/modules/helper.php', true);
+        require_once __DIR__ . '/modules/base.php';
+        require_once __DIR__ . '/modules/helper.php';
         $this->moduleHelper = new LSCacheModulesHelper($this);
 
         if (!$this->app) {
             $this->app = Factory::getApplication();
         }
 
-        JLoader::register('LSCacheComponentBase', __DIR__ . '/components/base.php', true);
-        JLoader::register('LSCacheComponentsHelper', __DIR__ . '/components/helper.php', true);
+        require_once __DIR__ . '/components/base.php';
+        require_once __DIR__ . '/components/helper.php';
         $this->componentHelper = new LSCacheComponentsHelper($this);
 
         $this->purgeObject = (object) array('tags' => array(), 'urls' => array(), 'option' => "", 'idField' => "", 'ids' => array(), 'purgeAll' => false, 'recacheAll' => false);
@@ -384,7 +384,49 @@ class plgSystemLSCache extends CMSPlugin {
         }
 
         if ($this->purgeObject->recacheAll) {
-            $this->recacheAction(true,true);
+            $this->purgeObject->recacheAll = false;
+            ignore_user_abort(true);
+            set_time_limit(0);
+            $progressFile = JPATH_ROOT . '/cache/lscache_rebuild_progress.json';
+
+            try {
+                $menus     = $this->getSiteMap();
+                $crawlList = array_map(function ($m) { return $m->path; }, $menus);
+                $recacheComponent = $this->settings->get('recacheComponent', false);
+                if ($recacheComponent) {
+                    $compUrls  = $this->componentHelper->getComMap($recacheComponent);
+                    $crawlList = array_merge($compUrls, $crawlList);
+                }
+            } catch (\Throwable $e) {
+                $crawlList = [];
+            }
+
+            file_put_contents($progressFile, json_encode([
+                'status'  => empty($crawlList) ? 'error' : 'starting',
+                'total'   => count($crawlList),
+                'current' => 0,
+                'success' => 0,
+                'started' => time(),
+                'error'   => empty($crawlList) ? 'No URLs found. Enable "Recache" in LSCache settings.' : null,
+            ]));
+
+            if (!empty($crawlList)) {
+                $pfClosure = $progressFile;
+                register_shutdown_function(\Closure::bind(function () use ($pfClosure, $crawlList) {
+                    if (function_exists('fastcgi_finish_request')) {
+                        fastcgi_finish_request();
+                    }
+                    try {
+                        $this->crawlUrls($crawlList, false);
+                    } catch (\Throwable $e) {
+                        file_put_contents($pfClosure, json_encode([
+                            'status' => 'error',
+                            'error'  => $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine(),
+                        ]));
+                    }
+                }, $this, \get_class($this)));
+            }
+
             $this->app->redirect('index.php?option=com_lscache');
         }
 
@@ -602,6 +644,7 @@ class plgSystemLSCache extends CMSPlugin {
         }
         
         $option = $this->getOption($context);
+        $purgeTags = '';
 
         $menu_contexts = array('com_menus.item', 'com_menus.menu');
         if (in_array($context, $menu_contexts)) {
@@ -1024,12 +1067,17 @@ class plgSystemLSCache extends CMSPlugin {
         $extensionID = $this->pageElements["id"];
         $file = $this->pageElements["file"];
         if ($purge && !empty($file) && !empty($extensionID)) {
-            $file = base64_decode($file);
-            $elements = explode('/', $file);
-            if (count($elements) < 3) {
+            $decoded = base64_decode($file, true);
+            if ($decoded === false || str_contains($decoded, '..') || str_contains($decoded, "\0")) {
                 $purge = false;
-            } else if ($elements[1] != "html") {
-                $purge = false;
+            } else {
+                $file = $decoded;
+                $elements = explode('/', $file);
+                if (count($elements) < 3) {
+                    $purge = false;
+                } else if ($elements[1] !== "html") {
+                    $purge = false;
+                }
             }
         }
 
@@ -1132,7 +1180,7 @@ class plgSystemLSCache extends CMSPlugin {
         $query = $db->createQuery()
                 ->select('*')
                 ->from('#__modules')
-                ->where($db->quoteName('module') . '="' . $element . '"')
+                ->where($db->quoteName('module') . '=' . $db->quote($element))
                 ->where($db->quoteName('published') . '=1');
 
         $db->setQuery($query);
@@ -1147,7 +1195,7 @@ class plgSystemLSCache extends CMSPlugin {
         $query = $db->createQuery()
                 ->select('*')
                 ->from('#__template_styles')
-                ->where($db->quoteName('template') . '="' . $element . '"');
+                ->where($db->quoteName('template') . '=' . $db->quote($element));
 
         $db->setQuery($query);
 
@@ -1355,7 +1403,7 @@ class plgSystemLSCache extends CMSPlugin {
         $cleancache = $app->input->get('cleanCache');
         if($ipPass && (!empty($cleancache))) {
             $cleanWords = $this->settings->get('cleanCache', 'purgeAllCache');
-            if ($cleancache != $cleanWords) {
+            if ($cleancache !== $cleanWords) {
                 http_response_code(403);
                 $app->close();
                 return;
@@ -1377,7 +1425,7 @@ class plgSystemLSCache extends CMSPlugin {
         $recache = $app->input->get('recache');
         if ($ipPass && (!empty($recache))) {
             $cleanWords = $this->settings->get('cleanCache', 'purgeAllCache');
-            if ($recache != $cleanWords) {
+            if ($recache !== $cleanWords) {
                 http_response_code(403);
                 $app->close();
                 return;
@@ -1431,7 +1479,7 @@ class plgSystemLSCache extends CMSPlugin {
         $menuid = $app->getMenu()->getDefault()->id;
 
         if (($module->pages > 0) && (isset($_SERVER['HTTP_REFERER']))) {
-            $uri = Uri::getinstance();
+            $uri = Uri::getInstance();
             $uri->setPath("");
             $uri->setQuery("");
             $uri->setFragment(""); 
@@ -1446,7 +1494,7 @@ class plgSystemLSCache extends CMSPlugin {
             }
         } else if (($module->pages > 0) && ($menuItems = $this->getModuleMenuItems($moduleid)) && (!in_array($menuid, $menuItems))) {
             $menuid = $menuItems[0];
-            $uri = Uri::getinstance();
+            $uri = Uri::getInstance();
             $uri->setPath("");
             $uri->setQuery("");
             $uri->setFragment("");
@@ -1460,7 +1508,7 @@ class plgSystemLSCache extends CMSPlugin {
                 $root .= 'index.php';
             }
 
-            $uri = Uri::getinstance();
+            $uri = Uri::getInstance();
             $uri->setPath("");
             $uri->setQuery("");
             $uri->setFragment("");
@@ -1616,6 +1664,22 @@ class plgSystemLSCache extends CMSPlugin {
         return true;
     }
 
+    public function onAjaxLscache() {
+        $progressFile = JPATH_ROOT . '/cache/lscache_rebuild_progress.json';
+        if (!file_exists($progressFile)) {
+            return ['status' => 'idle'];
+        }
+        $json = @json_decode(@file_get_contents($progressFile), true);
+        if (!is_array($json)) {
+            return ['status' => 'idle'];
+        }
+        if (isset($json['started']) && (time() - $json['started']) > 3600) {
+            @unlink($progressFile);
+            return ['status' => 'idle'];
+        }
+        return $json;
+    }
+
     public function onLSCacheRebuildAll() {
         if (!$this->isAdmin()) {
             return;
@@ -1657,6 +1721,7 @@ class plgSystemLSCache extends CMSPlugin {
     }
 
     private function crawlUrls($urls, $output = true) {
+        $prevTimeLimit = (int) ini_get('max_execution_time');
         set_time_limit(0);
 
         $cli = false;
@@ -1678,6 +1743,15 @@ class plgSystemLSCache extends CMSPlugin {
         $root = Uri::getInstance()->toString(array('scheme', 'host', 'port'));
         $recacheDuration = $this->settings->get('recacheDuration', 30) * 1000000;
         $break = false;
+        $progressFile    = JPATH_ROOT . '/cache/lscache_rebuild_progress.json';
+        $progressStarted = time();
+        file_put_contents($progressFile, json_encode([
+            'status'  => 'running',
+            'total'   => $count,
+            'current' => 0,
+            'success' => 0,
+            'started' => $progressStarted,
+        ]));
         if ($output) {
             //ob_implicit_flush(TRUE);
             echo '<h3>Rebuild LiteSpeed Cache may take several minutes</h3><br/>';
@@ -1722,7 +1796,6 @@ class plgSystemLSCache extends CMSPlugin {
             
             $buffer = curl_exec($ch);
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
             $this->log( $root.$url);
 
             if (in_array($httpcode, $acceptCode)) {
@@ -1737,6 +1810,16 @@ class plgSystemLSCache extends CMSPlugin {
                 $this->log('httpcode:'.$httpcode);
             }
             $current++;
+
+            if ($current % 5 === 0 || $current === $count) {
+                file_put_contents($progressFile, json_encode([
+                    'status'  => 'running',
+                    'total'   => $count,
+                    'current' => $current,
+                    'success' => $success,
+                    'started' => $progressStarted,
+                ]));
+            }
 
             if ($output) {
             
@@ -1762,7 +1845,7 @@ class plgSystemLSCache extends CMSPlugin {
             usleep(round($diff));
         }
 
-        if($output & (!$break)){
+        if($output && (!$break)){
             echo '100%';
             if (ob_get_contents()){
                 ob_flush();
@@ -1770,11 +1853,22 @@ class plgSystemLSCache extends CMSPlugin {
             flush();
         }
             
+        file_put_contents($progressFile, json_encode([
+            'status'   => 'completed',
+            'total'    => $count,
+            'current'  => $current,
+            'success'  => $success,
+            'started'  => $progressStarted,
+            'finished' => time(),
+        ]));
         $totalTime = round($this->microtimeMinus($begin, microtime()) / 1000000);
         if ($count == $current) {
             $msg = str_replace('%d', $totalTime, Text::_('COM_LSCACHE_PLUGIN_PAGERECACHED'));
         } else {
             $msg = str_replace('%d', $totalTime, Text::_('COM_LSCACHE_PLUGIN_PAGERECACHOVERTIME'));
+        }
+        if ($prevTimeLimit > 0) {
+            set_time_limit($prevTimeLimit);
         }
         return $msg;
     }
@@ -1791,6 +1885,7 @@ class plgSystemLSCache extends CMSPlugin {
             return;
         }
 
+        $httpcode = 0;
         if ((!$this->purgeObject->purgeAll) && ($this->purgeObject->autoRecache > 0)) {
             $root = Uri::root();
             $cleanWords = $this->settings->get('cleanCache', 'purgeAllCache');
@@ -1808,7 +1903,6 @@ class plgSystemLSCache extends CMSPlugin {
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $buffer = curl_exec($ch);
             $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
         }
 
         if (!empty($httpcode) && in_array($httpcode, array(200, 201))) {
@@ -1935,26 +2029,12 @@ class plgSystemLSCache extends CMSPlugin {
 
    
     protected function getVisitorIP() {
-        $ip = '';
+        // Use only REMOTE_ADDR for security-sensitive IP checks (admin whitelist).
+        // HTTP_CLIENT_IP and HTTP_X_FORWARDED_FOR are client-controlled and can
+        // be spoofed to bypass IP restrictions.
         $jinput = Factory::getApplication()->input;
-        $ip = $jinput->server->get('REMOTE_ADDR');
-        
-        if ($jinput->server->get('HTTP_CLIENT_IP')) {
-            $ip = $jinput->server->get('HTTP_CLIENT_IP');
-        } else if($jinput->server->get('HTTP_X_FORWARDED_FOR')) {
-            $ip = $jinput->server->get('HTTP_X_FORWARDED_FOR');
-        } else if($jinput->server->get('HTTP_X_FORWARDED')) {
-            $ip = $jinput->server->get('HTTP_X_FORWARDED');
-        } else if($jinput->server->get('HTTP_FORWARDED_FOR')) {
-            $ip = $jinput->server->get('HTTP_FORWARDED_FOR');
-        } else if($jinput->server->get('HTTP_FORWARDED')) {
-            $ip = $jinput->server->get('HTTP_FORWARDED');
-        } else if($jinput->server->get('REMOTE_ADDR')) {
-            $ip = $jinput->server->get('REMOTE_ADDR');
-        } else if (getHostName()){
-            $ip = getHostByName(getHostName());
-        }
-        return $ip;
+        $ip = $jinput->server->getString('REMOTE_ADDR', '');
+        return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '';
     }
     
     protected function esiTokenForm(){
