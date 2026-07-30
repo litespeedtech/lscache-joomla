@@ -1489,14 +1489,14 @@ class plgSystemLSCache extends CMSPlugin {
         if ($requestedMenuid > 0) {
             $menuid = $requestedMenuid;
             $pageContext = $this->getMenuPageContext($menuid);
-            $uri = Uri::getinstance();
+            $uri = Uri::getInstance();
             $uri->setPath("");
             $uri->setQuery("");
             $uri->setFragment("");
             $url = Route::_('index.php?Itemid=' . $menuid, false);
             $uri->parse($url);
         } else if (($module->pages > 0) && (isset($_SERVER['HTTP_REFERER']))) {
-            $uri = Uri::getinstance();
+            $uri = Uri::getInstance();
             $uri->setPath("");
             $uri->setQuery("");
             $uri->setFragment("");
@@ -1514,7 +1514,7 @@ class plgSystemLSCache extends CMSPlugin {
         } else if (($module->pages > 0) && ($menuItems = $this->getModuleMenuItems($moduleid)) && (!in_array($menuid, $menuItems))) {
             $menuid = $menuItems[0];
             $pageContext = $this->getMenuPageContext($menuid);
-            $uri = Uri::getinstance();
+            $uri = Uri::getInstance();
             $uri->setPath("");
             $uri->setQuery("");
             $uri->setFragment("");
