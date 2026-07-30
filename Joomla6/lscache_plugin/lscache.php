@@ -384,7 +384,49 @@ class plgSystemLSCache extends CMSPlugin {
         }
 
         if ($this->purgeObject->recacheAll) {
-            $this->recacheAction(true,true);
+            $this->purgeObject->recacheAll = false;
+            ignore_user_abort(true);
+            set_time_limit(0);
+            $progressFile = JPATH_ROOT . '/cache/lscache_rebuild_progress.json';
+
+            try {
+                $menus     = $this->getSiteMap();
+                $crawlList = array_map(function ($m) { return $m->path; }, $menus);
+                $recacheComponent = $this->settings->get('recacheComponent', false);
+                if ($recacheComponent) {
+                    $compUrls  = $this->componentHelper->getComMap($recacheComponent);
+                    $crawlList = array_merge($compUrls, $crawlList);
+                }
+            } catch (\Throwable $e) {
+                $crawlList = [];
+            }
+
+            file_put_contents($progressFile, json_encode([
+                'status'  => empty($crawlList) ? 'error' : 'starting',
+                'total'   => count($crawlList),
+                'current' => 0,
+                'success' => 0,
+                'started' => time(),
+                'error'   => empty($crawlList) ? 'No URLs found. Enable "Recache" in LSCache settings.' : null,
+            ]));
+
+            if (!empty($crawlList)) {
+                $pfClosure = $progressFile;
+                register_shutdown_function(\Closure::bind(function () use ($pfClosure, $crawlList) {
+                    if (function_exists('fastcgi_finish_request')) {
+                        fastcgi_finish_request();
+                    }
+                    try {
+                        $this->crawlUrls($crawlList, false);
+                    } catch (\Throwable $e) {
+                        file_put_contents($pfClosure, json_encode([
+                            'status' => 'error',
+                            'error'  => $e->getMessage() . ' in ' . basename($e->getFile()) . ':' . $e->getLine(),
+                        ]));
+                    }
+                }, $this, \get_class($this)));
+            }
+
             $this->app->redirect('index.php?option=com_lscache');
         }
 
@@ -630,7 +672,7 @@ class plgSystemLSCache extends CMSPlugin {
             return;
         }
 
-        if($row->featured){
+        if(isset($row->featured) && $row->featured){
             $purgeTags .= ','. $option . ':featured';
         }
 
@@ -1622,6 +1664,22 @@ class plgSystemLSCache extends CMSPlugin {
         return true;
     }
 
+    public function onAjaxLscache() {
+        $progressFile = JPATH_ROOT . '/cache/lscache_rebuild_progress.json';
+        if (!file_exists($progressFile)) {
+            return ['status' => 'idle'];
+        }
+        $json = @json_decode(@file_get_contents($progressFile), true);
+        if (!is_array($json)) {
+            return ['status' => 'idle'];
+        }
+        if (isset($json['started']) && (time() - $json['started']) > 3600) {
+            @unlink($progressFile);
+            return ['status' => 'idle'];
+        }
+        return $json;
+    }
+
     public function onLSCacheRebuildAll() {
         if (!$this->isAdmin()) {
             return;
@@ -1685,6 +1743,15 @@ class plgSystemLSCache extends CMSPlugin {
         $root = Uri::getInstance()->toString(array('scheme', 'host', 'port'));
         $recacheDuration = $this->settings->get('recacheDuration', 30) * 1000000;
         $break = false;
+        $progressFile    = JPATH_ROOT . '/cache/lscache_rebuild_progress.json';
+        $progressStarted = time();
+        file_put_contents($progressFile, json_encode([
+            'status'  => 'running',
+            'total'   => $count,
+            'current' => 0,
+            'success' => 0,
+            'started' => $progressStarted,
+        ]));
         if ($output) {
             //ob_implicit_flush(TRUE);
             echo '<h3>Rebuild LiteSpeed Cache may take several minutes</h3><br/>';
@@ -1744,6 +1811,16 @@ class plgSystemLSCache extends CMSPlugin {
             }
             $current++;
 
+            if ($current % 5 === 0 || $current === $count) {
+                file_put_contents($progressFile, json_encode([
+                    'status'  => 'running',
+                    'total'   => $count,
+                    'current' => $current,
+                    'success' => $success,
+                    'started' => $progressStarted,
+                ]));
+            }
+
             if ($output) {
             
                 echo 'curl url: ' . $root . '/' . $url . '<br/>' .  PHP_EOL;
@@ -1776,6 +1853,14 @@ class plgSystemLSCache extends CMSPlugin {
             flush();
         }
             
+        file_put_contents($progressFile, json_encode([
+            'status'   => 'completed',
+            'total'    => $count,
+            'current'  => $current,
+            'success'  => $success,
+            'started'  => $progressStarted,
+            'finished' => time(),
+        ]));
         $totalTime = round($this->microtimeMinus($begin, microtime()) / 1000000);
         if ($count == $current) {
             $msg = str_replace('%d', $totalTime, Text::_('COM_LSCACHE_PLUGIN_PAGERECACHED'));

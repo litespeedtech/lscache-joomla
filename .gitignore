@@ -1,0 +1,22 @@
+# Build scripts et artefacts locaux — jamais versionnés
+Joomla5/package/buildPackage.ps1
+Joomla6/package/buildPackage.ps1
+Joomla5/package/updateLatest.ps1
+Joomla6/package/updateLatest.ps1
+Joomla5/package/lscache_J5_v*_b*.zip
+Joomla6/package/lscache_J6_v*_b*.zip
+.build-number
+
+# VS Code workspace local
+*.code-workspace
+
+# Editor / IDE
+.claude/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store

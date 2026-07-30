@@ -44,6 +44,21 @@ $colSpan = $clientId === 1 ? 8 : 10;
 }
 </style>
 <form action="<?php echo Route::_('index.php?option=com_lscache'); ?>" method="post" name="adminForm" id="adminForm">
+
+<div id="lscache-rebuild-progress" style="display:none;margin:10px 0;">
+    <div class="alert alert-info" style="margin-bottom:0;">
+        <strong id="lscache-rebuild-title">Cache Rebuild In Progress</strong>
+        <div class="progress" style="margin:6px 0 2px;height:20px;">
+            <div id="lscache-rebuild-bar"
+                 class="progress-bar progress-bar-striped active"
+                 role="progressbar"
+                 style="width:0%;min-width:2em;transition:width 0.4s ease;">
+            </div>
+        </div>
+        <small id="lscache-rebuild-text">Starting…</small>
+    </div>
+</div>
+
 <?php if (!empty( $this->sidebar)) : ?>
 	<div id="j-sidebar-container" class="span2">
 		<?php echo $this->sidebar; ?>
@@ -248,3 +263,61 @@ $colSpan = $clientId === 1 ? 8 : 10;
 		<?php echo HTMLHelper::_('form.token'); ?>
 	</div>
 </form>
+<script>
+(function () {
+    var progressUrl = 'index.php?option=com_ajax&plugin=lscache&group=system&format=json';
+    var wrapper     = document.getElementById('lscache-rebuild-progress');
+    var bar         = document.getElementById('lscache-rebuild-bar');
+    var text        = document.getElementById('lscache-rebuild-text');
+    var title       = document.getElementById('lscache-rebuild-title');
+    var timer       = null;
+
+    function setProgress(pct, label) {
+        bar.style.width = pct + '%';
+        text.textContent = label;
+    }
+
+    function poll() {
+        fetch(progressUrl, {cache: 'no-store'})
+            .then(function (r) { return r.json(); })
+            .then(function (resp) {
+                if (!resp || resp.success === false) { clearInterval(timer); return; }
+                var data = (resp && resp.data) ? resp.data : resp;
+                if (!data || !data.status || data.status === 'idle') {
+                    wrapper.style.display = 'none';
+                    clearInterval(timer);
+                    return;
+                }
+                wrapper.style.display = 'block';
+                if (data.status === 'starting') {
+                    setProgress(0, 'Starting rebuild…');
+                } else if (data.status === 'running') {
+                    var total   = data.total   || 1;
+                    var current = data.current || 0;
+                    var success = data.success || 0;
+                    var pct     = Math.round(current / total * 100);
+                    setProgress(pct, current + ' / ' + total + ' pages  (' + pct + '%)  —  ' + success + ' cached');
+                } else if (data.status === 'completed') {
+                    bar.classList.remove('active');
+                    bar.style.background = '#5cb85c';
+                    setProgress(100, 'Rebuild complete: ' + (data.success || 0) + ' / ' + (data.total || 0) + ' pages cached');
+                    title.textContent = 'Cache Rebuild Complete';
+                    clearInterval(timer);
+                    setTimeout(function () { wrapper.style.display = 'none'; }, 8000);
+                } else if (data.status === 'error') {
+                    bar.classList.remove('active');
+                    bar.style.background = '#d9534f';
+                    wrapper.querySelector('.alert').classList.replace('alert-info', 'alert-danger');
+                    title.textContent = 'Rebuild Error';
+                    text.textContent = data.error || 'Unknown error';
+                    clearInterval(timer);
+                }
+            })
+            .catch(function () { clearInterval(timer); });
+    }
+
+    // Start polling immediately on page load
+    poll();
+    timer = setInterval(poll, 2000);
+})();
+</script>
