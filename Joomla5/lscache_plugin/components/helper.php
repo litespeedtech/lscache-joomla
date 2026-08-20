@@ -50,6 +50,27 @@ class LSCacheComponentsHelper
         }
     }
     
+    public function getCustomisedUrlComponents(){
+        $components = array();
+        foreach($this->activeComponents as $com_name => $component){
+            getInstanceInternal($$component[self::COM_CLASSNAME]);
+            if($this->isMethodOverridden($component[self::COM_CLASSNAME], 'getComMap')){
+                $components[] = $com_name;
+            }
+        }
+        return $components;
+    }
+
+    protected function isMethodOverridden($childClass, $methodName) {
+        if (!method_exists($childClass, $methodName)) {
+            return false;
+        }
+        
+        $reflection = new ReflectionMethod($childClass, $methodName);
+        
+        return $reflection->getDeclaringClass()->getName() === ltrim($childClass, '\\');
+    }
+
     public function getInstance($com_name){
         if(!$this->supportComponent($com_name)){
             return null;
@@ -114,4 +135,5 @@ class LSCacheComponentsHelper
         }
         return $com_instance->getComMap();
     }
+
 }
