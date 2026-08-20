@@ -13,4 +13,5 @@ $lscacheComponents = Array(
     "com_virtuemart" => Array("VirtueMart", "com_virtuemart", "com_virtuemart.php", "LSCacheComponentVirtueMart"),
     "com_sppagebuilder" => Array("SP Page Builder", "com_sppagebuilder", "com_sppagebuilder.php", "LSCacheComponentSPPageBuilder"),
     "com_komento" => Array("Komento", "com_komento", "com_komento.php", "LSCacheComponentKomento"),
+    "com_hikashop" => Array("HikaShop", "com_hikashop", "com_hikashop.php", "LSCacheComponentHikaShop"),
 );
