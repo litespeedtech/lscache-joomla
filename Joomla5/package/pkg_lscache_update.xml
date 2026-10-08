@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <updates>
     <update>
-        <name>LiteSpeed Cache Component and Plugin</name>
+        <name>LiteSpeed Cache Component and Plugin Package Bundle</name>
         <description>Regular maintenance and feature updates.</description>
-        <element>com_lscache</element>
-        <type>component</type>
+        <element>pkg_lscache</element>
+        <type>package</type>
         <version>1.5.3</version>
-        <infourl title="Changelog">https://yourwebsite.com</infourl>
+        <infourl title="Changelog">https://litespeedtech.com/products/cache-plugins/joomla-acceleration</infourl>
         <downloads>
             <downloadurl type="full" format="zip">
                 https://github.com/litespeedtech/lscache-joomla/blob/master/Joomla5/package/lscache-1.5.3.zip
