@@ -401,12 +401,9 @@ class plgSystemLSCache extends CMSPlugin {
             try {
                 $menus     = $this->getSiteMap();
                 $crawlList = array_map(function ($m) { return $m->path; }, $menus);
-                $recacheComponents = $this->settings->get('recacheComponents', array());
-                if (!empty($recacheComponents)) {
-                    foreach ($recacheComponents as $recacheComponent) {
-                        $compUrls  = $this->componentHelper->getComMap($recacheComponent);
-                        $crawlList = array_merge($compUrls, $crawlList);
-                    }    
+                foreach ($this->getRecacheComponents() as $recacheComponent) {
+                    $compUrls  = $this->componentHelper->getComMap($recacheComponent);
+                    $crawlList = array_merge($compUrls, $crawlList);
                 }
             } catch (\Throwable $e) {
                 $crawlList = [];
@@ -1824,6 +1821,26 @@ class plgSystemLSCache extends CMSPlugin {
         return;
     }
 
+    /**
+     * Components whose URLs should be warmed.
+     *
+     * The Joomla5 config declares "recacheComponents", plural and multi valued, while the
+     * code read "recacheComponent" - so the setting silently did nothing and the form
+     * showed nothing selected on any site that had picked one. Both names are accepted,
+     * and emptiness rather than absence is tested: saving the configuration writes the
+     * plural key empty, which would otherwise drop the component URLs from every rebuild.
+     *
+     * @return  array
+     */
+    private function getRecacheComponents() {
+        $components = $this->settings->get('recacheComponents', null);
+        if (empty($components)) {
+            $components = $this->settings->get('recacheComponent', false);
+        }
+
+        return array_filter((array) $components);
+    }
+
     private function getSiteMap($option = "") {
         $app  = Factory::getContainer()->get(SiteApplication::class);
         $appmenus = $app->getMenu();
@@ -1831,7 +1848,13 @@ class plgSystemLSCache extends CMSPlugin {
         $curlMenus = array();
         if (!empty($menus) && is_array($menus)) {
             foreach ($menus as $menu) {
-                if (($menu->type != "alias")) {
+                // Only a "component" item renders a page of its own. A "url" item carries an
+                // absolute link, which then got the site root prefixed onto it and produced
+                // https://site.comhttps://site.com/path ; "separator", "heading" and
+                // "container" have no link at all, so each of them collapsed to ?Itemid=NNN
+                // and re-crawled the home page. Items above public access answer 403 to an
+                // anonymous crawler, so they are no use either.
+                if (($menu->type === 'component') && ((int) $menu->access <= 1)) {
                     $menu->path = $menu->link . '&Itemid=' . $menu->id;
                     if(!empty($menu->link)){
                         if($menu->language!="*"){
@@ -1904,10 +1927,25 @@ class plgSystemLSCache extends CMSPlugin {
             }
             
             if((strpos($curlurl,'[')!==false) && (strpos($curlurl,']')!==false)){
-                $curlurl = substr($curlurl, 0, strpos($curlurl,'?'));
+                $pos = strpos($curlurl, '?');
+                if ($pos === false) {
+                    // substr(..., 0, false) yields an empty string on PHP 8: skip instead.
+                    continue;
+                }
+                $curlurl = substr($curlurl, 0, $pos);
+            }
+
+            // With sef_rewrite on, SiteRouter only attaches the rule that strips "index.php/"
+            // when it sees the setting as it is constructed, which does not hold outside a
+            // web request. The prefix is always wrong there: the page is served on the clean
+            // URL, so warming /index.php/scanners does not put /scanners in the cache.
+            if ($this->app->get('sef_rewrite')) {
+                $curlurl = preg_replace('#^(/?)index\.php/#', '$1', $curlurl);
             }
             
-            curl_setopt($ch, CURLOPT_URL, $root.$curlurl);
+            // A menu item can already carry an absolute URL; prefixing it would double the
+            // domain.
+            curl_setopt($ch, CURLOPT_URL, preg_match('#^https?://#i', $curlurl) ? $curlurl : $root . $curlurl);
             curl_setopt($ch, CURLOPT_HEADER, false);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
@@ -2064,12 +2102,9 @@ class plgSystemLSCache extends CMSPlugin {
             $urls = array_map(function($menu) {
                 return $menu->path;
             }, $menus);
-            $recacheComponents = $this->settings->get('recacheComponents', array());
-            if (!empty($recacheComponents)) {
-                foreach ($recacheComponents as $recacheComponent) {
-                    $compUrls  = $this->componentHelper->getComMap($recacheComponent);
-                    $urls = array_merge($compUrls, $urls);
-                }
+            foreach ($this->getRecacheComponents() as $recacheComponent) {
+                $compUrls = $this->componentHelper->getComMap($recacheComponent);
+                $urls = array_merge($compUrls,$urls);
             }
         } else if ($this->purgeObject->autoRecache > 0) {
             $urls = $this->purgeObject->urls;
