@@ -23,6 +23,7 @@ use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\Helper\ModuleHelper;
+use Joomla\CMS\Event\PageCache\GetKeyEvent;
 
 /**
  * LiteSpeed Cache Plugin for Joomla running on LiteSpeed Webserver (LSWS).
@@ -179,7 +180,12 @@ class plgSystemLSCache extends CMSPlugin {
             $this->pageCachable = false;
             $this->purgeAdmin($option);
         } else {
-            $this->checkVary();
+            // Evaluate without writing. The key computed here is provisional: consent
+            // managers populate the session during render, so the routing-time value
+            // differs from the final one. Writing both produced two contradictory
+            // Set-Cookie _lscache_vary headers in the same response. The authoritative
+            // write happens at the end of the request, in onAfterRender().
+            $this->checkVary("", false);
             if($app->input->get("lscache_formtoken")=="1"){
                 $token = Session::getFormToken();
                 $app->input->post->set($token,'1');
@@ -389,6 +395,17 @@ class plgSystemLSCache extends CMSPlugin {
         
         if(defined('LSCACHE_RENDERED')){
             return;
+        }
+
+        // getVaryKey() first runs in onAfterRoute, before the request has had any
+        // chance to mutate the session. Consent managers write their state late -
+        // com_gdpr stores the per category choices in the session from its own AJAX
+        // tasks - so the cookie set at route time still describes the previous
+        // state. Recompute it now that the request is complete, otherwise the next
+        // request is looked up under the stale variant and, being a cache hit, it
+        // never reaches PHP again: the visitor stays pinned to that variant.
+        if (!$this->isAdmin()) {
+            $this->checkVary();
         }
 
         if ($this->purgeObject->recacheAll) {
@@ -1700,6 +1717,79 @@ class plgSystemLSCache extends CMSPlugin {
         return '';
     }
 
+    /**
+     * Does the visitor carry a recorded consent decision?
+     *
+     * Cookie names come from configuration rather than code: this plugin doesn't need
+     * to know which consent manager is installed. An empty field means the setting is
+     * off - there is no separate toggle, a site that wants this off just clears the
+     * field.
+     */
+    private function hasConsentDecision() {
+        $configured = (string) $this->settings->get('consentCookies', '');
+        $names      = array_filter(array_map('trim', explode(',', $configured)), 'strlen');
+
+        // No usable name - empty field, blanks, commas only: the setting is off, no
+        // splitting happens at all.
+        if (empty($names)) {
+            return false;
+        }
+
+        foreach ($names as $name) {
+            if (!empty($_COOKIE[$name])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     *  Collect the cache key parts published by Joomla page cache plugins.
+     *
+     *  plg_system_cache dispatches onPageCacheGetKey so extensions can declare
+     *  what makes their output differ between visitors. Honouring the same
+     *  event here lets those extensions vary the LiteSpeed cache too, the GDPR
+     *  consent state (com_gdpr, "auto manage caching" set to Advanced) being
+     *  the typical case: without it a single cached copy is shared by visitors
+     *  who accepted and refused cookies alike. An empty consentCookies list turns
+     *  this off entirely - what a site whose HTML does NOT depend on consent
+     *  should do, since a consent manager that started filtering HTML server
+     *  side would otherwise make this dangerous overnight.
+     */
+    private function getPageCacheVary() {
+        if (!class_exists('Joomla\\CMS\\Event\\PageCache\\GetKeyEvent')) {
+            return '';
+        }
+
+        // A visitor who hasn't decided anything sees the site's default output,
+        // identical for everyone: one shared copy is accurate. Varying on this state
+        // would exile every first visit into a variant that's never pre-warmed, the
+        // rebuild crawler and every PageSpeed audit included, since they all arrive
+        // cookieless and only ever load a page once, guaranteeing a miss on a page
+        // that's actually identical to the shared copy. Only a visitor who has
+        // actually decided gets their own variant.
+        if (!$this->hasConsentDecision()) {
+            return '';
+        }
+
+        try {
+            $dispatcher = $this->getDispatcher();
+            PluginHelper::importPlugin('pagecache', null, true, $dispatcher);
+            $parts = $dispatcher->dispatch('onPageCacheGetKey', new GetKeyEvent('onPageCacheGetKey'))
+                                ->getArgument('result', array());
+        } catch (\Throwable $e) {
+            // A third party listener must never be able to break page delivery.
+            return '';
+        }
+
+        if (empty($parts)) {
+            return '';
+        }
+
+        return substr(md5(serialize($parts)), 0, 12);
+    }
+
     private function getVaryKey() {
         //$lang = Factory::getLanguage();
         //. $lang->getDefault();
@@ -1745,6 +1835,13 @@ class plgSystemLSCache extends CMSPlugin {
             unset($this->vary['login']);
         }
 
+        $pageCacheVary = $this->getPageCacheVary();
+        if ($pageCacheVary !== '') {
+            $this->vary['pagecache'] = $pageCacheVary;
+        } else if (isset($this->vary['pagecache'])) {
+            unset($this->vary['pagecache']);
+        }
+
         if (count($this->vary)) {
             ksort($this->vary);
             $varyKey = $this->implode2($this->vary, ',', ':');
@@ -1755,12 +1852,17 @@ class plgSystemLSCache extends CMSPlugin {
     }
 
     /**
+     * Compares the visitor's vary key to the one carried by their cookie, and sets
+     * or clears the cookie if it needs to change.
      *
-     *  set or delete cache vary cookie, if cookie need no change return true;
+     * $writeCookie lets callers evaluate without writing. getVaryKey() has side
+     * effects the pipeline depends on (filling $this->vary, clearing pageCachable,
+     * refreshing the private cookie), so it must always be called early, but only
+     * one write, the last one, should reach the browser. See onAfterRoute().
      *
      * @since   0.1
      */
-    private function checkVary($value = "") {
+    private function checkVary($value = "", $writeCookie = true) {
 
         if ($value == "") {
             $value = $this->getVaryKey();
@@ -1770,19 +1872,25 @@ class plgSystemLSCache extends CMSPlugin {
 
         if ($value == "") {
             if (isset($_COOKIE[LiteSpeedCacheBase::VARY_COOKIE])) {
-                $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, null, time() - 1, '/');
+                if ($writeCookie) {
+                    $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, null, time() - 1, '/');
+                }
                 return false;
             }
             return true;
         }
 
         if (!isset($_COOKIE[LiteSpeedCacheBase::VARY_COOKIE])) {
-            $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, $value, 0, '/');
+            if ($writeCookie) {
+                $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, $value, 0, '/');
+            }
             return false;
         }
 
         if ($_COOKIE[LiteSpeedCacheBase::VARY_COOKIE] != $value) {
-            $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, $value, 0, '/');
+            if ($writeCookie) {
+                $inputCookie->set(LiteSpeedCacheBase::VARY_COOKIE, $value, 0, '/');
+            }
             return false;
         }
 
