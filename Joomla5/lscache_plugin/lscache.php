@@ -72,6 +72,10 @@ class plgSystemLSCache extends CMSPlugin {
             $this->saveHtaccess();
         }
 
+        if(empty($this->settings->get('lscache_htaccess',''))){
+            $this->settings->set('lscache_htaccess', $this->getHtaccess());
+        }
+
         $this->cacheEnabled = $this->settings->get('cacheEnabled', 1) == 1 ? true : false;
         if (!$this->cacheEnabled) {
             return;
@@ -786,6 +790,9 @@ class plgSystemLSCache extends CMSPlugin {
             if($this->settings->get('mobileCacheVary') != $newSetting->mobileCacheVary){
                 $this->app->enqueueMessage(Text::_('COM_LSCACHE_PLUGIN_CHECKHTACCESS'), "warning");            
             }
+            if($this->settings->get('lscache_htaccess') != $newSetting->lscache_htaccess){
+                $this->saveHtaccess();           
+            }        
         }
 
         $this->purgeExtension($context, $row);
@@ -2119,21 +2126,37 @@ class plgSystemLSCache extends CMSPlugin {
         $table->store();
     }
 
+    private function getHtaccess() {
+        $htaccess = JPATH_ROOT . '/.htaccess';
+        if (file_exists($htaccess)) {
+            $content = file_get_contents($htaccess);
+            preg_match('@\<IfModule\ LiteSpeed\>.*?\<\/IfModule\>@s', $content, $matches);
+            return $matches[0];
+        }
+        return '';
+    }
+
+    
     private function saveHtaccess() {
         $htaccess = JPATH_ROOT . '/.htaccess';
 
         $directives = '### LITESPEED_CACHE_START - Do not remove this line' . PHP_EOL;
-        $directives .= '<IfModule LiteSpeed>' . PHP_EOL;
-        $directives .= 'CacheLookup on' . PHP_EOL;
-        $directives .= '## Uncomment the following directives if you has a separate mobile view' . PHP_EOL;
-        $directives .= '##RewriteEngine On' . PHP_EOL;
-        $directives .= '##RewriteCond %{HTTP_USER_AGENT} Mobile|Android|Silk/|Kindle|BlackBerry|Opera\ Mini|Opera\ Mobi [NC] ' . PHP_EOL;
-        $directives .= '##RewriteRule .* - [E=Cache-Control:vary=ismobile]' . PHP_EOL;
-        $directives .= '## Uncomment the following directives to enable login remember me' . PHP_EOL;
-        $directives .= '##RewriteCond %{HTTP_COOKIE} ^.*joomla_remember_me.*$' . PHP_EOL;
-        $directives .= '##RewriteCond %{HTTP_COOKIE} !^.*_lscache_vary.*$' . PHP_EOL;
-        $directives .= '##RewriteRule .* - [E=cache-control:no-cache]' . PHP_EOL;        
-        $directives .= '</IfModule>' . PHP_EOL;
+        if(!empty($this->settings->get('lscache_htaccess',''))){ 
+            $directives .= $this->settings->get('lscache_htaccess','')  . PHP_EOL;
+        } else {
+            $directives .= '<IfModule LiteSpeed>' . PHP_EOL;
+            $directives .= 'CacheLookup on' . PHP_EOL;
+            $directives .= '## Uncomment the following directives if you has a separate mobile view' . PHP_EOL;
+            $directives .= '##RewriteEngine On' . PHP_EOL;
+            $directives .= '##RewriteCond %{HTTP_USER_AGENT} Mobile|Android|Silk/|Kindle|BlackBerry|Opera\ Mini|Opera\ Mobi [NC] ' . PHP_EOL;
+            $directives .= '##RewriteRule .* - [E=Cache-Control:vary=ismobile]' . PHP_EOL;
+            $directives .= '## Uncomment the following directives to enable login remember me' . PHP_EOL;
+            $directives .= '##RewriteCond %{HTTP_COOKIE} ^.*joomla_remember_me.*$' . PHP_EOL;
+            $directives .= '##RewriteCond %{HTTP_COOKIE} !^.*_lscache_vary.*$' . PHP_EOL;
+            $directives .= '##RewriteRule .* - [E=cache-control:no-cache]' . PHP_EOL;  
+            $directives .= '</IfModule>' . PHP_EOL;
+        }
+        
         $directives .= '### LITESPEED_CACHE_END';
 
         $pattern = '@### LITESPEED_CACHE_START - Do not remove this line.*?### LITESPEED_CACHE_END@s';

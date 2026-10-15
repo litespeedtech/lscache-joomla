@@ -76,7 +76,7 @@
             <option value="0">JDISABLED</option>
             <option value="1">JENABLED</option>
         </field>
-                
+        <field name="lscache_htaccess" type="textarea" default="" class="input-xxlarge" rows="15" filter="raw" label="COM_LSCACHE_FIELD_LSCACHE_HTACCESS_LABEL" description="COM_LSCACHE_FIELD_LSCACHE_HTACCESS_DESC" />
     </fieldset>
 
     <fieldset name="login" label="COM_LSCACHE_FIELDSET_LOGIN_LABEL" description="COM_LSCACHE_FIELDSET_LOGIN_DESC" >
