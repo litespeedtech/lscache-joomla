@@ -74,6 +74,7 @@ class plgSystemLSCache extends CMSPlugin {
 
         if(empty($this->settings->get('lscache_htaccess',''))){
             $this->settings->set('lscache_htaccess', $this->getHtaccess());
+            $this->saveComponent();
         }
 
         $this->cacheEnabled = $this->settings->get('cacheEnabled', 1) == 1 ? true : false;
@@ -2156,7 +2157,7 @@ class plgSystemLSCache extends CMSPlugin {
             $directives .= '##RewriteRule .* - [E=cache-control:no-cache]' . PHP_EOL;  
             $directives .= '</IfModule>' . PHP_EOL;
         }
-        
+
         $directives .= '### LITESPEED_CACHE_END';
 
         $pattern = '@### LITESPEED_CACHE_START - Do not remove this line.*?### LITESPEED_CACHE_END@s';
