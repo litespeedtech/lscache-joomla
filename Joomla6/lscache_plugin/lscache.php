@@ -395,12 +395,9 @@ class plgSystemLSCache extends CMSPlugin {
             try {
                 $menus     = $this->getSiteMap();
                 $crawlList = array_map(function ($m) { return $m->path; }, $menus);
-                $recacheComponents = $this->settings->get('recacheComponents', array());
-                if (!empty($recacheComponents)) {
-                    foreach ($recacheComponents as $recacheComponent) {
-                        $compUrls  = $this->componentHelper->getComMap($recacheComponent);
-                        $crawlList = array_merge($compUrls, $crawlList);
-                    }    
+                foreach ($this->getRecacheComponents() as $recacheComponent) {
+                    $compUrls  = $this->componentHelper->getComMap($recacheComponent);
+                    $crawlList = array_merge($compUrls, $crawlList);
                 }
             } catch (\Throwable $e) {
                 $crawlList = [];
@@ -1704,6 +1701,26 @@ class plgSystemLSCache extends CMSPlugin {
         return;
     }
 
+    /**
+     * Components whose URLs should be warmed.
+     *
+     * The Joomla5 config declares "recacheComponents", plural and multi valued, while the
+     * code read "recacheComponent" - so the setting silently did nothing and the form
+     * showed nothing selected on any site that had picked one. Both names are accepted,
+     * and emptiness rather than absence is tested: saving the configuration writes the
+     * plural key empty, which would otherwise drop the component URLs from every rebuild.
+     *
+     * @return  array
+     */
+    private function getRecacheComponents() {
+        $components = $this->settings->get('recacheComponents', null);
+        if (empty($components)) {
+            $components = $this->settings->get('recacheComponent', false);
+        }
+
+        return array_filter((array) $components);
+    }
+
     private function getSiteMap($option = "") {
         $app  = Factory::getContainer()->get(SiteApplication::class);
         $appmenus = $app->getMenu();
@@ -1711,7 +1728,13 @@ class plgSystemLSCache extends CMSPlugin {
         $curlMenus = array();
         if (!empty($menus) && is_array($menus)) {
             foreach ($menus as $menu) {
-                if (($menu->type != "alias")) {
+                // Only a "component" item renders a page of its own. A "url" item carries an
+                // absolute link, which then got the site root prefixed onto it and produced
+                // https://site.comhttps://site.com/path ; "separator", "heading" and
+                // "container" have no link at all, so each of them collapsed to ?Itemid=NNN
+                // and re-crawled the home page. Items above public access answer 403 to an
+                // anonymous crawler, so they are no use either.
+                if (($menu->type === 'component') && ((int) $menu->access <= 1)) {
                     $menu->path = $menu->link . '&Itemid=' . $menu->id;
                     if(!empty($menu->link)){
                         if($menu->language!="*"){
@@ -1739,7 +1762,6 @@ class plgSystemLSCache extends CMSPlugin {
             return "";
         }
 
-        $cached = 0;
         $acceptCode = array(200, 201);
         $begin = microtime();
         $success = 0;
@@ -1747,6 +1769,29 @@ class plgSystemLSCache extends CMSPlugin {
         //$router =  CMSApplication::getInstance('site')->getRouter('site'); //$appInstance->getRouter();
         $root = Uri::getInstance()->toString(array('scheme', 'host', 'port'));
         $recacheDuration = $this->settings->get('recacheDuration', 30) * 1000000;
+
+        // Pages demandees simultanement. The crawl spends its time waiting on the server
+        // rather than working, so issuing several at once divides the wall clock by as
+        // much. Capped at 20 so a rebuild cannot saturate the PHP pool of the very site
+        // it is warming.
+        $concurrency = (int) $this->settings->get('crawlConcurrency', 5);
+        if ($concurrency < 1) {
+            $concurrency = 1;
+        } else if ($concurrency > 20) {
+            $concurrency = 20;
+        }
+
+        // Pause between batches, in milliseconds, default none. What stood here before was
+        // usleep(round($diff)) after every page - sleeping exactly as long as the request
+        // had just taken, which doubled the total runtime. That politeness has no recipient
+        // when a site crawls itself; sites warming a third party host can set a delay.
+        $crawlDelay = (int) $this->settings->get('crawlDelay', 0);
+        if ($crawlDelay < 0) {
+            $crawlDelay = 0;
+        } else if ($crawlDelay > 10000) {
+            $crawlDelay = 10000;
+        }
+
         $break = false;
         $progressFile    = JPATH_ROOT . '/cache/lscache_rebuild_progress.json';
         $progressStarted = time();
@@ -1766,89 +1811,140 @@ class plgSystemLSCache extends CMSPlugin {
             flush();
         }
         
-        foreach ($urls as $url) {
-            $ch = curl_init();
-            if ($this->isAdmin()) {
-                try {
-                    $curlurl = Route::link("site",$url);
-                } catch (Error $ex) {
-                    $this->log($ex->getMessage());
-                    continue;
+        // Rolling window: keep $concurrency requests in flight and start a new one the
+        // moment any finishes. Firing a fixed batch and waiting for all of it would make
+        // every group cost its slowest member - mix a cached page at 0.02 s with a fresh
+        // render at 1.4 s and the group costs 1.4 s, whatever the proportion of warm pages.
+        $queue    = array_values($urls);
+        $next     = 0;
+        $inFlight = array();
+        $mh       = curl_multi_init();
+
+        while (true) {
+            while ((!$break) && ($next < $count) && (count($inFlight) < $concurrency)) {
+                $url = $queue[$next];
+                $next++;
+
+                if ($this->isAdmin()) {
+                    try {
+                        $curlurl = Route::link("site", $url);
+                    } catch (Error $ex) {
+                        $this->log($ex->getMessage());
+                        $current++;
+                        continue;
+                    }
+                } else {
+                    $curlurl = Route::link("site", $url);
                 }
-            } else {
-                $curlurl = Route::link("site",$url);
-            }
-            
-            if(strpos($curlurl, '/component')===0){
-                $curlurl ='/'.$url;
-            }
-            
-            if((strpos($curlurl,'[')!==false) && (strpos($curlurl,']')!==false)){
-                $curlurl = substr($curlurl, 0, strpos($curlurl,'?'));
-            }
-            
-            curl_setopt($ch, CURLOPT_URL, $root.$curlurl);
-            curl_setopt($ch, CURLOPT_HEADER, false);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-            curl_setopt($ch, CURLOPT_MAXREDIRS, 1);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'lscache_runner');
-            curl_setopt($ch, CURLOPT_ENCODING, "gzip");
-            curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-            $start = microtime();
-            
-            $buffer = curl_exec($ch);
-            $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $this->log( $root.$url);
 
-            if (in_array($httpcode, $acceptCode)) {
-                $success++;
-            } else if($httpcode==428){
-                echo 'Web Server crawler feature not enabled, please check <a href="https://www.litespeedtech.com/support/wiki/doku.php/litespeed_wiki:cache:lscwp:configuration:enabling_the_crawler" target="_blank">web server settings</a>';
-                $this->log('httpcode:'.$httpcode);
-                sleep(5);
-                $break = true;
+                if (strpos($curlurl, '/component') === 0) {
+                    $curlurl = '/' . $url;
+                }
+
+                if ((strpos($curlurl, '[') !== false) && (strpos($curlurl, ']') !== false)) {
+                    $pos = strpos($curlurl, '?');
+                    if ($pos === false) {
+                        $current++;
+                        continue;
+                    }
+                    $curlurl = substr($curlurl, 0, $pos);
+                }
+
+                if ($this->app->get('sef_rewrite')) {
+                    $curlurl = preg_replace('#^(/?)index\.php/#', '$1', $curlurl);
+                }
+
+                if (($crawlDelay > 0) && ($current > 0)) {
+                    usleep($crawlDelay * 1000);
+                }
+
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, preg_match('#^https?://#i', $curlurl) ? $curlurl : $root . $curlurl);
+                curl_setopt($ch, CURLOPT_HEADER, false);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+                curl_setopt($ch, CURLOPT_MAXREDIRS, 1);
+                // Without an explicit timeout curl waits forever: one hanging front end page
+                // stalled the whole rebuild, progress frozen and no error state ever written.
+                curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+                curl_setopt($ch, CURLOPT_USERAGENT, 'lscache_runner');
+                curl_setopt($ch, CURLOPT_ENCODING, "gzip");
+                curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
+                curl_multi_add_handle($mh, $ch);
+                $inFlight[spl_object_id($ch)] = $curlurl;
+            }
+
+            if (empty($inFlight)) {
                 break;
-            } else {
-                $this->log('httpcode:'.$httpcode);
             }
-            $current++;
 
-            if ($current % 5 === 0 || $current === $count) {
-                file_put_contents($progressFile, json_encode([
-                    'status'  => 'running',
-                    'total'   => $count,
-                    'current' => $current,
-                    'success' => $success,
-                    'started' => $progressStarted,
-                ]));
+            $active = null;
+            do {
+                $mrc = curl_multi_exec($mh, $active);
+            } while ($mrc === CURLM_CALL_MULTI_PERFORM);
+
+            if ($active && ($mrc === CURLM_OK)) {
+                if (curl_multi_select($mh, 1.0) === -1) {
+                    usleep(1000);
+                }
+            }
+
+            while (($info = curl_multi_info_read($mh)) !== false) {
+                $ch      = $info['handle'];
+                $id      = spl_object_id($ch);
+                $curlurl = isset($inFlight[$id]) ? $inFlight[$id] : '';
+                unset($inFlight[$id]);
+
+                $httpcode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_multi_remove_handle($mh, $ch);
+
+                $current++;
+                $this->log($root . $curlurl);
+
+                if (in_array($httpcode, $acceptCode)) {
+                    $success++;
+                } else if ($httpcode == 428) {
+                    echo 'Web Server crawler feature not enabled, please check <a href="https://www.litespeedtech.com/support/wiki/doku.php/litespeed_wiki:cache:lscwp:configuration:enabling_the_crawler" target="_blank">web server settings</a>';
+                    $this->log('httpcode:' . $httpcode);
+                    $break = true;
+                } else {
+                    $this->log('httpcode:' . $httpcode);
+                }
+
+                if ($output) {
+                    if ($cli) {
+                        echo $current . '/' . $count . ' ' . $root . $curlurl . ' : ' . $httpcode . PHP_EOL;
+                    } else {
+                        echo $current . '/' . $count . ' ' . $root . $curlurl . ' : ' . $httpcode . '<br/>' . PHP_EOL;
+                    }
+                }
             }
 
             if ($output) {
-            
-                echo 'curl url: ' . $root . '/' . $url . '<br/>' .  PHP_EOL;
-                
-                if ($cli) {
-                    echo $current . '/' . $count . ' ' . $root.$curlurl . ' : ' . $httpcode . PHP_EOL;
-                } else {
-                    echo $current . '/' . $count . ' ' . $root.$curlurl . ' : ' . $httpcode . '<br/>' . PHP_EOL;
-                }
-                
                 if (ob_get_contents()){
                     ob_flush();
                 }
                 flush();
-            } else if (($current % 10 == 0) && ($this->microtimeMinus($begin, microtime()) > $recacheDuration)) {
-                $break = true;
-                break;
             }
-            
-            $end = microtime();
-            $diff = $this->microtimeMinus($start, $end);
-            usleep(round($diff));
+
+            file_put_contents($progressFile, json_encode([
+                'status'  => 'running',
+                'total'   => $count,
+                'current' => $current,
+                'success' => $success,
+                'started' => $progressStarted,
+            ]));
+
+            if ((!$break) && (!$output) && ($this->microtimeMinus($begin, microtime()) > $recacheDuration)) {
+                $break = true;
+            }
         }
+
+        curl_multi_close($mh);
 
         if($output && (!$break)){
             echo '100%';
@@ -1944,12 +2040,9 @@ class plgSystemLSCache extends CMSPlugin {
             $urls = array_map(function($menu) {
                 return $menu->path;
             }, $menus);
-            $recacheComponents = $this->settings->get('recacheComponents', array());
-            if (!empty($recacheComponents)) {
-                foreach ($recacheComponents as $recacheComponent) {
-                    $compUrls  = $this->componentHelper->getComMap($recacheComponent);
-                    $urls = array_merge($compUrls, $urls);
-                }    
+            foreach ($this->getRecacheComponents() as $recacheComponent) {
+                $compUrls = $this->componentHelper->getComMap($recacheComponent);
+                $urls = array_merge($compUrls,$urls);
             }
         } else if ($this->purgeObject->autoRecache > 0) {
             $urls = $this->purgeObject->urls;
