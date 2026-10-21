@@ -10,6 +10,7 @@
 $lscacheModules = Array(
     "mod_menu" => Array("Joomla.mod_menu", "mod_menu", "joomla.menu.php", "LSCacheModuleJoomlaMenu"),
     "mod_k2_content" => Array("K2.mod_k2_content", "mod_k2_content", "k2.content.php", "LSCacheModuleK2Content"),
+    "mod_rsform" => Array("RSForm.mod_rsform", "mod_rsform", "rsform.php", "LSCacheModuleRSForm"),
     "mod_virtuemart_cart" => Array("VirtueMart.mod_virtuemart_cart", "mod_virtuemart_cart", "virtuemart.cart.php", "LSCacheModuleVirtueMartCart"),
     
 );
