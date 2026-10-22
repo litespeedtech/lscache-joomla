@@ -184,7 +184,12 @@ class plgSystemLSCache extends CMSPlugin {
             $this->pageCachable = false;
             $this->purgeAdmin($option);
         } else {
-            $this->checkVary();
+            if (!$this->checkVary()) {
+                // The request carried the wrong vary cookie, so LiteSpeed would store this
+                // response under the wrong cache variant. Don't cache it; the corrected
+                // cookie applies from the next request.
+                $this->pageCachable = false;
+            }
             if($app->input->get("lscache_formtoken")=="1"){
                 $token = Session::getFormToken();
                 $app->input->post->set($token,'1');
