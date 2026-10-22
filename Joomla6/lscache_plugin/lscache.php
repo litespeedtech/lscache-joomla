@@ -508,6 +508,11 @@ class plgSystemLSCache extends CMSPlugin {
             $cacheTimeout = $this->settings->get('homePageCacheTimeout', 2000) * 60;
         }
 
+        $urlCacheTimeout = $this->getUrlCacheTimeout();
+        if ($urlCacheTimeout !== null) {
+            $cacheTimeout = $urlCacheTimeout * 60;
+        }
+
         $content = $this->app->getBody();
         $token = Session::getFormToken();
         $search = '#<input.*?name="'. $token . '".*?>#';
@@ -1335,11 +1340,7 @@ class plgSystemLSCache extends CMSPlugin {
                 continue;
             }
 
-            if ((strpos($exclusion, '/') !== FALSE) && (strpos($exclusion, '\/') === FALSE)) {
-                $exclusion = str_replace('/', '\/', $exclusion);
-            }
-
-            if (preg_match('/' . $exclusion . '/is', $path)) {
+            if ($this->matchUrlPattern($exclusion, $path)) {
                 return true;
             }
         }
@@ -1372,11 +1373,7 @@ class plgSystemLSCache extends CMSPlugin {
                 continue;
             }
 
-            if ((strpos($exclusion, '/') !== FALSE) && (strpos($exclusion, '\/') === FALSE)) {
-                $exclusion = str_replace('/', '\/', $exclusion);
-            }
-
-            if (preg_match('/' . $exclusion . '/is', $path)) {
+            if ($this->matchUrlPattern($exclusion, $path)) {
                 return true;
             }
         }
@@ -2055,6 +2052,54 @@ class plgSystemLSCache extends CMSPlugin {
         return $block;
     }
     
+    /**
+     * Get the cache TTL (minutes) set for the current URL in "Override Cache TTL by URL".
+     * Patterns use the same syntax as "Exclude URLs": a substring or regular expression
+     * matched against the path and query string. Rows are checked top to bottom and the
+     * first match wins.
+     *
+     * @return  int|null  TTL in minutes of the first matching row, or null if no row matches
+     */
+    protected function getUrlCacheTimeout() {
+        $rows = $this->settings->get('urlCacheTimeouts');
+        if (empty($rows)) {
+            return null;
+        }
+
+        $path = Uri::getInstance()->toString(array('path', 'query', 'fragment'));
+        foreach ((array) $rows as $row) {
+            $row = (array) $row;
+            if (!isset($row['url']) || (trim($row['url']) === '') || !isset($row['ttl']) || !is_numeric($row['ttl'])) {
+                continue;
+            }
+
+            if ($this->matchUrlPattern(trim($row['url']), $path)) {
+                return max(0, (int) $row['ttl']);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check a URL pattern against a path (path + query string).
+     * Shared by "Exclude URLs", "Login Exclude URLs" and "Override Cache TTL by URL":
+     * the pattern is a substring or regular expression, matched case-insensitively.
+     * An invalid regular expression never matches.
+     *
+     * @param   string  $pattern  The pattern as entered in the settings
+     * @param   string  $path     The path (and query string) to check
+     *
+     * @return  boolean  True if the pattern matches
+     */
+    protected function matchUrlPattern($pattern, $path) {
+        if ((strpos($pattern, '/') !== FALSE) && (strpos($pattern, '\/') === FALSE)) {
+            $pattern = str_replace('/', '\/', $pattern);
+        }
+
+        return (bool) @preg_match('/' . $pattern . '/is', $path);
+    }
+
     protected function isAdmin(){
         return $this->app->isClient('administrator') ;
     }

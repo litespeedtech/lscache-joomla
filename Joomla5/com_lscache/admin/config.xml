@@ -55,6 +55,12 @@
         </field>
         
         <field name="homePageCacheTimeout" type="text" default="2000" label="COM_LSCACHE_FIELD_HOMEPAGE_TIMEOUT_LABEL" description="COM_LSCACHE_FIELD_HOMEPAGE_TIMEOUT_DESC"/>
+        <field name="urlCacheTimeouts" type="subform" multiple="true" layout="joomla.form.field.subform.repeatable-table" buttons="add,remove,move" label="COM_LSCACHE_FIELD_URL_TIMEOUTS_LABEL" description="COM_LSCACHE_FIELD_URL_TIMEOUTS_DESC">
+            <form>
+                <field name="url" type="text" filter="raw" hint="^/my-page$" label="COM_LSCACHE_FIELD_URL_TIMEOUTS_URL_LABEL"/>
+                <field name="ttl" type="number" min="0" filter="integer" label="COM_LSCACHE_FIELD_URL_TIMEOUTS_TTL_LABEL"/>
+            </form>
+        </field>
         <field name="mobileCacheVary" type="radio" default="0" class="btn-group btn-group-yesno" label="COM_LSCACHE_FIELD_VARY_MOBILE_LABEL" description="COM_LSCACHE_FIELD_VARY_MOBILE_DESC">
             <option value="0">JDISABLED</option>
             <option value="1">JENABLED</option>
