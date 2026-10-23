@@ -71,9 +71,13 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
      *
      * @since   1.0.0
      */
-    public function purgeAllPublic()
+    public function purgeAllPublic($serveStale=FALSE)
     {
-        $LSheader = self::CACHE_PURGE . 'public,' . $this->site_only_tag;
+        if($serveStale){
+            $LSheader = self::CACHE_PURGE . 'public,stale,' . $this->site_only_tag;
+        } else {
+            $LSheader = self::CACHE_PURGE . 'public,' . $this->site_only_tag;
+        }
         $this->liteSpeedHeader($LSheader);
     }
 
@@ -146,6 +150,17 @@ class LiteSpeedCacheCore extends LiteSpeedCacheBase
         
         $LSheader = $this->tagCommand( self::CACHE_TAG ,  $siteTags);
         $this->liteSpeedHeader($LSheader);
+    }
+
+    /**
+     *
+     *  build a per-page cache tag from a URL path (and query string),
+     *  so a single URL can be purged by tag (which supports stale).
+     *
+     */
+    public static function urlTag($uri)
+    {
+        return 'url:' . md5(rawurldecode((string) $uri));
     }
 
     public function getSiteOnlyTag(){

@@ -494,6 +494,10 @@ class plgSystemLSCache extends CMSPlugin {
         }
 
 
+        if (isset($_SERVER['REQUEST_URI'])) {
+            $this->cacheTags[] = LiteSpeedCacheCore::urlTag($_SERVER['REQUEST_URI']);
+        }
+
         $templateName = $this->app->getTemplate();
         $view = isset($this->pageElements["view"]) ? $this->pageElements["view"] : "default";
         $layout = isset($this->pageElements["layout"]) ? $this->pageElements["layout"] : "default";
@@ -674,6 +678,9 @@ class plgSystemLSCache extends CMSPlugin {
             $this->purgeObject->tags[] = $purgeTags;
             $this->purgeObject->option = $option;
             $this->purgeObject->idField = 'id';
+            if ($option == 'com_contact') {
+                $this->purgeObject->noStale = true;
+            }
             return;
         }
 
@@ -693,7 +700,8 @@ class plgSystemLSCache extends CMSPlugin {
             $this->purgeObject->tags[] = $purgeTags;
             $this->purgeObject->option = $option;
             $this->purgeObject->idField = 'id';
-            $this->purgeObject->ids[] = $row->id;
+            $this->purgeObject->ids[] = $row['id'];
+            $this->purgeObject->noStale = true;
             return;
         }
         if ($this->componentHelper->supportComponent($option)) {
@@ -1417,9 +1425,10 @@ class plgSystemLSCache extends CMSPlugin {
             $tags = $app->input->get('tags');
             if (!empty($tags)) {
                 $purgeTags = base64_decode($tags);
-                $this->lscInstance->purgePublic($purgeTags);
+                $serveStale = $app->input->getInt('nostale', 0) ? 0 : $this->settings->get('serveStale', 1);
+                $this->lscInstance->purgePublic($purgeTags, $serveStale);
             } else {
-                $this->lscInstance->purgeAllPublic();
+                $this->lscInstance->purgeAllPublic($this->settings->get('serveStale', 1));
                 echo "<html><body><h2>All LiteSpeed Cache Purged!</h2></body></html>";
             }
             $this->log();
@@ -1901,6 +1910,9 @@ class plgSystemLSCache extends CMSPlugin {
                 $purgeTags = implode(',', $this->purgeObject->tags);
                 $tags = base64_encode($purgeTags);
                 $url .= "&tags=" . $tags;
+                if (!empty($this->purgeObject->noStale)) {
+                    $url .= "&nostale=1";
+                }
             }
 
             $ch = curl_init();
@@ -1919,14 +1931,14 @@ class plgSystemLSCache extends CMSPlugin {
             $this->purgeObject->recacheAll = false;
 
         } else if ($this->purgeObject->purgeAll) {
-            $this->lscInstance->purgeAllPublic();
+            $this->lscInstance->purgeAllPublic($this->settings->get('serveStale', 1));
             $this->log();
             if ($this->isAdmin()) {
                 $this->app->enqueueMessage(Text::_('COM_LSCACHE_PLUGIN_NEEDMANUALRECACHE'), "message");
             }
             
         } else if (count($this->purgeObject->tags) > 0) {
-            $serveStale = $this->settings->get('serveStale', 1);
+            $serveStale = !empty($this->purgeObject->noStale) ? 0 : $this->settings->get('serveStale', 1);
             $purgeTags = implode(',', $this->purgeObject->tags);
             $this->lscInstance->purgePublic($purgeTags,$serveStale);
             $this->log();

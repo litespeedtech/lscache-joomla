@@ -14,6 +14,7 @@ use Joomla\CMS\Session\Session;
 use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Component\ComponentHelper;
 
 /**
  * Modules list controller class.
@@ -94,7 +95,7 @@ class LSCacheControllerModules extends AdminController {
         $lscInstance = new LiteSpeedCacheCore();
         $app = Factory::getApplication();
         $app->enqueueMessage(Text::_('COM_LSCACHE_PURGED_ALL'), "");
-        $lscInstance->purgeAllPublic();
+        $lscInstance->purgeAllPublic(ComponentHelper::getParams('com_lscache')->get('serveStale', 1));
         $this->setRedirect('index.php?option=com_lscache');
     }
 
@@ -107,7 +108,7 @@ class LSCacheControllerModules extends AdminController {
         $lscInstance = new LiteSpeedCacheCore();
         $app = Factory::getApplication();
         $app->enqueueMessage(Text::_('COM_LSCACHE_PURGED_ALL'), "");
-        $lscInstance->purgeAllPublic();
+        $lscInstance->purgeAllPublic(ComponentHelper::getParams('com_lscache')->get('serveStale', 1));
         $this->setRedirect($_SERVER['HTTP_REFERER']);
     }
 
@@ -196,11 +197,36 @@ class LSCacheControllerModules extends AdminController {
         // Build list of valid URLs and their original paths for reporting
         $validPaths = [];
         foreach ($slugs as $path) {
+            $path = trim($path);
+            if ($path === '') {
+                continue;
+            }
             if (strpos($path, $domain) === false) {
                 $msg[] = $path . ' - ' . Text::_('COM_LSCACHE_URL_WRONG_DOMAIN');
                 continue;
             }
             $validPaths[] = $path;
+        }
+
+        // Serve Stale: purge the URLs by their per-page cache tag with "stale",
+        // instead of deleting them with HTTP PURGE requests (which cannot serve stale).
+        $serveStale = ComponentHelper::getParams('com_lscache')->get('serveStale', 1);
+        if (!empty($validPaths) && $serveStale) {
+            require_once JPATH_SITE . '/plugins/system/lscache/lscachebase.php';
+            require_once JPATH_SITE . '/plugins/system/lscache/lscachecore.php';
+            $urlTags = [];
+            foreach ($validPaths as $path) {
+                $parts = parse_url($path);
+                $uri = isset($parts['path']) && $parts['path'] !== '' ? $parts['path'] : '/';
+                if (isset($parts['query']) && $parts['query'] !== '') {
+                    $uri .= '?' . $parts['query'];
+                }
+                $urlTags[] = LiteSpeedCacheCore::urlTag($uri);
+                $success++;
+            }
+            $lscInstance = new LiteSpeedCacheCore();
+            $lscInstance->purgePublic(implode(',', $urlTags), true);
+            $validPaths = [];
         }
 
         if (!empty($validPaths)) {
