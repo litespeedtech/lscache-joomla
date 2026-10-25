@@ -447,17 +447,20 @@ class plgSystemLSCache extends CMSPlugin {
         }
 
         if (!$this->pageCachable) {
+            $this->sendEsiOnly();
             return;
         }
 
         $httpcode = $this->app->getResponse()->getStatusCode();
         if ($httpcode > 201) {
             $this->log("Http Response Code Not Cachable:" . $httpcode);
+            $this->sendEsiOnly();
             return;
         }
 
         $headers = $this->app->getHeaders();
         if(isset($headers[0]) && isset($headers[0]['name']) && ($headers[0]['name']=='status') && (strpos($headers[0]['value'],'200')===FALSE) && (strpos($headers[0]['value'],'201')===FALSE)){
+            $this->sendEsiOnly();
             return;
         }
         
@@ -490,6 +493,7 @@ class plgSystemLSCache extends CMSPlugin {
         
         if (empty($option) && !empty($this->menuItem)) {
             if ($this->menuItem && !$this->menuItem->home) {
+                $this->sendEsiOnly();
                 return;
             }
         } else if (isset($id) && in_array($option, array('com_content', 'com_contact', 'com_banners', 'com_newsfeed', 'com_categories', 'com_users'))) {
@@ -527,6 +531,7 @@ class plgSystemLSCache extends CMSPlugin {
         $this->app->setBody($data);
         
         if ($cacheTimeout == 0) {
+            $this->sendEsiOnly();
             return;
         }
         
@@ -2199,6 +2204,16 @@ class plgSystemLSCache extends CMSPlugin {
         return $block;
     }
     
+    /**
+     * When a page is not cached, still tell LiteSpeed to process its ESI includes.
+     * Without esi=on, LiteSpeed outputs <esi:include> tags as they are.
+     */
+    protected function sendEsiOnly() {
+        if ($this->esion) {
+            header('X-LiteSpeed-Cache-Control: no-cache,esi=on');
+        }
+    }
+
     protected function isAdmin(){
         return $this->app->isClient('administrator') ;
     }
