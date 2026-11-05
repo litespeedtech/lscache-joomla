@@ -2063,11 +2063,22 @@ class plgSystemLSCache extends CMSPlugin {
     /**
      * When a page is not cached, still tell LiteSpeed to process its ESI includes.
      * Without esi=on, LiteSpeed outputs <esi:include> tags as they are.
+     * If something else (another extension, a com_ajax handler) already set its own
+     * X-LiteSpeed-Cache-Control header, that header is kept and esi=on is only added.
      */
     protected function sendEsiOnly() {
-        if ($this->esion) {
-            header('X-LiteSpeed-Cache-Control: no-cache,esi=on');
+        if (!$this->esion || headers_sent()) {
+            return;
         }
+
+        foreach (headers_list() as $header) {
+            if (stripos($header, 'X-LiteSpeed-Cache-Control:') === 0) {
+                header('X-LiteSpeed-Cache-Control: esi=on', false);
+                return;
+            }
+        }
+
+        header('X-LiteSpeed-Cache-Control: no-cache,esi=on');
     }
 
     protected function isAdmin(){
