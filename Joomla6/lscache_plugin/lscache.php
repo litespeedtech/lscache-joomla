@@ -530,6 +530,46 @@ class plgSystemLSCache extends CMSPlugin {
         
     }
 
+    /**
+     * Makes LiteSpeed process the <esi:include> tags of a page this plugin does not cache.
+     *
+     * Without esi=on, LiteSpeed outputs the tags as they are. cachePublic() adds esi=on for
+     * a cached page, but the early returns of onAfterRender() skip it, even though modules
+     * may already have been turned into ESI blocks.
+     *
+     * An X-LiteSpeed-Cache-Control header that is already set is kept and extended on the
+     * same line (e.g. the public,max-age=... of an ESI block rendered through esitemplate in
+     * onAfterDispatch() must not become no-cache). A header queued with $app->setHeader() is
+     * extended in the queue, because sendHeaders() emits it after onAfterRender() and would
+     * replace a header() call.
+     */
+    protected function sendEsiOnly() {
+        if (!$this->esion || headers_sent()) {
+            return;
+        }
+
+        foreach ($this->app->getHeaders() as $header) {
+            if (strcasecmp((string) $header['name'], 'X-LiteSpeed-Cache-Control') === 0) {
+                if (stripos((string) $header['value'], 'esi=on') === false) {
+                    $this->app->setHeader('X-LiteSpeed-Cache-Control', $header['value'] . ',esi=on', true);
+                }
+                return;
+            }
+        }
+
+        foreach (headers_list() as $header) {
+            if (stripos($header, 'X-LiteSpeed-Cache-Control:') === 0) {
+                $value = trim(substr($header, strlen('X-LiteSpeed-Cache-Control:')));
+                if (stripos($value, 'esi=on') === false) {
+                    header('X-LiteSpeed-Cache-Control: ' . $value . ',esi=on');
+                }
+                return;
+            }
+        }
+
+        header('X-LiteSpeed-Cache-Control: no-cache,esi=on');
+    }
+
     private function getOption($context) {
         $parts = explode(".", $context);
         return $parts[0];
@@ -2060,27 +2100,6 @@ class plgSystemLSCache extends CMSPlugin {
         return $block;
     }
     
-    /**
-     * When a page is not cached, still tell LiteSpeed to process its ESI includes.
-     * Without esi=on, LiteSpeed outputs <esi:include> tags as they are.
-     * If something else (another extension, a com_ajax handler) already set its own
-     * X-LiteSpeed-Cache-Control header, that header is kept and esi=on is only added.
-     */
-    protected function sendEsiOnly() {
-        if (!$this->esion || headers_sent()) {
-            return;
-        }
-
-        foreach (headers_list() as $header) {
-            if (stripos($header, 'X-LiteSpeed-Cache-Control:') === 0) {
-                header('X-LiteSpeed-Cache-Control: esi=on', false);
-                return;
-            }
-        }
-
-        header('X-LiteSpeed-Cache-Control: no-cache,esi=on');
-    }
-
     protected function isAdmin(){
         return $this->app->isClient('administrator') ;
     }
