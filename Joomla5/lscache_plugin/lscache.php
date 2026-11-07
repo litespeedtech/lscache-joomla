@@ -38,6 +38,12 @@ class plgSystemLSCache extends CMSPlugin {
     const CATEGORY_CONTEXTS = array('com_categories.category', 'com_banners.category', 'com_contact.category', 'com_content.category', 'com_newsfeeds.category', 'com_users.category',
         'com_categories.categories', 'com_banners.categories', 'com_contact.categories', 'com_content.categories', 'com_newsfeeds.categories', 'com_users.categories');
     const CONTENT_CONTEXTS = array('com_content.article', 'com_content.featured', 'com_content.form', 'com_banner.banner', 'com_contact.contact', 'com_contact.form', 'com_newsfeeds.newsfeed', 'com_content');
+    // VirtueMart views rendered from the visitor's session (cart, account, orders, payment
+    // returns): never stored in the public cache. See isVirtueMartPrivateRequest().
+    const VM_PRIVATE_VIEWS = array('cart', 'user', 'orders', 'invoice', 'pluginresponse', 'vmplg');
+    // VirtueMart tasks that only display a public form (product page popups, posted back
+    // with POST): they stay cacheable, as before.
+    const VM_CACHABLE_TASKS = array('askquestion', 'recommend');
 
     protected $app;
     protected $cacheEnabled;
@@ -241,6 +247,8 @@ class plgSystemLSCache extends CMSPlugin {
         } else if ($app->get('offline', '0')){
             $this->pageCachable = false;
         } else if ($this->isExcluded()) {
+            $this->pageCachable = false;
+        } else if ($this->isVirtueMartPrivateRequest()) {
             $this->pageCachable = false;
         }
 
@@ -1300,6 +1308,28 @@ class plgSystemLSCache extends CMSPlugin {
         if($link) { $content .= '   ' . $link; }
 
         Log::add($content, $logLevel, 'LiteSpeedCache');
+    }
+
+    /**
+     * Whether this is a VirtueMart request whose output depends on the visitor's session.
+     *
+     * The VirtueMart handler only excludes the cart and user views for guests, from
+     * pageElements, and leaves orders, invoice and the payment return views out. The
+     * decision here reads the routed request, whatever the active menu item and the Itemid.
+     * Any VirtueMart request that carries a task is excluded too: served from the cache,
+     * the task would never run. The tasks in VM_CACHABLE_TASKS only display a public form
+     * and stay cacheable.
+     */
+    private function isVirtueMartPrivateRequest() {
+        $input = $this->app->getInput();
+        if ($input->getCmd('option', '') !== 'com_virtuemart') {
+            return false;
+        }
+        if (in_array($input->getCmd('view', ''), self::VM_PRIVATE_VIEWS, true)) {
+            return true;
+        }
+        $task = strtolower($input->getCmd('task', ''));
+        return ($task !== '') && (!in_array($task, self::VM_CACHABLE_TASKS, true));
     }
 
     protected function isOptionExcluded($option) {
