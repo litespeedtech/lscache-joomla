@@ -447,17 +447,20 @@ class plgSystemLSCache extends CMSPlugin {
         }
 
         if (!$this->pageCachable) {
+            $this->sendEsiOnly();
             return;
         }
 
         $httpcode = $this->app->getResponse()->getStatusCode();
         if ($httpcode > 201) {
             $this->log("Http Response Code Not Cachable:" . $httpcode);
+            $this->sendEsiOnly();
             return;
         }
 
         $headers = $this->app->getHeaders();
         if(isset($headers[0]) && isset($headers[0]['name']) && ($headers[0]['name']=='status') && (strpos($headers[0]['value'],'200')===FALSE) && (strpos($headers[0]['value'],'201')===FALSE)){
+            $this->sendEsiOnly();
             return;
         }
         
@@ -490,6 +493,7 @@ class plgSystemLSCache extends CMSPlugin {
         
         if (empty($option) && !empty($this->menuItem)) {
             if ($this->menuItem && !$this->menuItem->home) {
+                $this->sendEsiOnly();
                 return;
             }
         } else if (isset($id) && in_array($option, array('com_content', 'com_contact', 'com_banners', 'com_newsfeed', 'com_categories', 'com_users'))) {
@@ -527,6 +531,7 @@ class plgSystemLSCache extends CMSPlugin {
         $this->app->setBody($data);
         
         if ($cacheTimeout == 0) {
+            $this->sendEsiOnly();
             return;
         }
         
@@ -534,6 +539,46 @@ class plgSystemLSCache extends CMSPlugin {
         $this->lscInstance->cachePublic($cacheTags, $this->esion);
         $this->log();
         
+    }
+
+    /**
+     * Makes LiteSpeed process the <esi:include> tags of a page this plugin does not cache.
+     *
+     * Without esi=on, LiteSpeed outputs the tags as they are. cachePublic() adds esi=on for
+     * a cached page, but the early returns of onAfterRender() skip it, even though modules
+     * may already have been turned into ESI blocks.
+     *
+     * An X-LiteSpeed-Cache-Control header that is already set is kept and extended on the
+     * same line (e.g. the public,max-age=... of an ESI block rendered through esitemplate in
+     * onAfterDispatch() must not become no-cache). A header queued with $app->setHeader() is
+     * extended in the queue, because sendHeaders() emits it after onAfterRender() and would
+     * replace a header() call.
+     */
+    protected function sendEsiOnly() {
+        if (!$this->esion || headers_sent()) {
+            return;
+        }
+
+        foreach ($this->app->getHeaders() as $header) {
+            if (strcasecmp((string) $header['name'], 'X-LiteSpeed-Cache-Control') === 0) {
+                if (stripos((string) $header['value'], 'esi=on') === false) {
+                    $this->app->setHeader('X-LiteSpeed-Cache-Control', $header['value'] . ',esi=on', true);
+                }
+                return;
+            }
+        }
+
+        foreach (headers_list() as $header) {
+            if (stripos($header, 'X-LiteSpeed-Cache-Control:') === 0) {
+                $value = trim(substr($header, strlen('X-LiteSpeed-Cache-Control:')));
+                if (stripos($value, 'esi=on') === false) {
+                    header('X-LiteSpeed-Cache-Control: ' . $value . ',esi=on');
+                }
+                return;
+            }
+        }
+
+        header('X-LiteSpeed-Cache-Control: no-cache,esi=on');
     }
 
     private function getOption($context) {
