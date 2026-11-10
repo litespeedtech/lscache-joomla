@@ -15,4 +15,5 @@ $lscacheComponents = Array(
     "com_komento" => Array("Komento", "com_komento", "com_komento.php", "LSCacheComponentKomento",1),
     "com_content" => Array("Articles", "com_content", "com_content.php", "LSCacheComponentContent",1),
     "com_hikashop" => Array("HikaShop", "com_hikashop", "com_hikashop.php", "LSCacheComponentHikaShop",0),
+    "com_j2commerce" => Array("J2Commerce", "com_j2commerce", "com_j2commerce.php", "LSCacheComponentJ2Commerce",1),
 );
